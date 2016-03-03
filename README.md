@@ -1,4 +1,5 @@
-**beautiful-racket** [![Build Status](https://travis-ci.org/mbutterick/pollen.svg?branch=master)](https://travis-ci.org/mbutterick/beautiful-racket)
+beautiful-racket [![Build Status](https://travis-ci.org/mbutterick/pollen.svg?branch=master)](https://travis-ci.org/mbutterick/beautiful-racket)
+--
 
 Resources for the upcoming “Beautiful Racket” book, including:
 
