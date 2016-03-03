@@ -34,4 +34,4 @@ before_install:
 script:
  - cd ..   # Travis did a cd into the dir. Back up, for the next:
  - travis_retry raco pkg install --deps search-auto --link beautiful-racket
- - raco test -p br
+ - raco test -p beautiful-racket
