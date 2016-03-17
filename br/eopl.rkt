@@ -1,6 +1,6 @@
 #lang br
-(require rackunit (for-syntax br/datum sugar/debug))
-(provide define-datatype occurs-free?)
+(require rackunit racket/struct (for-syntax br/datum sugar/debug))
+(provide define-datatype cases occurs-free?)
 
 #;(begin
     (struct lc-exp () #:transparent)
@@ -59,17 +59,22 @@
                          (occurs-free? search-var rator)
                          (occurs-free? search-var rand)))]))
 
+(define-syntax (cases stx)
+  (syntax-case stx (else)
+    [(_ <base-type> <input-var>
+        [<subtype> (<positional-var> ...) <body> ...] ...
+        [else <else-body> ...])
+     (inject-syntax ([#'(<subtype?> ...) (map-syntax (λ(s) (format-datum '~a? s)) #'(<subtype> ...))])
+                    #'(cond
+                        [(<subtype?> <input-var>) (match-let ([(list <positional-var> ...) (struct->list <input-var>)])
+                                                    <body> ...)] ...
+                                                                 [else <else-body> ...]))]
+    [(_ <base-type> <input-var>
+        <subtype-case> ...)
+     #'(cases <base-type> <input-var>
+         <subtype-case> ...
+         [else (void)])]))
 
-(define #'(cases-let <input-var> <subtype> (<field> ...) <body> ...)
-  (inject-syntax ([#'(<subtype-field> ...) (map-syntax (λ(field) (format-datum '~a-~a #'<subtype> field)) #'(<field> ...))])
-                 #'(let ([<field> (<subtype-field> <input-var>)] ...)
-                     <body> ...)))
-
-
-(define #'(cases <base-type> <input-var> [<subtype> (<field> ...) <body> ...] ...)
-  (inject-syntax ([#'(<subtype?> ...) (map-syntax (λ(s) (format-datum '~a? s)) #'(<subtype> ...))])
-                 #'(cond
-                     [(<subtype?> <input-var>) (cases-let <input-var> <subtype> (<field> ...) <body> ...)] ...)))
 
 (define (occurs-free? search-var exp)
   (cases lc-exp exp
