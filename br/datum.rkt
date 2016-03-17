@@ -13,11 +13,13 @@
 (define-syntax format-datum
   (λ(stx)
     (syntax-case stx (quote datum)
-      [(_ (quote datum-template) arg ...)
-      #'(format-datum (datum datum-template) arg ...)]
-      [(_ (datum datum-template) arg ...)
+      [(_ (quote <datum-template>) <arg> ...)
+      #'(format-datum (datum <datum-template>) <arg> ...)]
+      [(_ (datum datum-template) <arg> ...)
        (syntax-let ([#'format-string (format "~a" (syntax->datum #'datum-template))])
-         #'(string->datum (apply format format-string (list arg ...))))])))
+         #'(string->datum (apply format format-string (map (λ(arg) (if (syntax? arg)
+                                                                       (syntax->datum arg)
+                                                                       arg)) (list <arg> ...)))))])))
 
 
 (module+ test

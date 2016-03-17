@@ -17,4 +17,12 @@
 
 (define-syntax inject-syntax (make-rename-transformer #'add-syntax))
 
+(define-syntax (map-syntax stx)
+  (syntax-case stx ()
+    [(_ <proc> <arg> ...)
+     #'(map <proc> (if (and (syntax? <arg>) (list? (syntax-e <arg>)))
+                       (syntax->list <arg>)
+                       <arg>) ...)]))
+
+
 #;(define-syntax syntax-variable (make-rename-transformer #'format-id))

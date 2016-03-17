@@ -10,10 +10,10 @@
   
   (syntax-parse stx
     #:literals (syntax)
-    [(_ (syntax (id pat-arg ...)) body ...) ; (define #'(foo arg) #'(+ arg arg))
+    [(_ (syntax (id pat-arg ... . rest-arg)) body ...) ; (define #'(foo arg) #'(+ arg arg))
      #'(define-syntax id (λ (stx)
                            (syntax-case stx ()
-                             [(_ pat-arg ...) body ...])))]
+                             [(_ pat-arg ... . rest-arg) body ...])))]
     
     [(_ sid:syntaxed-id sid2:syntaxed-id) ; (define #'f1 #'f2)
      #'(define-syntax sid.name (make-rename-transformer sid2))]
