@@ -10,8 +10,10 @@
   
   (syntax-parse stx
     #:literals (syntax)
-    [(_ (syntax (id pat-arg ...)) (syntax body ...)) ; (define #'(foo arg) #'(+ arg arg))
-     #'(define-syntax-rule (id pat-arg ...) body ...)]
+    [(_ (syntax (id pat-arg ...)) body ...) ; (define #'(foo arg) #'(+ arg arg))
+     #'(define-syntax id (λ (stx)
+                           (syntax-case stx ()
+                             [(_ pat-arg ...) body ...])))]
     
     [(_ sid:syntaxed-id sid2:syntaxed-id) ; (define #'f1 #'f2)
      #'(define-syntax sid.name (make-rename-transformer sid2))]
@@ -37,5 +39,9 @@
   (check-equal? (plusser 42) +)
   (check-equal? (times 10) 100)
   (check-equal? (timeser 12) 144)
+  (check-equal? (let ()
+                  (br:define #'(foo x)
+                             (with-syntax ([zam +])
+                               #'(zam x x))) (foo 42)) 84) 
   ;; todo: error from define not trapped by check-exn 
   #;(check-exn exn:fail:syntax? (λ _ (br:define (#'times stx stx2) #'*))))
