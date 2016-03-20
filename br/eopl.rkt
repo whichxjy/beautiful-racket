@@ -31,8 +31,8 @@
 (define #'(define-datatype <base-type> <base-type-predicate?>
             (<subtype> [<field> <field-predicate?>] ...) ...)
   #'(begin
-      (struct <base-type> () #:transparent)
-      (struct <subtype> <base-type> (<field> ...) #:transparent
+      (struct <base-type> () #:transparent #:mutable)
+      (struct <subtype> <base-type> (<field> ...) #:transparent #:mutable
         #:guard (λ(<field> ... name)
                   (unless (<field-predicate?> <field>)
                     (error name (format "arg ~a is not ~a" <field> '<field-predicate?>))) ...
