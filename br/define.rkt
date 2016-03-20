@@ -1,6 +1,24 @@
 #lang racket/base
-(require (for-syntax racket/base syntax/parse))
+(require (for-syntax racket/base syntax/parse racket/syntax syntax/datum syntax/strip-context))
 (provide (all-defined-out))
+
+(define-syntax (br:debug-define stx)
+  (syntax-parse stx
+    #:literals (syntax)
+    [(_ (syntax (id pat-arg ... . rest-arg)) body-exp) ; (define #'(foo arg) #'(+ arg arg))
+     #'(define-syntax id (λ (stx)
+                           (define result (syntax-case stx ()
+                                            [(_ pat-arg ... . rest-arg) body-exp]))
+                           (with-syntax ([syntaxed-result result]
+                                         [context stx])
+                             #`(begin
+                                 (displayln (format "input pattern = #'~a" (quote (id pat-arg ... . rest-arg))))
+                                 (displayln (format "output pattern = #'~a" (syntax->datum body-exp)))
+                                 (displayln (format "arg ~a = ~a" (quote pat-arg) 'zz)) ...
+                                 #;(displayln stx)
+                                 (displayln (format "expansion = ~a" 'syntaxed-result))
+                                 (displayln (format "result = ~a" syntaxed-result))
+                                 syntaxed-result))))]))
 
 (define-syntax (br:define stx)
   (define-syntax-class syntaxed-id
@@ -12,8 +30,12 @@
     #:literals (syntax)
     [(_ (syntax (id pat-arg ... . rest-arg)) body ...) ; (define #'(foo arg) #'(+ arg arg))
      #'(define-syntax id (λ (stx)
-                           (syntax-case stx ()
-                             [(_ pat-arg ... . rest-arg) body ...])))]
+                           (define result
+                             (syntax-case stx ()
+                               [(_ pat-arg ... . rest-arg) body ...]))
+                           (if (not (syntax? result))
+                               (datum->syntax stx result)
+                               result)))]
     
     [(_ sid:syntaxed-id sid2:syntaxed-id) ; (define #'f1 #'f2)
      #'(define-syntax sid.name (make-rename-transformer sid2))]
