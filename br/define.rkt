@@ -2,16 +2,16 @@
 (require (for-syntax racket/base syntax/parse racket/syntax syntax/datum syntax/strip-context))
 (provide (all-defined-out))
 
+
 ;; a little tricky because we have to mix two levels of macrology.
-;; does not work with ellipses in the input pattern
 (define-syntax (br:debug-define stx)
   (syntax-parse stx
     #:literals (syntax)
     [(_ (syntax (id pat-arg ... . rest-arg)) body-exp) ; (define #'(foo arg) #'(+ arg arg))
      #'(define-syntax id (λ (stx)
                            (define result (syntax-case stx ()
-                                                 [(_ pat-arg ... . rest-arg)
-                                                  body-exp]))
+                                            [(_ pat-arg ... . rest-arg)
+                                             body-exp]))
                            (define arg-printing (syntax-case stx ()
                                                   [(_ pat-arg ... . rest-arg)
                                                    #`(begin
@@ -24,6 +24,17 @@
                                  syntaxed-arg-printing
                                  (displayln (format "expanded syntax = #'~a" 'syntaxed-result))
                                  syntaxed-result))))]))
+
+(module+ test
+  (require rackunit racket/port)
+  (check-equal? (parameterize ([current-output-port (open-output-nowhere)])
+                  (br:debug-define #'(foo <x> <y> <z>)
+                                   #'(apply + (list <x> <y> <z>)))
+                  (foo 1 2 3)) 6))
+
+;; does not work with ellipses in the input pattern
+#;(br:debug-define #'(foo <x> ...)
+                   #'(apply + (list <x> ...)))
 
 (define-syntax (br:define stx)
   (define-syntax-class syntaxed-id
