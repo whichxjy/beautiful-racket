@@ -2,22 +2,27 @@
 (require (for-syntax racket/base syntax/parse racket/syntax syntax/datum syntax/strip-context))
 (provide (all-defined-out))
 
+;; a little tricky because we have to mix two levels of macrology.
+;; does not work with ellipses in the input pattern
 (define-syntax (br:debug-define stx)
   (syntax-parse stx
     #:literals (syntax)
     [(_ (syntax (id pat-arg ... . rest-arg)) body-exp) ; (define #'(foo arg) #'(+ arg arg))
      #'(define-syntax id (λ (stx)
                            (define result (syntax-case stx ()
-                                            [(_ pat-arg ... . rest-arg) body-exp]))
-                           (with-syntax ([syntaxed-result result]
-                                         [context stx])
-                             #`(begin
-                                 (displayln (format "input pattern = #'~a" (quote (id pat-arg ... . rest-arg))))
-                                 (displayln (format "output pattern = #'~a" (syntax->datum body-exp)))
-                                 (displayln (format "arg ~a = ~a" (quote pat-arg) 'zz)) ...
-                                 #;(displayln stx)
-                                 (displayln (format "expansion = ~a" 'syntaxed-result))
-                                 (displayln (format "result = ~a" syntaxed-result))
+                                                 [(_ pat-arg ... . rest-arg)
+                                                  body-exp]))
+                           (define arg-printing (syntax-case stx ()
+                                                  [(_ pat-arg ... . rest-arg)
+                                                   #`(begin
+                                                       (displayln (format "arg #'~a = ~a" #,''pat-arg pat-arg)) ...)]))
+                           (with-syntax ([syntaxed-arg-printing arg-printing]
+                                         [syntaxed-result result])
+                             #'(begin
+                                 (displayln (format "input syntax = #'~a" (quote (id pat-arg ... . rest-arg))))
+                                 (displayln (format "output syntax = #'~a" (syntax->datum body-exp)))
+                                 syntaxed-arg-printing
+                                 (displayln (format "expanded syntax = #'~a" 'syntaxed-result))
                                  syntaxed-result))))]))
 
 (define-syntax (br:define stx)
