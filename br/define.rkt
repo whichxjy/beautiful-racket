@@ -3,38 +3,30 @@
 (provide (all-defined-out))
 
 
-;; a little tricky because we have to mix two levels of macrology.
-(define-syntax (br:debug-define stx)
-  (syntax-parse stx
-    #:literals (syntax)
-    [(_ (syntax (id pat-arg ... . rest-arg)) body-exp) ; (define #'(foo arg) #'(+ arg arg))
-     #'(define-syntax id (λ (stx)
-                           (define result (syntax-case stx ()
-                                            [(_ pat-arg ... . rest-arg)
-                                             body-exp]))
-                           (define arg-printing (syntax-case stx ()
-                                                  [(_ pat-arg ... . rest-arg)
-                                                   #`(begin
-                                                       (displayln (format "arg #'~a = ~a" #,''pat-arg pat-arg)) ...)]))
-                           (with-syntax ([syntaxed-arg-printing arg-printing]
-                                         [syntaxed-result result])
-                             #'(begin
-                                 (displayln (format "input syntax = #'~a" (quote (id pat-arg ... . rest-arg))))
-                                 (displayln (format "output syntax = #'~a" (syntax->datum body-exp)))
-                                 syntaxed-arg-printing
-                                 (displayln (format "expanded syntax = #'~a" 'syntaxed-result))
-                                 syntaxed-result))))]))
+(define-syntax-rule (br:debug-define (syntax (id pat-arg ... . rest-arg)) body-exp)
+  (br:define #'(id pat-arg ... . rest-arg)
+             #`(begin
+                 (for-each displayln
+                           (list
+                            (format "input pattern = #'~a" '#,'(id pat-arg ... . rest-arg))
+                            (format "output pattern = #'~a" (cadr '#,'body-exp))
+                            (format "invoked as = ~a" (syntax->datum #'(id pat-arg ... . rest-arg)))
+                            (format "expanded as = ~a" '#,(syntax->datum body-exp))
+                            (format "evaluated as = ~a" #,body-exp)))
+                 #,body-exp)))
+
 
 (module+ test
   (require rackunit racket/port)
-  (check-equal? (parameterize ([current-output-port (open-output-nowhere)])
-                  (br:debug-define #'(foo <x> <y> <z>)
-                                   #'(apply + (list <x> <y> <z>)))
-                  (foo 1 2 3)) 6))
+  (parameterize ([current-output-port (open-output-nowhere)])
+    (check-equal? (let ()
+                    (br:debug-define #'(foo <x> <y> <z>)
+                                     #'(apply + (list <x> <y> <z>)))
+                    (foo 1 2 3)) 6)  
+    (check-equal? (let ()
+                    (br:debug-define #'(foo <x> ...) #'(apply * (list <x> ...)))
+                    (foo 10 11 12)) 1320)))
 
-;; does not work with ellipses in the input pattern
-#;(br:debug-define #'(foo <x> ...)
-                   #'(apply + (list <x> ...)))
 
 (define-syntax (br:define stx)
   (define-syntax-class syntaxed-id
