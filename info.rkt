@@ -3,4 +3,4 @@
 
 (define version "0.01")
 (define deps '("base" "sugar"))
-(define build-deps '("racket-doc"))
+(define build-deps '("racket-doc" "rackunit-lib"))
