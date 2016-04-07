@@ -6,3 +6,4 @@
 (define build-deps '("racket-doc"))
 
 (define test-omit-paths '("br-bf"))
+(define compile-omit-paths '("br-bf"))
