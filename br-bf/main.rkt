@@ -20,25 +20,22 @@
     (for-each println (map syntax->datum result))
     result))
 
+(define #'(bf-program <op> ...)
+  #'(begin <op> ...))
 
-(define #'(bf-program arg ...)
-  #'(begin arg ...))
+(define #'(op <arg>)
+  (syntax-case #'(op <arg>) ()
+    [(op ">") #'(move-pointer 1)]
+    [(op "<") #'(move-pointer -1)]
+    [(op "+") #'(set-pointer-byte! (add1 (pointer-byte)))]
+    [(op "-") #'(set-pointer-byte! (sub1 (pointer-byte)))]
+    [(op ".") #'(write-byte (pointer-byte))]
+    [(op ",") #'(set-pointer-byte! (read-byte))]
+    [else #'<arg>])) ; <arg> must therefore be a loop
 
-(define #'(op arg)
-  (case (syntax->datum #'arg)
-    [(">") #'(move-pointer 1)]
-    [("<") #'(move-pointer -1)]
-    [("+") #'(set-pointer-byte! (add1 (pointer-byte)))]
-    [("-") #'(set-pointer-byte! (sub1 (pointer-byte)))]
-    [(".") #'(write-byte (pointer-byte))]
-    [(",") #'(set-pointer-byte! (read-byte (current-input-port)))]
-    [else #'arg]))
-
-(define #'(loop lb arg ... rb)
-  #'(let loop ()
-      (unless (zero? (pointer-byte))
-        arg ...
-        (loop))))
+(define #'(loop "[" <op> ... "]")
+  #'(until (zero? (pointer-byte))
+           <op> ...))
 
 (define bf-vector (make-vector 10 0))
 (define bf-pointer 0)
