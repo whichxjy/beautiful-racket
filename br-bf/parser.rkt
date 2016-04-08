@@ -1,10 +1,10 @@
 #lang ragg
-
-<expr> : ">"
+bf-program : expr*
+expr : ">"
        | "<" 
        | "+" 
        | "-" 
        | "." 
        | "," 
-       | <loop>
-<loop> : "["<expr>*"]"
+       | loop
+loop : "[" expr* "]"
