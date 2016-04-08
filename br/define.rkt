@@ -33,6 +33,11 @@
     #:literals (syntax)
     #:description "id in syntaxed form"
     (pattern (syntax name:id)))
+
+  (define-syntax-class syntaxed-thing
+    #:literals (syntax)
+    #:description "some datum in syntaxed form"
+    (pattern (syntax thing:expr)))
   
   (syntax-parse stx
     #:literals (syntax)
@@ -47,6 +52,9 @@
     
     [(_ sid:syntaxed-id sid2:syntaxed-id) ; (define #'f1 #'f2)
      #'(define-syntax sid.name (make-rename-transformer sid2))]
+
+    [(_ sid:syntaxed-id sid2:syntaxed-thing) ; (define #'f1 #'42)
+     #'(define-syntax sid.name (λ (stx) sid2))]
     
     [(_ (sid:syntaxed-id stx-arg ...) expr ...)  ; (define (#'f1 stx) expr ...)
      (raise-syntax-error 'define "definition of a syntax transformer must use lambda notation, because otherwise it's too easy to confuse the compile-time shape and the run-time shape" (syntax->datum #'sid.name))]
