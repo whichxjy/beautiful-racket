@@ -75,3 +75,38 @@
                                #'(zam x x))) (foo 42)) 84) 
   ;; todo: error from define not trapped by check-exn 
   #;(check-exn exn:fail:syntax? (λ _ (br:define (#'times stx stx2) #'*))))
+
+
+;; todo: support `else` case
+(define-syntax (br:define-cases stx)
+  (syntax-parse stx
+    #:literals (syntax)
+    ; (define-cases #'foo [#'(_ arg) #'(+ arg arg)] [#'(_ 42 bar) #'42] ...)
+    [(_ (syntax top-id) [(syntax (_ pat-arg ... . rest-arg)) body ...] ...) 
+     #'(define-syntax top-id (λ (stx)
+                               (define result
+                                 (syntax-case stx ()
+                                   [(_ pat-arg ... . rest-arg) body ...] ...))
+                               (if (not (syntax? result))
+                                   (datum->syntax stx result)
+                                   result)))]
+    
+    [(_ top-id [(_ pat-arg ... . rest-arg) body ...] ...)
+     #'(define top-id
+         (case-lambda
+           [(pat-arg ... . rest-arg) body ...] ...))]))
+
+(module+ test
+  (br:define-cases #'op
+    [#'(_ "+") #''got-plus]
+    [#'(_ arg) #''got-something-else])
+
+  (check-equal? (op "+") 'got-plus)
+  (check-equal? (op 42) 'got-something-else)
+  
+  (br:define-cases f
+    [(_ arg) (add1 arg)]
+    [(_ arg1 arg2) (+ arg1 arg2)])
+
+  (check-equal? (f 42) 43)
+  (check-equal? (f 42 5) 47))
