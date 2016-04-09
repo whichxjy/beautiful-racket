@@ -45,7 +45,7 @@
 ;; bf implementation
 
 ;; state: one vector, one pointer
-(define bf-vector (make-vector 1000 0))
+(define bf-vector (make-vector 30000 0))
 (define bf-pointer 0)
 
 ;; gets and sets
