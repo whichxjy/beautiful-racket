@@ -1,6 +1,7 @@
 #lang racket/base
-(require (for-syntax racket/base syntax/parse #;racket/syntax) #;racket/syntax)
-(provide (all-defined-out))
+(require (for-syntax racket/base syntax/parse) syntax/strip-context)
+(provide (all-defined-out) (all-from-out syntax/strip-context))
+
 
 (define-syntax (syntax-match stx)
   (syntax-case stx (syntax)
