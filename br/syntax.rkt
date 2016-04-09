@@ -10,9 +10,14 @@
          [pattern body ...] ...)]))
 
 (define-syntax (add-syntax stx)
+  ;; todo: permit mixing of two-arg and one-arg binding forms
+  ;; one-arg form allows you to inject an existing syntax object using its current name
   (syntax-case stx (syntax)
     [(_ ([(syntax sid) sid-stx] ...) body ...)
-     #'(with-syntax ([sid sid-stx] ...) body ...)]))
+     #'(with-syntax ([sid sid-stx] ...) body ...)]
+    ;; todo: limit `sid` to be an identifier
+    [(_ ([sid] ...) body ...)
+     #'(with-syntax ([sid sid] ...) body ...)]))
 
 (define-syntax syntax-let (make-rename-transformer #'add-syntax))
 

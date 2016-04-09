@@ -3,13 +3,6 @@
 ;; too numerous to indicate individually
 ;; (e.g., numbers, strings)
 
-;; parser imposes structure:
-;; takes a flat list of tokens
-;; and arranges them into an (often hierarchical / recursive) shape.
-;; produces a parse tree, which is like an annotated, structured version of the source code.
-;; gives us the parenthesized expressions we need for the expander.
-
-
 bf-program : (op | loop)*
 op : ">" | "<" | "+" | "-" | "." | ","
 loop : "[" (op | loop)* "]"
