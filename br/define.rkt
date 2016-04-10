@@ -72,6 +72,7 @@
   (br:define #'plusser #'plus)
   (br:define #'(times arg) #'(* arg arg))
   (br:define #'timeser #'times)
+  (br:define #'fortytwo #'42)
   (check-equal? (plus 42) +)
   (check-equal? plusser +)
   (check-equal? (plusser 42) +)
@@ -82,7 +83,8 @@
                              (with-syntax ([zam +])
                                #'(zam x x))) (foo 42)) 84) 
   ;; todo: error from define not trapped by check-exn 
-  #;(check-exn exn:fail:syntax? (λ _ (br:define (#'times stx stx2) #'*))))
+  #;(check-exn exn:fail:syntax? (λ _ (br:define (#'times stx stx2) #'*)))
+  (check-equal? fortytwo 42))
 
 
 ;; todo: support `else` case
