@@ -13,6 +13,13 @@
                     #'(module bf-interpreter br-bf
                         parsed-syntax)))))
 
+;; compact version
+#;(module reader br
+  (require br/read-functions "tokenizer.rkt" "parser.rkt")
+  (define-read-functions (src-path src-port)
+    #`(module bf-interpreter br-bf
+        #,(parse src-path (tokenize src-port)))))
+
 (provide (rename-out [bf-module-begin #%module-begin])
          #%top-interaction bf-program op loop)
 
