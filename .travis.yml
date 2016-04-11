@@ -33,7 +33,8 @@ before_install:
 
 script:
  - cd ..   # Travis did a cd into the dir. Back up, for the next:
- # manually install `beautiful-racket-lib` to catch most recent updates
- - travis_retry raco pkg install --deps search-auto git://github.com/mbutterick/beautiful-racket-lib
- - travis_retry raco pkg install --deps search-auto --link beautiful-racket
+ # don't rely on package server
+ - travis_retry raco pkg install --deps search-auto git://github.com/mbutterick/beautiful-racket/beautiful-racket-lib
+ - raco test -p beautiful-racket-lib
+ - travis_retry raco pkg install --deps search-auto --link git://github.com/mbutterick/beautiful-racket/beautiful-racket
  - raco test -p beautiful-racket
