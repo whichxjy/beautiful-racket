@@ -3,7 +3,7 @@ beautiful-racket [![Build Status](https://travis-ci.org/mbutterick/beautiful-rac
 
 Resources for the upcoming “Beautiful Racket” book, including:
 
-* `#lang br` teaching language
+* sample languages
 
 
 Installation:
