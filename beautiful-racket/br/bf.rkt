@@ -2,7 +2,7 @@
 
 (module reader br
   (provide read-syntax)
-  (require "tokenizer.rkt" "parser.rkt")
+  (require "bf/tokenizer.rkt" "bf/parser.rkt")
   (define (read-syntax src-path src-port)
     (define parsed-syntax (parse src-path (tokenize src-port)))
     ;; `strip-context` because `read-syntax` promises
@@ -10,14 +10,14 @@
     ;; (so later operations can add it)
     (strip-context
      (inject-syntax ([parsed-syntax])
-                    #'(module bf-interpreter br-bf
+                    #'(module bf-interpreter br/bf
                         parsed-syntax)))))
 
 ;; compact version
 #;(module reader br
-  (require br/read-functions "tokenizer.rkt" "parser.rkt")
-  (define-read-functions (src-path src-port)
-    #`(module bf-interpreter br-bf
+  (require br/reader-utils "tokenizer.rkt" "parser.rkt")
+  (define-read-and-read-syntax (src-path src-port)
+    #`(module bf-interpreter br/bf
         #,(parse src-path (tokenize src-port)))))
 
 (provide (rename-out [bf-module-begin #%module-begin])
