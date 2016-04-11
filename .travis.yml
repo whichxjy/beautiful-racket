@@ -34,7 +34,7 @@ before_install:
 script:
  - cd ..   # Travis did a cd into the dir. Back up, for the next:
  # don't rely on package server
- - travis_retry raco pkg install --deps search-auto https://github.com/mbutterick/beautiful-racket/beautiful-racket-lib
+ - travis_retry raco pkg install --deps search-auto https://github.com/mbutterick/beautiful-racket/beautiful-racket-lib.git
  - raco test -p beautiful-racket-lib
- - travis_retry raco pkg install --deps search-auto --link https://github.com/mbutterick/beautiful-racket/beautiful-racket
+ - travis_retry raco pkg install --deps search-auto --link https://github.com/mbutterick/beautiful-racket/beautiful-racket.git
  - raco test -p beautiful-racket
