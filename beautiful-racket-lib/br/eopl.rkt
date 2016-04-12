@@ -1,5 +1,5 @@
 #lang br
-(require rackunit racket/struct (for-syntax br/datum))
+(require racket/struct (for-syntax br/datum))
 (provide define-datatype cases occurs-free?)
 
 #;(begin
@@ -88,9 +88,10 @@
               (occurs-free? search-var rand))]))
 
 
-
-(check-true (occurs-free? 'foo (var-exp 'foo)))
-(check-false (occurs-free? 'foo (var-exp 'bar)))
-(check-false (occurs-free? 'foo (lambda-exp 'foo (var-exp 'bar))))
-(check-true (occurs-free? 'foo (lambda-exp 'bar (var-exp 'foo))))
-(check-true (occurs-free? 'foo (lambda-exp 'bar (lambda-exp 'zim (lambda-exp 'zam (var-exp 'foo))))))
+(module+ test
+  (require rackunit)
+  (check-true (occurs-free? 'foo (var-exp 'foo)))
+  (check-false (occurs-free? 'foo (var-exp 'bar)))
+  (check-false (occurs-free? 'foo (lambda-exp 'foo (var-exp 'bar))))
+  (check-true (occurs-free? 'foo (lambda-exp 'bar (var-exp 'foo))))
+  (check-true (occurs-free? 'foo (lambda-exp 'bar (lambda-exp 'zim (lambda-exp 'zam (var-exp 'foo)))))))
