@@ -5,4 +5,4 @@
 (define deps '("base" "sugar" "beautiful-racket-lib" "rackunit-lib" "ragg"))
 (define build-deps '("racket-doc"))
 
-(define test-omit-paths '("br-bf"))
+(define test-omit-paths '("br/bf"))
