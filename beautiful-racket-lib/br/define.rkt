@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base syntax/parse racket/syntax syntax/datum syntax/strip-context))
+(require (for-syntax racket/base syntax/parse racket/syntax syntax/datum syntax/strip-context) sugar/define)
 (provide (all-defined-out))
 
 
@@ -120,3 +120,8 @@
 
   (check-equal? (f 42) 43)
   (check-equal? (f 42 5) 47))
+
+
+(define-syntax-rule (br:define+provide arg ...)
+  (define+provide arg ...)) 
+

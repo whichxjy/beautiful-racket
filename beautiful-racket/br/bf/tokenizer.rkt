@@ -1,13 +1,7 @@
-#lang racket/base
-(require parser-tools/lex (prefix-in : parser-tools/lex-sre) ragg/support)
-(provide tokenize)
+#lang br
+(require parser-tools/lex ragg/support)
 
-;; tokenizer prepares source for parser by
-;; 1) identifying tokens, the smallest unit of information
-;; 2) throwing away anything irrelevant (whitespace, comments)
-;; tokenizer cooperates with the lexer, which is a fancy regular-expression processor
-
-(define (tokenize ip)
+(define+provide (tokenize ip)
   (define get-token
     (lexer
      [(char-set "><-.,+[]") lexeme]

@@ -1,24 +1,43 @@
 #lang br
+(require parser-tools/lex ragg/support "parser.rkt")
 
-(module reader br
-  (provide read-syntax)
-  (require "bf/tokenizer.rkt" "bf/parser.rkt")
-  (define (read-syntax src-path src-port)
-    (define parsed-syntax (parse src-path (tokenize src-port)))
-    ;; `strip-context` because `read-syntax` promises
-    ;; a "clean" syntax object without context
-    ;; (so later operations can add it)
-    (strip-context
-     (inject-syntax ([parsed-syntax])
-                    #'(module bf-interpreter br/bf
-                        parsed-syntax)))))
+(define (tokenize src-port)
+  (define (next-token)
+    (define get-token
+      (lexer
+       [(char-set "><-.,+[]") lexeme]
+       [(char-complement (char-set "><-.,+[]")) (token 'OTHER #:skip? #t)]
+       [(eof) eof]))
+    (get-token src-port))  
+  next-token)
+
+
+(define+provide (read-syntax src-path src-port)
+  (define parsed-syntax (parse src-path (tokenize src-port)))
+  (strip-context
+   (inject-syntax ([parsed-syntax])
+                  #'(module bf-interpreter br/bf
+                      parsed-syntax))))
+
+#;(module reader br
+    (provide read-syntax)
+    (require "bf/tokenizer.rkt" "bf/parser.rkt")
+    (define (read-syntax src-path src-port)
+      (define parsed-syntax (parse src-path (tokenize src-port)))
+      ;; `strip-context` because `read-syntax` promises
+      ;; a "clean" syntax object without context
+      ;; (so later operations can add it)
+      (strip-context
+       (inject-syntax ([parsed-syntax])
+                      #'(module bf-interpreter br/bf
+                          parsed-syntax)))))
 
 ;; compact version
 #;(module reader br
-  (require br/reader-utils "tokenizer.rkt" "parser.rkt")
-  (define-read-and-read-syntax (src-path src-port)
-    #`(module bf-interpreter br/bf
-        #,(parse src-path (tokenize src-port)))))
+    (require br/reader-utils "tokenizer.rkt" "parser.rkt")
+    (define-read-and-read-syntax (src-path src-port)
+      #`(module bf-interpreter br/bf
+          #,(parse src-path (tokenize src-port)))))
 
 (provide (rename-out [bf-module-begin #%module-begin])
          #%top-interaction bf-program op loop)
