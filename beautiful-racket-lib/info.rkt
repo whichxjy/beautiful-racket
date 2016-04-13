@@ -2,5 +2,5 @@
 (define collection 'multi)
 
 (define version "0.01")
-(define deps '("base"))
+(define deps '("base" "sugar"))
 (define build-deps '("racket-doc" "rackunit-lib"))
