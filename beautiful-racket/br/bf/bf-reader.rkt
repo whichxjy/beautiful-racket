@@ -16,6 +16,6 @@
   (define parse-tree (parse source-path (tokenize input-port)))
   (strip-context
     (inject-syntax ([#'PARSE-TREE parse-tree])
-                  #'(module bf-mod "bf-expander.rkt"
+                  #'(module bf-mod br/bf/bf-expander
                       PARSE-TREE))))
 (provide read-syntax)
