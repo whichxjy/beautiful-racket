@@ -1,4 +1,4 @@
-#lang br/basic
+#lang br/example/basic
 10 PRINT "shit"
 20 PRINT "bird"
 25 PRINT "dork"
