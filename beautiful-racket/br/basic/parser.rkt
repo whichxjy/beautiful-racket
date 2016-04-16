@@ -1,32 +1,55 @@
 #lang ragg
+;; adapted from http://www.ittybittycomputers.com/IttyBitty/TinyBasic/TBuserMan.txt
 
 basic-program : line*
 
-line : CR | NUMBER statement CR | statement CR
-| NUMBER statement | statement
+line : NUMBER statement CR | statement CR | CR
 
-statement : "PRINT" expr-list
-| "IF" expression relop expression "THEN" statement
-| "GOTO" expression
-| "INPUT" var-list
+statement : "PRINT" printlist
+| "PR" printlist
+| "INPUT" varlist
 | "LET" var "=" expression
+| var "=" expression
+| "GOTO" expression
 | "GOSUB" expression
 | "RETURN"
+| "IF" expression relop expression "THEN" statement
+| "IF" expression relop expression statement
+;| "REM" commentstring ; todo: implement in tokenizer
 | "CLEAR"
-| "LIST"
 | "RUN"
-| "END"
+| "RUN" exprlist
+| "LIST"
+| "LIST" exprlist
 
-expr-list : (STRING | expression) ("," (STRING | expression) )*
+printlist : printitem [(":" | separator printlist)]
 
-var-list : var ("," var)*
+printitem : expression | STRING
 
-expression : term (("+"|"-") term)*
+varlist: var ["," varlist]
 
-term : factor (("*"|"/") factor)*
+exprlist : expression ["," exprlist]
 
-factor : var | NUMBER | (expression)
+expression : [("+"|"-")] unsignedexpr
+
+unsignedexpr : term [("+"|"-") unsignedexpr]
+
+term : factor [("*"|"/") term]
+
+factor : var
+| number
+| "(" expression ")"
+| function
+
+function : "RND(" expression ")"
+| "USR(" exprlist ")"
+
+number : NUMBER
+
+separator : "," | ";"
 
 var : UPPERCASE
 
-relop : "<" (">"|"="|"ε") | ">" ("<"|"="|"ε") | "="
+digit: DIGIT
+
+relop : "<" [("="|">")] | ">" [("="|"<")] | "="

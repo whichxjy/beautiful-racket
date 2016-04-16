@@ -6,37 +6,51 @@
 
 (define #'(basic-module-begin PARSE-TREE ...)
   #'(#%module-begin
-     'PARSE-TREE ...))
+     PARSE-TREE ...))
 
 (define #'(basic-program LINE ...)
-  #'(begin
-      (define program-lines (vector LINE ...))
-      (run program-lines)))
+  #'(basic-run LINE ...))
 
-(define (run program-lines)
+(define (basic-run . lines)
+  (define program-lines (list->vector (filter (λ(x) x) lines)))
   (for/fold ([line-idx 0])
             ([i (in-naturals)]
              #:break (= line-idx (vector-length program-lines)))
-    (match-define (list line-number proc jump-number)
+    (match-define (cons line-number proc)
       (vector-ref program-lines line-idx))
-    (when proc (proc))
-    (if jump-number
-        (for/first ([idx (in-range (vector-length program-lines))]
-                    #:when (= (car (vector-ref program-lines idx)) jump-number))
-                   idx)
+    (define maybe-jump-number (and proc (proc)))
+    (if (number? maybe-jump-number)
+        (let ([jump-number maybe-jump-number])
+          (for/or ([idx (in-range (vector-length program-lines))])
+                  (and (= (car (vector-ref program-lines idx)) jump-number)
+                       idx)))
         (add1 line-idx))))
 
-;; model each line as (list line-number line-thunk jump)
-;; if jump is #f, that means go to the next line
-;; a `GOTO` would not have a line-thunk, just a jump
-;; what about `GOSUB`? A jump with a return jump ...
+;; model each line as (cons line-number line-thunk)
 (define-cases #'line
-  [#'(line 'end) #'(list #f #f #f)]
-  [#'(_ NUMBER (statement ARG ...) 'end) #'(list NUMBER (statement ARG ...) #f)]
-  [#'(_ (statement ARG ...) 'end) #'(list #f (statement ARG ...) #f)])
+  [#'(line 'end) #'#f]
+  [#'(_ NUMBER STATEMENT 'end) #'(cons NUMBER (λ _ STATEMENT))]
+  [#'(_ STATEMENT 'end) #'(cons #f (λ _ STATEMENT))])
 
-(define-cases #'statement
-  [#'(_ "PRINT" EXPR-LIST) #'(λ _ (begin (for-each display EXPR-LIST) (displayln "")))])
+(define #'(statement NAME ARG ...) #'(NAME ARG ...))
+
+(define #'(expression ITEM) #'ITEM)
+(define #'(unsignedexpr ITEM) #'ITEM)
+(define #'(term ITEM) #'ITEM)
+(define #'(factor ITEM) #'ITEM)
+(define #'(number ITEM) #'ITEM)
+
+(define #'(printitem EXPR-OR-STRING) #'EXPR-OR-STRING)
+
+(define #'(printlist ITEM-OR-SEPARATOR ...) #'(list ITEM-OR-SEPARATOR ...))
+
+(define (PRINT args)
+  (for-each display args)
+  (displayln ""))
+
+(define (GOTO where)
+  where)
+
 
 (define-cases #'expr-list
   [#'(_ EXPR ...) #'(list EXPR ...)])

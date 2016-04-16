@@ -12,7 +12,7 @@
        ["\n" (token 'CR ''end)]
        [(union "PRINT" "IF" "THEN" "GOTO"
                "INPUT" "LET" "GOSUB" "RETURN"
-               "CLEAR" "LIST" "RUN" "END") lexeme]
+               "CLEAR" "LIST" "RUN" "END") (string->symbol lexeme)]
        ;; this only matches integers
        [(repetition 1 +inf.0 numeric) (token 'NUMBER (string->number lexeme))]
        [(char-set ",+-ε*/<>=") lexeme]
