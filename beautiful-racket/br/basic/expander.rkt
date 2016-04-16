@@ -26,6 +26,10 @@
                    idx)
         (add1 line-idx))))
 
+;; model each line as (list line-number line-thunk jump)
+;; if jump is #f, that means go to the next line
+;; a `GOTO` would not have a line-thunk, just a jump
+;; what about `GOSUB`? A jump with a return jump ...
 (define-cases #'line
   [#'(line 'end) #'(list #f #f #f)]
   [#'(_ NUMBER (statement ARG ...) 'end) #'(list NUMBER (statement ARG ...) #f)]
