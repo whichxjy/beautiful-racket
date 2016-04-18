@@ -1,11 +1,18 @@
 #lang ragg
 ;; adapted from http://www.ittybittycomputers.com/IttyBitty/TinyBasic/TBuserMan.txt
 
-basic-program : line*
+;; MS Basic extensions
+;; http://www.atariarchives.org/basicgames/showpage.php?page=i12
 
-line : NUMBER statement CR | statement CR | CR
+;; games
+;; http://www.vintage-basic.net/games.html
 
-statement : "PRINT" printlist
+
+basic-program : [CR] line (CR line)* [CR]
+
+line: [NUMBER] statement (":" statement)*
+
+statement : "PRINT" printlist*
 | "PR" printlist
 | "INPUT" varlist
 | "LET" var "=" expression
@@ -15,20 +22,20 @@ statement : "PRINT" printlist
 | "RETURN"
 | "IF" expression relop expression "THEN" statement
 | "IF" expression relop expression statement
-;| "REM" commentstring ; todo: implement in tokenizer
 | "CLEAR"
 | "RUN"
 | "RUN" exprlist
 | "LIST"
 | "LIST" exprlist
 
-printlist : printitem [(":" | separator printlist)]
+; formerly printlist : printitem [(":" | (separator printitem)*)]
+printlist :  printitem (separator printitem)*
 
 printitem : expression | STRING
 
-varlist: var ["," varlist]
+varlist: var ("," var)*
 
-exprlist : expression ["," exprlist]
+exprlist : expression ("," expression)*
 
 expression : [("+"|"-")] unsignedexpr
 
@@ -43,12 +50,13 @@ factor : var
 
 function : "RND(" expression ")"
 | "USR(" exprlist ")"
+| "TAB(" expression ")"
 
 number : NUMBER
 
 separator : "," | ";"
 
-var : UPPERCASE
+var : "A" | "B" | "C" | "D" | "T"
 
 digit: DIGIT
 
