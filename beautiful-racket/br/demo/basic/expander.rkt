@@ -17,7 +17,7 @@
       (procedure-rename (λ xs (cons 'id xs)) (format-datum "undefined:~a" 'id))))
 
 (define #'(basic-program CR-LINE ...)
-  #'(begin CR-LINE ...))
+  #'(basic-run CR-LINE ...))
 
 (define (basic-run . lines)
   (define program-lines (list->vector lines))
@@ -34,23 +34,23 @@
                              idx)))
               (add1 line-idx)))))
 
-(define-cases #'cr-line ; erases "cr"s
-  [#'(_ "cr" LINE)  #'LINE]
-  [#'(_ "cr") #'(begin)])
+(define #'(cr-line "cr" ARG ...)
+  #'(begin ARG ...))
 
 (define #'(line NUMBER STATEMENT ...)
-  #'(begin STATEMENT ...))
+  #'(cons NUMBER (λ _ STATEMENT ...)))
+
+
+(define vars (make-hasheq))
 
 (define-cases #'statement
-  [#'(statement ID "=" EXPR) (if (identifier-binding #'ID)
-                                 #'(set! ID EXPR)
-                                 #'(define ID EXPR))]
+  [#'(statement ID "=" EXPR) #'(hash-set! vars 'ID EXPR)]
   [#'(statement PROC ARG ...) #'(PROC ARG ...)])
 
 (define-cases #'value
   [#'(value "(" EXPR ")") #'EXPR]
   [#'(value ID "(" ARG ... ")") #'(ID ARG ...)]
-  [#'(value DATUM) #'DATUM])
+  [#'(value ID-OR-DATUM) #'(hash-ref vars 'ID-OR-DATUM (λ _ ID-OR-DATUM))])
 
 (define #'(expr EXPR) #'EXPR)
 
@@ -76,5 +76,8 @@
 (define (TAB num) (make-string num #\space))
 (define (INT num) (inexact->exact (round num)))
 (define (SIN num) (sin num))
+
+(define (GOTO where)
+  where)
 
 (define (comment . args) void)
