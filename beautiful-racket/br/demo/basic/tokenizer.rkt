@@ -9,17 +9,17 @@
   (define (next-token)
     (define get-token
       (lexer
-       [(:seq "REM" (repetition 1 +inf.0 (char-complement "\n")) (repetition 0 +inf.0 "\n"))
-        (token 'COMMENT lexeme #:skip? #t)]
        [(repetition 1 +inf.0 "\n") (token 'CR '(CR))]
-       [(union "PRINT" "IF" "THEN" "GOTO"
-               "INPUT" "LET" "GOSUB" "RETURN"
+       [(union "PRINT" "FOR" "TO" "STEP" "IF" "THEN" "GOTO" "REM"
+               "INPUT" "LET" "NEXT" "GOSUB" "RETURN"
                "CLEAR" "LIST" "RUN" "END") (string->symbol lexeme)]
        
        ;; this only matches integers
-       [(repetition 1 +inf.0 numeric) (token 'NUMBER (string->number lexeme))]
-       [(char-set ",;:+-ε*/<>=()") lexeme]
-       [(:seq (repetition 1 +inf.0 upper-case) "(") lexeme]
+       [(repetition 1 +inf.0 numeric) (token 'INTEGER (string->number lexeme))]
+       [(repetition 1 +inf.0 (union "." numeric)) (token 'REAL (string->number lexeme))]
+       [(union "," ";" ":" "+" "-" "*" "/"
+               "<=" ">=" "<>" "><" "<" ">" "=" "(" ")") lexeme]
+       [(:seq (repetition 1 +inf.0 upper-case)) (token 'ID lexeme)]
        [upper-case (token 'UPPERCASE lexeme)]
        [whitespace (token 'WHITESPACE lexeme #:skip? #t)]
        [(:seq "\"" (complement (:: any-string "\"" any-string)) "\"") (token 'STRING (string-trim lexeme "\""))]

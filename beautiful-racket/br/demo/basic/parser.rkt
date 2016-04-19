@@ -7,57 +7,56 @@
 ;; games
 ;; http://www.vintage-basic.net/games.html
 
+;; chipmunk basic
+;; http://www.nicholson.com/rhn/basic/basic.man.html
 
-basic-program : [CR] line (CR line)* [CR]
+basic-program : [CR] lines [CR]
 
-line: [NUMBER] statement (":" statement)*
+lines : INTEGER statements [CR | CR lines]
 
-statement : "PRINT" printlist*
-| "PR" printlist
-| "INPUT" varlist
-| "LET" var "=" expression
-| var "=" expression
-| "GOTO" expression
-| "GOSUB" expression
-| "RETURN"
-| "IF" expression relop expression "THEN" statement
-| "IF" expression relop expression statement
-| "CLEAR"
-| "RUN"
-| "RUN" exprlist
-| "LIST"
-| "LIST" exprlist
+statements : statement [":" statements]
 
-; formerly printlist : printitem [(":" | (separator printitem)*)]
-printlist :  printitem (separator printitem)*
+statement : "CLOSE" "#" INTEGER
+| "END"
+| "FOR" ID "=" expr "TO" expr ["STEP" expr]     
+| "GOTO" expr
+| "IF" expr "THEN" (statement | expr) ; change: add expr
+| "INPUT" id-list
+| ["LET"] ID "=" expr ; change: make "LET" opt
+| "NEXT" id-list
+| "PRINT" printlist
+| "REM" STRING
 
-printitem : expression | STRING
+id-list : ID ["," id-list]
 
-varlist: var ("," var)*
+value-list : value ["," value-list]
 
-exprlist : expression ("," expression)*
+constant-list : constant ["," constant-list]
 
-expression : [("+"|"-")] unsignedexpr
+integer-list : INTEGER ["," integer-list]
 
-unsignedexpr : term [("+"|"-") unsignedexpr]
+expr-list : expr ["," expr-list]
 
-term : factor [("*"|"/") term]
+printlist : [expr [";" printlist]]
 
-factor : var
-| number
-| "(" expression ")"
-| function
+expr : and-expr ["OR" expr]
 
-function : "RND(" expression ")"
-| "USR(" exprlist ")"
-| "TAB(" expression ")"
+and-expr : not-expr ["AND" and-expr]
 
-number : NUMBER
+not-expr : ["NOT"] compare-expr
 
-separator : "," | ";"
+compare-expr : add-expr [("=" | "<>" | "><" | ">" | ">=" | "<" | "<=") compare-expr]
 
-var : "A" | "B" | "C" | "D" | "T"
+add-expr : mult-expr [("+" | "-") add-expr]
 
-digit: DIGIT
+mult-expr : negate-expr [("*" | "/") mult-expr]
 
-relop : "<" [("="|">")] | ">" [("="|"<")] | "="
+negate-expr : ["-"] power-expr
+
+power-expr : [power-expr "^"] value
+
+value : "(" expr ")"
+| ID ["(" expr-list ")"]
+| constant
+
+constant : INTEGER | STRING | REAL

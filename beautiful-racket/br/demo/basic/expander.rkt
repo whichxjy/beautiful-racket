@@ -8,7 +8,7 @@
 (define #'(basic-module-begin PARSE-TREE ...)
   #'(#%module-begin
      (println (quote PARSE-TREE ...))
-     PARSE-TREE ...))
+     'PARSE-TREE ...))
 
 (define #'(basic-program LINE ...)
   #'(basic-run LINE ...))
@@ -34,8 +34,13 @@
 
 ;; model each line as (cons line-number line-thunk)
 (define-cases #'line
-  [#'(_ NUMBER STATEMENT) #'(cons NUMBER (λ _ STATEMENT))]
-  [#'(_ STATEMENT) #'(cons #f (λ _ STATEMENT))])
+  [#'(_ NUMBER . SEPARATED-STMTS)
+   #`(cons NUMBER
+           (λ _ (begin
+                  #,@(for/list ([(item idx) (in-indexed (syntax->list #'SEPARATED-STMTS))]
+                                #:when (even? idx))
+                               item))))]
+  [#'(_ ARG ...) #'(line #f ARG ...)])
 
 (define #'(statement NAME ARG ...) #'(NAME ARG ...))
 
@@ -44,6 +49,9 @@
 (define #'(term ITEM) #'ITEM)
 (define #'(factor ITEM) #'ITEM)
 (define #'(number ITEM) #'ITEM)
+(define #'(varlist ITEM) #'ITEM)
+(define #'(var ITEM) #'ITEM)
+
 
 (define #'(printitem EXPR-OR-STRING) #'EXPR-OR-STRING)
 
@@ -60,6 +68,7 @@
   (make-string expr #\space))
 
 (define (PRINT . args)
+  (println args)
   (if (and (= (length args) 1) (list? (car args)))
       (begin
         (for-each display (car args))
@@ -69,6 +78,9 @@
 (define (GOTO where)
   where)
 
+(define vars (make-hasheq))
+(define (INPUT id)
+  (hash-set! vars (string->symbol id) (read (open-input-string (read-line)))))
 
 (define-cases #'expr-list
   [#'(_ EXPR ...) #'(list EXPR ...)])
