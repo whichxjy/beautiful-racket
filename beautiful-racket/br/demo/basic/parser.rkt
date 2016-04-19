@@ -1,62 +1,32 @@
 #lang ragg
-;; adapted from http://www.ittybittycomputers.com/IttyBitty/TinyBasic/TBuserMan.txt
 
-;; MS Basic extensions
-;; http://www.atariarchives.org/basicgames/showpage.php?page=i12
+basic-program : cr-line* [CR]
 
-;; games
-;; http://www.vintage-basic.net/games.html
+cr-line : CR line [cr-line]
 
-;; chipmunk basic
-;; http://www.nicholson.com/rhn/basic/basic.man.html
+line: INTEGER statement+
 
-basic-program : [CR] lines [CR]
-
-lines : INTEGER statements [CR | CR lines]
-
-statements : statement [":" statements]
-
-statement : "CLOSE" "#" INTEGER
-| "END"
+statement : "END"
 | "FOR" ID "=" expr "TO" expr ["STEP" expr]     
 | "GOTO" expr
 | "IF" expr "THEN" (statement | expr) ; change: add expr
-| "INPUT" id-list
+| "INPUT" ID+
 | ["LET"] ID "=" expr ; change: make "LET" opt
-| "NEXT" id-list
-| "PRINT" printlist
-| "REM" STRING
+| "NEXT" ID+
+| "PRINT" print-list
+| REM-COMMENT
 
-id-list : ID ["," id-list]
+print-list : [expr [";" [print-list]*]]
 
-value-list : value ["," value-list]
+expr : sum [("=" | "<>" | "><" | ">" | ">=" | "<" | "<=") expr]
 
-constant-list : constant ["," constant-list]
+sum : product [("+" | "-") sum]+
 
-integer-list : INTEGER ["," integer-list]
-
-expr-list : expr ["," expr-list]
-
-printlist : [expr [";" printlist]]
-
-expr : and-expr ["OR" expr]
-
-and-expr : not-expr ["AND" and-expr]
-
-not-expr : ["NOT"] compare-expr
-
-compare-expr : add-expr [("=" | "<>" | "><" | ">" | ">=" | "<" | "<=") compare-expr]
-
-add-expr : mult-expr [("+" | "-") add-expr]
-
-mult-expr : negate-expr [("*" | "/") mult-expr]
-
-negate-expr : ["-"] power-expr
-
-power-expr : [power-expr "^"] value
+product : value [("*" | "/") product]+
 
 value : "(" expr ")"
-| ID ["(" expr-list ")"]
-| constant
+| ID ["(" expr* ")"]
+| INTEGER
+| STRING
+| REAL
 
-constant : INTEGER | STRING | REAL

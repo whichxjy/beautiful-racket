@@ -1,20 +1,26 @@
 #lang br
-(provide (all-defined-out)
-         #%top-interaction
-         #%datum
-         (rename-out [basic-module-begin #%module-begin]))
-(require (for-syntax racket/string))
+(provide #%top-interaction #%app #%datum
+         (rename-out [basic-module-begin #%module-begin])
+         (rename-out [basic-top #%top])
+         (all-defined-out))
+(require (for-syntax racket/syntax))
 
 (define #'(basic-module-begin PARSE-TREE ...)
   #'(#%module-begin
      (println (quote PARSE-TREE ...))
-     'PARSE-TREE ...))
+     PARSE-TREE ...))
 
-(define #'(basic-program LINE ...)
-  #'(basic-run LINE ...))
+; #%app and #%datum have to be present to make #%top work
+(define #'(basic-top . id)
+  #'(begin
+      (displayln (format "got unbound identifier: ~a" 'id))
+      (procedure-rename (λ xs (cons 'id xs)) (format-datum "undefined:~a" 'id))))
+
+(define #'(basic-program CR-LINE ...)
+  #'(begin CR-LINE ...))
 
 (define (basic-run . lines)
-  (define program-lines (list->vector (filter (λ(x) x) lines)))
+  (define program-lines (list->vector lines))
   (void (for/fold ([line-idx 0])
                   ([i (in-naturals)]
                    #:break (= line-idx (vector-length program-lines)))
@@ -28,60 +34,47 @@
                              idx)))
               (add1 line-idx)))))
 
-(define #'(CR) #'#f)
+(define-cases #'cr-line ; erases "cr"s
+  [#'(_ "cr" LINE)  #'LINE]
+  [#'(_ "cr") #'(begin)])
 
-(define #'(REM ARG ...) #'(void (list 'ARG ...)))
+(define #'(line NUMBER STATEMENT ...)
+  #'(begin STATEMENT ...))
 
-;; model each line as (cons line-number line-thunk)
-(define-cases #'line
-  [#'(_ NUMBER . SEPARATED-STMTS)
-   #`(cons NUMBER
-           (λ _ (begin
-                  #,@(for/list ([(item idx) (in-indexed (syntax->list #'SEPARATED-STMTS))]
-                                #:when (even? idx))
-                               item))))]
-  [#'(_ ARG ...) #'(line #f ARG ...)])
+(define-cases #'statement
+  [#'(statement ID "=" EXPR) (if (identifier-binding #'ID)
+                                 #'(set! ID EXPR)
+                                 #'(define ID EXPR))]
+  [#'(statement PROC ARG ...) #'(PROC ARG ...)])
 
-(define #'(statement NAME ARG ...) #'(NAME ARG ...))
+(define-cases #'value
+  [#'(value "(" EXPR ")") #'EXPR]
+  [#'(value ID "(" ARG ... ")") #'(ID ARG ...)]
+  [#'(value DATUM) #'DATUM])
 
-(define #'(expression ITEM) #'ITEM)
-(define #'(unsignedexpr ITEM) #'ITEM)
-(define #'(term ITEM) #'ITEM)
-(define #'(factor ITEM) #'ITEM)
-(define #'(number ITEM) #'ITEM)
-(define #'(varlist ITEM) #'ITEM)
-(define #'(var ITEM) #'ITEM)
+(define #'(expr EXPR) #'EXPR)
 
+(define-cases sum
+  [(_ term op sum) (op term sum)]
+  [(_ term) term])
+(provide - +)
 
-(define #'(printitem EXPR-OR-STRING) #'EXPR-OR-STRING)
+(define-cases product
+  [(_ factor op product) (op factor product)]
+  [(_ factor) factor])
+(provide * /)
 
-;; skip separators
-(define #'(printlist . SEPARATED-ITEMS) #`(list #,@(for/list ([(item idx) (in-indexed (syntax->list #'SEPARATED-ITEMS))]
-                                                              #:when (even? idx))
-                                                             item)))
+(define print-list list)
 
-(define #'(separator SEP) #'(void))
+(define (PRINT args)
+  (match args
+    [(list) (displayln "")]
+    [(list items ... ";" pl) (begin (for-each display items) (PRINT pl))]
+    [(list items ... ";") (for-each display items)]
+    [(list items ...) (for-each displayln items)]))
 
-(define #'(function NAME EXP ")") #`(#,(string->symbol (string-trim (syntax->datum #'NAME) "(")) EXP))
+(define (TAB num) (make-string num #\space))
+(define (INT num) (inexact->exact (round num)))
+(define (SIN num) (sin num))
 
-(define (TAB expr)
-  (make-string expr #\space))
-
-(define (PRINT . args)
-  (println args)
-  (if (and (= (length args) 1) (list? (car args)))
-      (begin
-        (for-each display (car args))
-        (displayln ""))
-      (filter (λ(i) (and (equal? i ":") (displayln ""))) args)))
-
-(define (GOTO where)
-  where)
-
-(define vars (make-hasheq))
-(define (INPUT id)
-  (hash-set! vars (string->symbol id) (read (open-input-string (read-line)))))
-
-(define-cases #'expr-list
-  [#'(_ EXPR ...) #'(list EXPR ...)])
-
+(define (comment . args) void)
