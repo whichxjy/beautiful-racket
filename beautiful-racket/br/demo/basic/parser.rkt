@@ -1,6 +1,7 @@
 #lang ragg
 
-basic-program : line [CR line]*
+;; recursive rules destucture easily in the expander
+program : line [CR line]*
 
 line: INTEGER statement+
 
@@ -16,14 +17,13 @@ statement : "END"
 
 print-list : [expr [";" [print-list]]]
 
-expr : sum [("=" | ">" | "<" | "<>") expr]
+expr : sum [("=" | ">" | ">=" | "<" | "<=" | "<>") expr]
 
 sum : product [("+" | "-") sum]
 
 product : value [("*" | "/") product]
 
-value : "(" expr ")"
-| ID ["(" expr* ")"]
+value : ID ["(" expr* ")"]
 | INTEGER
 | STRING
 | REAL

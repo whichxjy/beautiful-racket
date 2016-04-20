@@ -16,10 +16,10 @@
       (displayln (format "got unbound identifier: ~a" 'id))
       (procedure-rename (λ xs (cons 'id xs)) (format-datum "undefined:~a" 'id))))
 
-(define #'(basic-program CR-LINE ...)
-  #'(basic-run CR-LINE ...))
+(define #'(program LINE ...)
+  #'(run (list LINE ...)))
 
-(define (basic-run . lines)
+(define (run lines)
   (define program-lines (list->vector (filter (λ(ln) (not (equal? ln "cr"))) lines)))
   (void (for/fold ([line-idx 0])
                   ([i (in-naturals)]
@@ -52,7 +52,12 @@
   [#'(value ID "(" ARG ... ")") #'(ID ARG ...)]
   [#'(value ID-OR-DATUM) #'(hash-ref vars 'ID-OR-DATUM (λ _ ID-OR-DATUM))])
 
-(define #'(expr EXPR) #'EXPR)
+(define-cases expr
+  [(_ lexpr op rexpr) (if (op lexpr rexpr)
+                              1
+                              0)]
+  [(_ expr) expr])
+(provide < > <= >=)
 
 (define-cases sum
   [(_ term op sum) (op term sum)]
@@ -76,6 +81,7 @@
 (define (TAB num) (make-string num #\space))
 (define (INT num) (inexact->exact (round num)))
 (define (SIN num) (sin num))
+(define (RND num) (* (random) num))
 
 (define (GOTO where)
   where)
