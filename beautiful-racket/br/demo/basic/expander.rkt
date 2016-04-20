@@ -3,12 +3,16 @@
          (rename-out [basic-module-begin #%module-begin])
          (rename-out [basic-top #%top])
          (all-defined-out))
-(require (for-syntax racket/syntax))
+(require (for-syntax racket/syntax racket/list))
 
-(define #'(basic-module-begin PARSE-TREE ...)
-  #'(#%module-begin
-     (println (quote PARSE-TREE ...))
-     PARSE-TREE ...))
+(define-syntax (basic-module-begin stx)
+  (syntax-case stx ()
+    [(_ PARSE-TREE ...)
+     (with-syntax ([(VARNAME ...) (map (λ(c) (format-id stx "~a" (integer->char c))) (range 65 91))]) 
+       #'(#%module-begin
+          (define VARNAME 0) ...
+          (println (quote PARSE-TREE ...))
+          PARSE-TREE ...))]))
 
 ; #%app and #%datum have to be present to make #%top work
 (define #'(basic-top . id)
@@ -44,18 +48,18 @@
 (define vars (make-hasheq))
 
 (define-cases #'statement
-  [#'(statement ID "=" EXPR) #'(hash-set! vars 'ID EXPR)]
+  [#'(statement ID "=" EXPR) #'(set! ID EXPR)]
   [#'(statement PROC ARG ...) #'(PROC ARG ...)])
 
 (define-cases #'value
   [#'(value "(" EXPR ")") #'EXPR]
   [#'(value ID "(" ARG ... ")") #'(ID ARG ...)]
-  [#'(value ID-OR-DATUM) #'(hash-ref vars 'ID-OR-DATUM (λ _ ID-OR-DATUM))])
+  [#'(value ID-OR-DATUM) #'ID-OR-DATUM])
 
 (define-cases expr
   [(_ lexpr op rexpr) (if (op lexpr rexpr)
-                              1
-                              0)]
+                          1
+                          0)]
   [(_ expr) expr])
 (provide < > <= >=)
 
