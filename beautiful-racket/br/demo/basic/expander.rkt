@@ -5,18 +5,19 @@
          (all-defined-out))
 (require (for-syntax racket/syntax racket/list br/datum))
 
-(require racket/stxparam)
+(require racket/stxparam racket/splicing)
 (define-syntax-parameter A
   (λ (stx) 
-    (raise-syntax-error (syntax-e stx) "can only be used inside the place")))
+    (raise-syntax-error (syntax-e stx) "parameter not set")))
 
 (define #'(basic-module-begin PARSE-TREE ...)
   #'(#%module-begin
-     (let ([A-inner 0])
-       (syntax-parameterize
-           ([A (make-rename-transformer #'A-inner)])
-         (println (quote PARSE-TREE ...))
-         PARSE-TREE ...))))
+     (splicing-syntax-parameterize
+         ([A (make-rename-transformer #'A-var)])
+       (define A-var 0)
+       (provide (rename-out [A-var A]))
+       (println (quote PARSE-TREE ...))
+       PARSE-TREE ...)))
 
 ; #%app and #%datum have to be present to make #%top work
 (define #'(basic-top . id)
