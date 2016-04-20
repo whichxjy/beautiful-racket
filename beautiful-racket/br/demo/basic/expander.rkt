@@ -5,21 +5,18 @@
          (all-defined-out))
 (require (for-syntax racket/syntax racket/list br/datum))
 
-(define-for-syntax alphasyms (for/list ([i (in-string "ABCDEFGHIJKLMNOPQRSTUVWXYZ")])
-                                       (string->symbol (format "~a" i))))
-(define-for-syntax stringsyms (map (λ(s) (format-datum "~a$" s)) alphasyms))
+(require racket/stxparam)
+(define-syntax-parameter A
+  (λ (stx) 
+    (raise-syntax-error (syntax-e stx) "can only be used inside the place")))
 
-(define-syntax (basic-module-begin stx)
-  (syntax-case stx ()
-    [(_ PARSE-TREE ...)
-     (with-syntax ([(VARNAME ...) (datum->syntax stx alphasyms)]
-                   [(STRINGVARNAME ...) (datum->syntax stx stringsyms)]) 
-       #'(#%module-begin
-          (define VARNAME 0) ...
-          (define STRINGVARNAME "") ...
-          (provide VARNAME ... STRINGVARNAME ...)
-          (println (quote PARSE-TREE ...))
-          PARSE-TREE ...))]))
+(define #'(basic-module-begin PARSE-TREE ...)
+  #'(#%module-begin
+     (let ([A-inner 0])
+       (syntax-parameterize
+           ([A (make-rename-transformer #'A-inner)])
+         (println (quote PARSE-TREE ...))
+         PARSE-TREE ...))))
 
 ; #%app and #%datum have to be present to make #%top work
 (define #'(basic-top . id)
@@ -94,8 +91,8 @@
 
 (define #'(INPUT PRINT-LIST ";" ID)
   #'(begin
-    (PRINT (append PRINT-LIST (list ";")))
-    (set! ID (read-line))))
+      (PRINT (append PRINT-LIST (list ";")))
+      (set! ID (read-line))))
 
 (define (GOTO where)
   where)
