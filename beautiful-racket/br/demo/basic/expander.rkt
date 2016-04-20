@@ -20,7 +20,7 @@
   #'(basic-run CR-LINE ...))
 
 (define (basic-run . lines)
-  (define program-lines (list->vector lines))
+  (define program-lines (list->vector (filter (λ(ln) (not (equal? ln "cr"))) lines)))
   (void (for/fold ([line-idx 0])
                   ([i (in-naturals)]
                    #:break (= line-idx (vector-length program-lines)))
@@ -34,8 +34,8 @@
                              idx)))
               (add1 line-idx)))))
 
-(define #'(cr-line "cr" ARG ...)
-  #'(begin ARG ...))
+(define-cases #'cr-line
+  [#'(_ ARG ...) #'(begin ARG ...)])
 
 (define #'(line NUMBER STATEMENT ...)
   #'(cons NUMBER (λ _ STATEMENT ...)))

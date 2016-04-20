@@ -1,8 +1,6 @@
 #lang ragg
 
-basic-program : cr-line* [CR]
-
-cr-line : CR line [cr-line]
+basic-program : line [CR line]*
 
 line: INTEGER statement+
 
@@ -16,13 +14,13 @@ statement : "END"
 | "PRINT" print-list
 | REM-COMMENT
 
-print-list : [expr [";" [print-list]*]]
+print-list : [expr [";" [print-list]]]
 
-expr : sum [("=" | "<>" | "><" | ">" | ">=" | "<" | "<=") expr]
+expr : sum [("=" | ">" | "<" | "<>") expr]
 
-sum : product [("+" | "-") sum]+
+sum : product [("+" | "-") sum]
 
-product : value [("*" | "/") product]+
+product : value [("*" | "/") product]
 
 value : "(" expr ")"
 | ID ["(" expr* ")"]

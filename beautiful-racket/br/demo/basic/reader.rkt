@@ -4,4 +4,4 @@
 (define-read-and-read-syntax (source-path input-port)
   (strip-context
    #`(module bf-mod br/demo/basic/expander
-       #,(parse source-path (tokenize input-port)))))
+       #,(parse source-path (tokenize (open-input-string (string-trim (port->string input-port))))))))
