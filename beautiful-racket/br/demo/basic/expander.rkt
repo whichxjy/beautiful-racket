@@ -3,20 +3,13 @@
          (rename-out [basic-module-begin #%module-begin])
          (rename-out [basic-top #%top])
          (all-defined-out))
-(require (for-syntax racket/syntax racket/list br/datum)
-         br/stxparam)
+(require br/stxparam)
 
-(define-language-variables A B C D E F A$)
+(define-language-variables [A 0][B 0][C 0][D 0][E 0][F 0][G 0][H 0][I 0][J 0][K 0][L 0][M 0][N 0][O 0][P 0][Q 0][R 0][S 0][T 0][U 0][V 0][W 0][X 0][Y 0][Z 0][A$ ""][B$ ""][C$ ""][D$ ""][E$ ""][F$ ""][G$ ""][H$ ""][I$ ""][J$ ""][K$ ""][L$ ""][M$ ""][N$ ""][O$ ""][P$ ""][Q$ ""][R$ ""][S$ ""][T$ ""][U$ ""][V$ ""][W$ ""][X$ ""][Y$ ""][Z$ ""])
 
 (define #'(basic-module-begin PARSE-TREE ...)
   #'(#%module-begin
-     (inject-language-variables ([A 0]
-                                 [B 0]
-                                 [C 0]
-                                 [D 0]
-                                 [E 0]
-                                 [F 0]
-                                 [A$ "foo"])
+     (inject-language-variables (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z A$ B$ C$ D$ E$ F$ G$ H$ I$ J$ K$ L$ M$ N$ O$ P$ Q$ R$ S$ T$ U$ V$ W$ X$ Y$ Z$)
        (println (quote PARSE-TREE ...))
        PARSE-TREE ...)))
 
@@ -24,7 +17,7 @@
 (define #'(basic-top . id)
   #'(begin
       (displayln (format "got unbound identifier: ~a" 'id))
-      (procedure-rename (λ xs (cons 'id xs)) (format-datum "undefined:~a" 'id))))
+      (procedure-rename (λ xs (cons 'id xs)) (string->symbol (format "undefined:~a" 'id)))))
 
 (define #'(program LINE ...) #'(run (list LINE ...)))
 
@@ -61,9 +54,7 @@
   [#'(value ID-OR-DATUM) #'ID-OR-DATUM])
 
 (define-cases expr
-  [(_ lexpr op rexpr) (if (op lexpr rexpr)
-                          1
-                          0)]
+  [(_ lexpr op rexpr) (if (op lexpr rexpr) 1 0)]
   [(_ expr) expr])
 (provide < > <= >=)
 
