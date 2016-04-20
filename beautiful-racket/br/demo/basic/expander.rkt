@@ -3,14 +3,21 @@
          (rename-out [basic-module-begin #%module-begin])
          (rename-out [basic-top #%top])
          (all-defined-out))
-(require (for-syntax racket/syntax racket/list))
+(require (for-syntax racket/syntax racket/list br/datum))
+
+(define-for-syntax alphasyms (for/list ([i (in-string "ABCDEFGHIJKLMNOPQRSTUVWXYZ")])
+                            (string->symbol (format "~a" i))))
+(define-for-syntax stringsyms (map (λ(s) (format-datum "~a$" s)) alphasyms))
 
 (define-syntax (basic-module-begin stx)
   (syntax-case stx ()
     [(_ PARSE-TREE ...)
-     (with-syntax ([(VARNAME ...) (map (λ(c) (format-id stx "~a" (integer->char c))) (range 65 91))]) 
+     (with-syntax ([(VARNAME ...) (datum->syntax stx alphasyms)]
+                   [(STRINGVARNAME ...) (datum->syntax stx stringsyms)]) 
        #'(#%module-begin
           (define VARNAME 0) ...
+          (define STRINGVARNAME "") ...
+          (provide VARNAME ... STRINGVARNAME ...)
           (println (quote PARSE-TREE ...))
           PARSE-TREE ...))]))
 
@@ -38,8 +45,7 @@
                              idx)))
               (add1 line-idx)))))
 
-(define-cases #'cr-line
-  [#'(_ ARG ...) #'(begin ARG ...)])
+(define #'(cr-line ARG ...) #'(begin ARG ...))
 
 (define #'(line NUMBER STATEMENT ...)
   #'(cons NUMBER (λ _ STATEMENT ...)))

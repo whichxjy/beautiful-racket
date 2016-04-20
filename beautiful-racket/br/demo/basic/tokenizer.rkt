@@ -27,7 +27,7 @@
        [(union ";" "=" "(" ")") lexeme]
        [(union "+" "-" "*" "/"
                "<=" ">=" "<>" "><" "<" ">" "=" ) (string->symbol lexeme)]
-       [(:seq (repetition 1 +inf.0 upper-case)) (token 'ID (string->symbol lexeme))]
+       [(:seq (repetition 1 +inf.0 upper-case) (:? "$")) (token 'ID (string->symbol lexeme))]
        [upper-case (token 'UPPERCASE (string->symbol lexeme))]
        [whitespace (token 'WHITESPACE lexeme #:skip? #t)]
        [(:seq "\"" (complement (:: any-string "\"" any-string)) "\"") (token 'STRING (string-trim lexeme "\""))]

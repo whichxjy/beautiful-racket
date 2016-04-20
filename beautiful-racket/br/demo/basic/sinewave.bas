@@ -1,8 +1,6 @@
 #lang br/demo/basic
 
-
-10 PRINT 2 + 3 * 10 + 1
-
-20 PRINT 6 * 7 / 8
-
-
+1 A = 2
+10 PRINT A < 2
+12 C$ = "string thing"
+15 PRINT A;: PRINT C$
