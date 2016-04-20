@@ -20,11 +20,11 @@
   (require rackunit racket/port)
   (parameterize ([current-output-port (open-output-nowhere)])
     (check-equal? (let ()
-                    (br:debug-define #'(foo <x> <y> <z>)
-                                     #'(apply + (list <x> <y> <z>)))
+                    (br:debug-define #'(foo X Y Z)
+                                     #'(apply + (list X Y Z)))
                     (foo 1 2 3)) 6)  
     (check-equal? (let ()
-                    (br:debug-define #'(foo <x> ...) #'(apply * (list <x> ...)))
+                    (br:debug-define #'(foo X ...) #'(apply * (list X ...)))
                     (foo 10 11 12)) 1320)))
 
 
