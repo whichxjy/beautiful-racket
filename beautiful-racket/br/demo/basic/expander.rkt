@@ -3,19 +3,20 @@
          (rename-out [basic-module-begin #%module-begin])
          (rename-out [basic-top #%top])
          (all-defined-out))
-(require (for-syntax racket/syntax racket/list br/datum))
+(require (for-syntax racket/syntax racket/list br/datum)
+         br/stxparam)
 
-(require racket/stxparam racket/splicing)
-(define-syntax-parameter A
-  (λ (stx) 
-    (raise-syntax-error (syntax-e stx) "parameter not set")))
+(define-language-variables A B C D E F A$)
 
 (define #'(basic-module-begin PARSE-TREE ...)
   #'(#%module-begin
-     (splicing-syntax-parameterize
-         ([A (make-rename-transformer #'A-var)])
-       (define A-var 0)
-       (provide (rename-out [A-var A]))
+     (inject-language-variables ([A 0]
+                                 [B 0]
+                                 [C 0]
+                                 [D 0]
+                                 [E 0]
+                                 [F 0]
+                                 [A$ "foo"])
        (println (quote PARSE-TREE ...))
        PARSE-TREE ...)))
 

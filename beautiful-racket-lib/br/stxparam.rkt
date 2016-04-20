@@ -1,34 +1,30 @@
 #lang racket/base
-(require (for-syntax racket/base syntax/parse) syntax/strip-context)
-(provide (all-defined-out) (all-from-out syntax/strip-context))
+(require (for-syntax racket/base) racket/stxparam racket/splicing)
+(provide splicing-syntax-parameterize
+         define-syntax-parameters
+         define-language-variables
+         inject-language-variables
+         (rename-out [br:define-syntax-parameter define-syntax-parameter]))
 
-
-(define-syntax (syntax-match stx)
-  (syntax-case stx (syntax)
-    [(_ stx-arg [(syntax pattern) body ...] ...)
-     #'(syntax-case stx-arg ()
-         [pattern body ...] ...)]))
-
-(define-syntax (add-syntax stx)
-  ;; todo: permit mixing of two-arg and one-arg binding forms
-  ;; one-arg form allows you to inject an existing syntax object using its current name
-  (syntax-case stx (syntax)
-    [(_ ([(syntax sid) sid-stx] ...) body ...)
-     #'(with-syntax ([sid sid-stx] ...) body ...)]
-    ;; todo: limit `sid` to be an identifier
-    [(_ ([sid] ...) body ...)
-     #'(with-syntax ([sid sid] ...) body ...)]))
-
-(define-syntax syntax-let (make-rename-transformer #'add-syntax))
-
-(define-syntax inject-syntax (make-rename-transformer #'add-syntax))
-
-(define-syntax (map-syntax stx)
+(define-syntax (br:define-syntax-parameter stx)
   (syntax-case stx ()
-    [(_ <proc> <arg> ...)
-     #'(map <proc> (if (and (syntax? <arg>) (list? (syntax-e <arg>)))
-                       (syntax->list <arg>)
-                       <arg>) ...)]))
+    [(_ ID STX)
+     #'(define-syntax-parameter ID STX)]
+    [(_ ID)
+     #'(define-syntax-parameter ID (λ (stx) 
+                                     (raise-syntax-error (syntax-e stx) "parameter not set")))]))
 
+(define-syntax-rule (define-syntax-parameters ID ...)
+  (begin (br:define-syntax-parameter ID) ...))
 
-#;(define-syntax syntax-variable (make-rename-transformer #'format-id))
+(define-syntax define-language-variables (make-rename-transformer #'define-syntax-parameters))
+
+(define-syntax (inject-language-variables stx)
+  (syntax-case stx ()
+    [(_ ([VAR-PARAM INITIAL-VALUE] ...) LANG-CODE ...)
+     (with-syntax ([(INTERNAL-NAME ...) (generate-temporaries #'(VAR-PARAM ...))])
+     #'(splicing-syntax-parameterize ;; need to use splicing version in a module-begin to compose with requires etc. that might be in lang code
+           ([VAR-PARAM (make-rename-transformer #'INTERNAL-NAME)] ...)
+         (define INTERNAL-NAME INITIAL-VALUE) ...
+         (provide (rename-out [INTERNAL-NAME VAR-PARAM] ...))
+         LANG-CODE ...))]))
