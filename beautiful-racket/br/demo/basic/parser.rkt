@@ -1,7 +1,7 @@
 #lang ragg
 
 ;; recursive rules destucture easily in the expander
-program : line [CR line]*
+program : [line [CR line]*]
 
 line: INTEGER statement+
 
@@ -9,7 +9,7 @@ statement : "END"
 | "FOR" ID "=" expr "TO" expr ["STEP" expr]     
 | "GOTO" expr
 | "IF" expr "THEN" (statement | expr) ; change: add expr
-| "INPUT" ID+
+| "INPUT" print-list ";" ID
 | ["LET"] ID "=" expr ; change: make "LET" opt
 | "NEXT" ID+
 | "PRINT" print-list

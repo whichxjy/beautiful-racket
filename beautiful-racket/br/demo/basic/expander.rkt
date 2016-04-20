@@ -6,7 +6,7 @@
 (require (for-syntax racket/syntax racket/list br/datum))
 
 (define-for-syntax alphasyms (for/list ([i (in-string "ABCDEFGHIJKLMNOPQRSTUVWXYZ")])
-                            (string->symbol (format "~a" i))))
+                                       (string->symbol (format "~a" i))))
 (define-for-syntax stringsyms (map (λ(s) (format-datum "~a$" s)) alphasyms))
 
 (define-syntax (basic-module-begin stx)
@@ -27,8 +27,7 @@
       (displayln (format "got unbound identifier: ~a" 'id))
       (procedure-rename (λ xs (cons 'id xs)) (format-datum "undefined:~a" 'id))))
 
-(define #'(program LINE ...)
-  #'(run (list LINE ...)))
+(define #'(program LINE ...) #'(run (list LINE ...)))
 
 (define (run lines)
   (define program-lines (list->vector (filter (λ(ln) (not (equal? ln "cr"))) lines)))
@@ -84,14 +83,19 @@
 (define (PRINT args)
   (match args
     [(list) (displayln "")]
-    [(list items ... ";" pl) (begin (for-each display items) (PRINT pl))]
-    [(list items ... ";") (for-each display items)]
-    [(list items ...) (for-each displayln items)]))
+    [(list print-list-item ... ";" pl) (begin (for-each display print-list-item) (PRINT pl))]
+    [(list print-list-item ... ";") (for-each display print-list-item)]
+    [(list print-list-item ...) (for-each displayln print-list-item)]))
 
 (define (TAB num) (make-string num #\space))
 (define (INT num) (inexact->exact (round num)))
 (define (SIN num) (sin num))
 (define (RND num) (* (random) num))
+
+(define #'(INPUT PRINT-LIST ";" ID)
+  #'(begin
+    (PRINT (append PRINT-LIST (list ";")))
+    (set! ID (read-line))))
 
 (define (GOTO where)
   where)
