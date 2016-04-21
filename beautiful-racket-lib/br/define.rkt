@@ -84,7 +84,11 @@
                                #'(zam x x))) (foo 42)) 84) 
   ;; todo: error from define not trapped by check-exn 
   #;(check-exn exn:fail:syntax? (λ _ (br:define (#'times stx stx2) #'*)))
-  (check-equal? fortytwo 42))
+  (check-equal? fortytwo 42)
+  (begin
+    (br:define #'(redefine ID) #'(define ID 42))
+    (redefine zoombar)
+    (check-equal? zoombar 42)))
 
 
 ;; todo: support `else` case
