@@ -5,34 +5,30 @@
          racket/string)
 (provide tokenize)
 
+(define-lex-abbrevs
+  (natural (repetition 1 +inf.0 numeric))
+  (integer (:seq (:? "-") natural))
+  (number (:seq integer (:? (:seq "." natural))))
+  (quoted-string (:seq "\"" (repetition 0 +inf.0 (char-complement "\"")) "\"")))
+
 (define (tokenize input-port)
   (define (next-token)
     (define get-token
       (lexer
-       [(:seq "REM" (repetition 1 +inf.0 (char-complement "\n")))
-        (token 'REM-COMMENT (format-datum '(comment "~v") lexeme))]
-       [(repetition 1 +inf.0 "\n") (token 'CR "cr")]
+       [(eof) eof]
+       [(union #\tab #\space
+               (:seq number " REM" (repetition 1 +inf.0 (char-complement #\newline)) #\newline)) (get-token input-port)]
+       [(:seq #\newline (repetition 0 +inf.0 whitespace)) (token 'CR "cr")]
        [(union "PRINT" "FOR" "TO" "STEP" "IF" "GOTO"
                "INPUT" "LET" "NEXT"  "RETURN"
-               "CLEAR" "LIST" "RUN" "END") (string->symbol lexeme)]
-       [(union "THEN" "ELSE" "GOSUB") lexeme]
-       
-       ;; this only matches integers
-       [(repetition 1 +inf.0 numeric) (token 'INTEGER (string->number lexeme))]
-       [(repetition 1 +inf.0 (union "." numeric)) (token 'REAL (string->number lexeme))]
-       ;; things that get thrown out: pass through as strings,
-       ;; because they can be matched literally in macros.
-       ;; things that become identifiers: pass through as symbols,
-       ;; so they can get bound by the expander.
-       [(union "," ":") (token 'SEPARATOR lexeme #:skip? #t)]
-       [(union ";" "=" "(" ")") lexeme]
-       [(union "+" "-" "*" "/"
-               "<=" ">=" "<>" "><" "<" ">" "=" ) (string->symbol lexeme)]
-       [(union "RND" "INT" "TAB" "SIN" "ABS") (token 'PROC (string->symbol lexeme))]
+               "CLEAR" "LIST" "RUN" "END"
+               "THEN" "ELSE" "GOSUB" "AND" "OR"
+               ";" "=" "(" ")" "+" "-" "*" "/"
+               "<=" ">=" "<>" "><" "<" ">" "=" ":") lexeme]
+       [(union ",") (get-token input-port)]
+       [number (token 'NUMBER (string->number lexeme))]
        [(:seq (repetition 1 +inf.0 upper-case) (:? "$")) (token 'ID (string->symbol lexeme))]
        [upper-case (token 'UPPERCASE (string->symbol lexeme))]
-       [whitespace (token 'WHITESPACE lexeme #:skip? #t)]
-       [(:seq "\"" (complement (:: any-string "\"" any-string)) "\"") (token 'STRING (string-trim lexeme "\""))]
-       [(eof) eof]))
+       [quoted-string (token 'STRING (string-trim lexeme "\""))]))
     (get-token input-port))  
   next-token)

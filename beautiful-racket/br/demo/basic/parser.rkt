@@ -1,21 +1,20 @@
 #lang ragg
 
 ;; recursive rules destucture easily in the expander
-program : [line [CR line]*]
+program : [CR]* [line [CR line]*] [CR]*
 
-line: INTEGER statement+
+line: NUMBER statement-list
+
+statement-list : statement [":" statement-list]
 
 statement : "END"
-| "FOR" ID "=" expr "TO" expr ["STEP" expr]
-| "GOSUB" INTEGER
+| "GOSUB" NUMBER
 | "GOTO" expr
-| "IF" expr "THEN" (statement | expr) ["ELSE" (statement | expr)]; change: add expr
+| "IF" expr "THEN" (statement | expr) ["ELSE" (statement | expr)]
 | "INPUT" [print-list ";"] ID
-| ["LET"] ID "=" expr ; change: make "LET" opt
-| "NEXT" ID+
+| ID "=" expr ; change: make "LET" opt
 | "PRINT" print-list
 | "RETURN"
-| REM-COMMENT
 
 print-list : [expr [";" [print-list]]]
 
@@ -28,9 +27,7 @@ sum : product [("+" | "-") sum]
 product : value [("*" | "/") product]
 
 value : "(" expr ")"
-| ID
-| PROC "(" expr* ")"
-| INTEGER
+| ID ["(" expr* ")"]
 | STRING
-| REAL
+| NUMBER
 

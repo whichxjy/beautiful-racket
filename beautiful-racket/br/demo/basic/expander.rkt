@@ -3,7 +3,10 @@
          (rename-out [basic-module-begin #%module-begin])
          (rename-out [basic-top #%top])
          (all-defined-out))
-(require br/stxparam)
+(require br/stxparam (for-syntax br/datum))
+
+; BASIC implementation details
+; http://www.atariarchives.org/basicgames/showpage.php?page=i12
 
 (define-language-variables [A 0][B 0][C 0][D 0][E 0][F 0][G 0][H 0][I 0][J 0][K 0][L 0][M 0][N 0][O 0][P 0][Q 0][R 0][S 0][T 0][U 0][V 0][W 0][X 0][Y 0][Z 0][A$ ""][B$ ""][C$ ""][D$ ""][E$ ""][F$ ""][G$ ""][H$ ""][I$ ""][J$ ""][K$ ""][L$ ""][M$ ""][N$ ""][O$ ""][P$ ""][Q$ ""][R$ ""][S$ ""][T$ ""][U$ ""][V$ ""][W$ ""][X$ ""][Y$ ""][Z$ ""])
 
@@ -36,16 +39,19 @@
       (exn:line-not-found
        (format "line number ~a not found in program" ln)
        (current-continuation-marks)))))
-  (void (with-handlers ([exn:program-end? (λ (exn) (void))])
-          (for/fold ([program-counter 0])
-                    ([i (in-naturals)]
-                     #:break (= program-counter (vector-length program-lines)))
-            (match-define (cons line-number proc)
-              (vector-ref program-lines program-counter))
-            (define maybe-jump-number (and proc (proc)))
-            (if (number? maybe-jump-number)
-                (line-number->index maybe-jump-number)
-                (add1 program-counter))))))
+  (with-handlers ([exn:program-end? (λ _ (void))])
+    (for/fold ([program-counter 0])
+              ([i (in-naturals)])
+      (cond
+        [(= program-counter (vector-length program-lines)) (basic:END)]
+        [else
+         (match-define (cons line-number proc)
+           (vector-ref program-lines program-counter))
+         (define maybe-jump-number (and proc (proc)))
+         (if (number? maybe-jump-number)
+             (line-number->index maybe-jump-number)
+             (add1 program-counter))])))
+  (void))
 
 (define #'(cr-line ARG ...) #'(begin ARG ...))
 
@@ -53,7 +59,7 @@
 (define current-return-stack (make-parameter empty))
 
 (define-cases #'line
-  [#'(_ NUMBER (STATEMENT "GOSUB" WHERE))
+  [#'(_ NUMBER (statement-list (statement "GOSUB" WHERE)))
    #'(cons NUMBER
            (λ _
              (let ([return-stack (current-return-stack)])
@@ -61,16 +67,24 @@
                  [(or (empty? return-stack)
                       (not (= NUMBER (car return-stack))))
                   (current-return-stack (cons NUMBER (current-return-stack)))
-                  (GOTO WHERE)]
+                  (basic:GOTO WHERE)]
                  [else (current-return-stack (cdr (current-return-stack)))]))))]
-  [#'(_ NUMBER STATEMENT ...)  #'(cons NUMBER (λ _ STATEMENT ...))])
+  [#'(_ NUMBER STATEMENT-LIST) #'(cons NUMBER (λ _ STATEMENT-LIST))])
 
+(define-cases #'statement-list
+  [#'(_ STATEMENT) #'(begin STATEMENT)]
+  [#'(_ STATEMENT ":" STATEMENT-LIST) #'(begin STATEMENT STATEMENT-LIST)])
 
 (define-cases #'statement
   [#'(statement ID "=" EXPR) #'(set! ID EXPR)]
-  [#'(statement PROC ARG ...) #'(PROC ARG ...)])
+  ;[#'(statement "PRINT" ARG ...) #'(print ARG ...)]
+  ;[#'(statement "RETURN" ARG ...) #'(return ARG ...)]
+  ;[#'(statement "END" ARG ...) #'(end ARG ...)]
+  [#'(statement PROC-STRING ARG ...)
+   (inject-syntax ([#'PROC-ID (format-datum "basic:~a" #'PROC-STRING)])
+                  #'(PROC-ID ARG ...))])
 
-(define-cases #'IF
+(define-cases #'basic:IF
   [#'(_ COND "THEN" TRUE-RESULT "ELSE" FALSE-RESULT)
    #'(if (true? COND)
          TRUE-RESULT
@@ -85,72 +99,65 @@
   [#'(value ID-OR-DATUM) #'ID-OR-DATUM])
 
 (define true? (compose1 not zero?))
+(define (cond->int cond) (if cond 1 0))
+(define (basic:and . args) (cond->int (andmap true? args)))
+(define (basic:or . args) (cond->int (ormap true? args)))
 
 (define-cases #'expr
-  [#'(_ LEXPR "AND" REXPR)
-   #'(if (and (true? LEXPR) (true? REXPR)) 1 0)]
-  [#'(_ LEXPR "OR" REXPR)
-   #'(if (or (true? LEXPR) (true? REXPR)) 1 0)]
-  [#'(_ EXPR) #'EXPR])
+  [#'(_ COMP-EXPR "AND" EXPR) #'(basic:and COMP-EXPR EXPR)]
+  [#'(_ COMP-EXPR "OR" EXPR) #'(basic:or COMP-EXPR EXPR)]
+  [#'(_ COMP-EXPR) #'COMP-EXPR])
 
 (define-cases #'comp-expr
-  [#'(_ lexpr "=" rexpr) #'(comp-expr lexpr equal? rexpr)] ; special case because = is overloaded
-  [#'(_ lexpr op rexpr) #'(if (op lexpr rexpr) 1 0)]
+  [#'(_ LEXPR "=" REXPR) #'(comp-expr LEXPR "equal?" REXPR)] ; special case because = is overloaded
+  [#'(_ LEXPR op REXPR) (inject-syntax ([#'OP (string->symbol (syntax->datum #'op))])
+                                       #'(cond->int (OP LEXPR REXPR)))]
   [#'(_ expr) #'expr])
-(define (<> lexpr rexpr) (not (equal? lexpr rexpr)))
-(provide < > <= >= <>)
+(define <> (compose1 not equal?))
 
-(define-cases sum
-  [(_ term op sum) (op term sum)]
-  [(_ term) term])
-(provide - +)
+(define-cases #'sum
+  [#'(_ term "+" sum) #'(+ term sum)]
+  [#'(_ term "-" sum) #'(- term sum)]
+  [#'(_ term) #'term])
 
-(define-cases product
-  [(_ factor op product) (op factor product)]
-  [(_ factor) factor])
-(provide * /)
+(define-cases #'product
+  [#'(_ factor "*" product) #'(* factor product)]
+  [#'(_ factor "/" product) #'(/ factor product)]
+  [#'(_ factor) #'factor])
 
 (define print-list list)
 
-(define (PRINT args)
+(define (basic:PRINT args)
   (match args
     [(list) (displayln "")]
     [(list print-list-item ... ";" pl) (begin (for-each display print-list-item)
-                                              (display " ")
-                                              (PRINT pl))]
-    [(list print-list-item ... ";") (begin
-                                      (for-each display print-list-item)
-                                      (display " "))]
+                                              (print pl))]
+    [(list print-list-item ... ";") (for-each display print-list-item)]
     [(list print-list-item ...) (for-each displayln print-list-item)]))
 
 (define (TAB num) (make-string num #\space))
-(define #'(INT EXPR ...) #'(inexact->exact (round (expr EXPR ...))))
+(define #'(INT EXPR ...) #'(inexact->exact (truncate (expr EXPR ...))))
 (define (SIN num) (sin num))
 (define (ABS num) (inexact->exact (abs num)))
 (define (RND num) (* (random) num))
 
-(define-cases #'INPUT
+(define-cases #'basic:INPUT
   [#'(_ PRINT-LIST ";" ID)
    #'(begin
-       (PRINT (append PRINT-LIST (list ";")))
-       (INPUT ID))]
+       (basic:PRINT (append PRINT-LIST (list ";")))
+       (basic:INPUT ID))]
   [#'(_ ID) #'(set! ID (let* ([str (read-line)]
                               [num (string->number str)])
                          (if num num str)))])
 
-(define (GOTO where)
-  where)
+(define (basic:GOTO where) where)
 
-(define (RETURN)
-  (car (current-return-stack)))
+(define (basic:RETURN) (car (current-return-stack)))
 
 
 (struct exn:program-end exn:fail ())
-(define (END)
+(define (basic:END)
   (raise
    (exn:program-end
     "program ended"
     (current-continuation-marks))))
-
-
-(define (comment . args) void)
