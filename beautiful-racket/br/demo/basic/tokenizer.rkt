@@ -12,9 +12,10 @@
        [(:seq "REM" (repetition 1 +inf.0 (char-complement "\n")))
         (token 'REM-COMMENT (format-datum '(comment "~v") lexeme))]
        [(repetition 1 +inf.0 "\n") (token 'CR "cr")]
-       [(union "PRINT" "FOR" "TO" "STEP" "IF" "THEN" "GOTO"
-               "INPUT" "LET" "NEXT" "GOSUB" "RETURN"
+       [(union "PRINT" "FOR" "TO" "STEP" "IF" "GOTO"
+               "INPUT" "LET" "NEXT"  "RETURN"
                "CLEAR" "LIST" "RUN" "END") (string->symbol lexeme)]
+       [(union "THEN" "ELSE" "GOSUB") lexeme]
        
        ;; this only matches integers
        [(repetition 1 +inf.0 numeric) (token 'INTEGER (string->number lexeme))]
@@ -27,6 +28,7 @@
        [(union ";" "=" "(" ")") lexeme]
        [(union "+" "-" "*" "/"
                "<=" ">=" "<>" "><" "<" ">" "=" ) (string->symbol lexeme)]
+       [(union "RND" "INT" "TAB" "SIN" "ABS") (token 'PROC (string->symbol lexeme))]
        [(:seq (repetition 1 +inf.0 upper-case) (:? "$")) (token 'ID (string->symbol lexeme))]
        [upper-case (token 'UPPERCASE (string->symbol lexeme))]
        [whitespace (token 'WHITESPACE lexeme #:skip? #t)]

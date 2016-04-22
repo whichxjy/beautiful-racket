@@ -6,24 +6,30 @@ program : [line [CR line]*]
 line: INTEGER statement+
 
 statement : "END"
-| "FOR" ID "=" expr "TO" expr ["STEP" expr]     
+| "FOR" ID "=" expr "TO" expr ["STEP" expr]
+| "GOSUB" INTEGER
 | "GOTO" expr
-| "IF" expr "THEN" (statement | expr) ; change: add expr
-| "INPUT" print-list ";" ID
+| "IF" expr "THEN" (statement | expr) ["ELSE" (statement | expr)]; change: add expr
+| "INPUT" [print-list ";"] ID
 | ["LET"] ID "=" expr ; change: make "LET" opt
 | "NEXT" ID+
 | "PRINT" print-list
+| "RETURN"
 | REM-COMMENT
 
 print-list : [expr [";" [print-list]]]
 
-expr : sum [("=" | ">" | ">=" | "<" | "<=" | "<>") expr]
+expr : comp-expr [("AND" | "OR") expr]
+
+comp-expr : sum [("=" | ">" | ">=" | "<" | "<=" | "<>") comp-expr]
 
 sum : product [("+" | "-") sum]
 
 product : value [("*" | "/") product]
 
-value : ID ["(" expr* ")"]
+value : "(" expr ")"
+| ID
+| PROC "(" expr* ")"
 | INTEGER
 | STRING
 | REAL
