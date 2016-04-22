@@ -104,26 +104,26 @@
 (define (basic:or . args) (cond->int (ormap true? args)))
 
 (define-cases #'expr
-  [#'(_ COMP-EXPR "AND" EXPR) #'(basic:and COMP-EXPR EXPR)]
-  [#'(_ COMP-EXPR "OR" EXPR) #'(basic:or COMP-EXPR EXPR)]
+  [#'(_ COMP-EXPR "AND" SUBEXPR) #'(basic:and COMP-EXPR SUBEXPR)]
+  [#'(_ COMP-EXPR "OR" SUBEXPR) #'(basic:or COMP-EXPR SUBEXPR)]
   [#'(_ COMP-EXPR) #'COMP-EXPR])
 
 (define-cases #'comp-expr
   [#'(_ LEXPR "=" REXPR) #'(comp-expr LEXPR "equal?" REXPR)] ; special case because = is overloaded
   [#'(_ LEXPR op REXPR) (inject-syntax ([#'OP (string->symbol (syntax->datum #'op))])
                                        #'(cond->int (OP LEXPR REXPR)))]
-  [#'(_ expr) #'expr])
+  [#'(_ ARG) #'ARG])
 (define <> (compose1 not equal?))
 
 (define-cases #'sum
-  [#'(_ term "+" sum) #'(+ term sum)]
-  [#'(_ term "-" sum) #'(- term sum)]
-  [#'(_ term) #'term])
+  [#'(_ TERM "+" SUM) #'(+ TERM SUM)]
+  [#'(_ TERM "-" SUM) #'(- TERM SUM)]
+  [#'(_ TERM) #'TERM])
 
 (define-cases #'product
-  [#'(_ factor "*" product) #'(* factor product)]
-  [#'(_ factor "/" product) #'(/ factor product)]
-  [#'(_ factor) #'factor])
+  [#'(_ FACTOR "*" PRODUCT) #'(* FACTOR PRODUCT)]
+  [#'(_ FACTOR "/" PRODUCT) #'(/ FACTOR PRODUCT)]
+  [#'(_ FACTOR) #'FACTOR])
 
 (define print-list list)
 
@@ -136,7 +136,7 @@
     [(list print-list-item ...) (for-each displayln print-list-item)]))
 
 (define (TAB num) (make-string num #\space))
-(define #'(INT EXPR ...) #'(inexact->exact (truncate (expr EXPR ...))))
+(define #'(INT ARG ...) #'(inexact->exact (truncate (expr ARG ...))))
 (define (SIN num) (sin num))
 (define (ABS num) (inexact->exact (abs num)))
 (define (RND num) (* (random) num))

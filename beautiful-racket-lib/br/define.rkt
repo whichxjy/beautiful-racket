@@ -1,8 +1,18 @@
 #lang racket/base
-(require (for-syntax racket/base syntax/parse racket/syntax syntax/datum syntax/strip-context) sugar/define)
+(require (for-syntax racket/list racket/base syntax/parse racket/syntax syntax/datum syntax/strip-context) sugar/define)
 (provide (all-defined-out))
 
 ;; everything is prefixed br: whether it needs it or not so it can be stripped by #lang br
+
+(define-for-syntax (generate-literals pats)
+  ;; generate literals for any symbols that are not ... or _ or UPPERCASE
+  (for*/list ([pat-arg (in-list (flatten (map (λ(stx) (or (syntax->list stx) stx)) (syntax->list pats))))]
+              [pat-datum (in-value (syntax->datum pat-arg))]
+              #:when (and (symbol? pat-datum)
+                          (not (eq? pat-datum '...)) (not (eq? pat-datum '_))
+                          (not (let ([str (symbol->string pat-datum)])
+                                 (equal? (string-upcase str) str)))))
+             pat-arg))
 
 ;; todo: support `else` case
 (define-syntax (br:define-cases stx)
@@ -29,14 +39,15 @@
     
     ;; syntax matcher
     [(_ top-id:syntaxed-id [(syntax pat) body ...] ...+)
-     #'(define-syntax top-id.name (λ (stx)
-                                    (define result
-                                      (syntax-case stx ()
-                                        [pat body ...] ...
-                                        [else (raise-syntax-error 'define-cases (format "no matching case for syntax pattern `~a`" (syntax->datum stx)) (syntax->datum #'top-id.name))]))
-                                    (if (not (syntax? result))
-                                        (datum->syntax stx result)
-                                        result)))]
+     (with-syntax ([(LITERAL ...) (generate-literals #'(pat ...))])
+       #'(define-syntax top-id.name (λ (stx)
+                                      (define result
+                                        (syntax-case stx (LITERAL ...)
+                                          [pat body ...] ...
+                                          [else (raise-syntax-error 'define-cases (format "no matching case for syntax pattern `~a`" (syntax->datum stx)) (syntax->datum #'top-id.name))]))
+                                      (if (not (syntax? result))
+                                          (datum->syntax stx result)
+                                          result))))]
     
     ;; function matcher
     [(_ top-id:id [(_ pat-arg ... . rest-arg) body ...] ...)
@@ -51,7 +62,7 @@
   (define (foo-func) 'got-foo-func)
   (br:define-cases #'op
                    [#'(_ "+") #''got-plus]
-                   [#'(_ arg) #''got-something-else]
+                   [#'(_ ARG) #''got-something-else]
                    [#'(_) #'(foo-func)]
                    [#'_ #'foo-val])
   
@@ -93,16 +104,16 @@
     
     ;; syntax
     [(_ (syntax (id pat-arg ... . rest-arg)) body ...) ; (define #'(foo arg) #'(+ arg arg))
-       #'(br:define-cases (syntax id) [(syntax (_ pat-arg ... . rest-arg)) body ...])]
+     #'(br:define-cases (syntax id) [(syntax (_ pat-arg ... . rest-arg)) body ...])]
     
     [(_ sid:syntaxed-id sid2:syntaxed-id) ; (define #'f1 #'f2)
-       #'(define-syntax sid.name (make-rename-transformer sid2))]
+     #'(define-syntax sid.name (make-rename-transformer sid2))]
     
     [(_ (syntax id) (syntax thing)) ; (define #'f1 #'42)
-       #'(br:define-cases (syntax id) [#'_ (syntax thing)])]
+     #'(br:define-cases (syntax id) [#'_ (syntax thing)])]
     
     [(_ (sid:syntaxed-id stx-arg ...) expr ...)  ; (define (#'f1 stx) expr ...)
-       (raise-syntax-error 'define "definition of a syntax transformer must use lambda notation, because otherwise it's too easy to confuse the compile-time shape and the run-time shape" (syntax->datum #'sid.name))]
+     (raise-syntax-error 'define "definition of a syntax transformer must use lambda notation, because otherwise it's too easy to confuse the compile-time shape and the run-time shape" (syntax->datum #'sid.name))]
     
     [(_ sid:syntaxed-id (λ (stx-arg ...) expr ...)) ; (define #'f1 (λ(stx) expr ...)
      #:fail-when (not (= (length (syntax->datum #'(stx-arg ...))) 1))
@@ -118,16 +129,16 @@
   (br:define #'plusser #'plus)
   (check-equal? (plusser 42) +)
   (check-equal? plusser +)
-  (br:define #'(times arg) #'(* arg arg))
+  (br:define #'(times ARG) #'(* ARG ARG))
   (check-equal? (times 10) 100)
   (br:define #'timeser #'times)
   (check-equal? (timeser 12) 144)
   (br:define #'fortytwo #'42)
   (check-equal? fortytwo 42)
   (check-equal? (let ()
-                  (br:define #'(foo x)
+                  (br:define #'(foo X)
                              (with-syntax ([zam +])
-                               #'(zam x x))) (foo 42)) 84) 
+                               #'(zam X X))) (foo 42)) 84) 
   ;; todo: error from define not trapped by check-exn 
   #;(check-exn exn:fail:syntax? (λ _ (br:define (#'times stx stx2) #'*)))
   (begin
@@ -137,28 +148,28 @@
 
 
 (define-syntax-rule (br:debug-define (syntax (id pat-arg ... . rest-arg)) body-exp)
-    (br:define #'(id pat-arg ... . rest-arg)
-               #`(begin
-                   (for-each displayln
-                             (list
-                              (format "input pattern = #'~a" '#,'(id pat-arg ... . rest-arg))
-                              (format "output pattern = #'~a" (cadr '#,'body-exp))
-                              (format "invoked as = ~a" (syntax->datum #'(id pat-arg ... . rest-arg)))
-                              (format "expanded as = ~a" '#,(syntax->datum body-exp))
-                              (format "evaluated as = ~a" #,body-exp)))
-                   #,body-exp)))
+  (br:define #'(id pat-arg ... . rest-arg)
+             #`(begin
+                 (for-each displayln
+                           (list
+                            (format "input pattern = #'~a" '#,'(id pat-arg ... . rest-arg))
+                            (format "output pattern = #'~a" (cadr '#,'body-exp))
+                            (format "invoked as = ~a" (syntax->datum #'(id pat-arg ... . rest-arg)))
+                            (format "expanded as = ~a" '#,(syntax->datum body-exp))
+                            (format "evaluated as = ~a" #,body-exp)))
+                 #,body-exp)))
 
 
 (module+ test
-    (require rackunit racket/port)
-    (parameterize ([current-output-port (open-output-nowhere)])
-      (check-equal? (let ()
-                      (br:debug-define #'(foo X Y Z)
-                                       #'(apply + (list X Y Z)))
-                      (foo 1 2 3)) 6)  
-      (check-equal? (let ()
-                      (br:debug-define #'(foo X ...) #'(apply * (list X ...)))
-                      (foo 10 11 12)) 1320)))
+  (require rackunit racket/port)
+  (parameterize ([current-output-port (open-output-nowhere)])
+    (check-equal? (let ()
+                    (br:debug-define #'(foo X Y Z)
+                                     #'(apply + (list X Y Z)))
+                    (foo 1 2 3)) 6)  
+    (check-equal? (let ()
+                    (br:debug-define #'(foo X ...) #'(apply * (list X ...)))
+                    (foo 10 11 12)) 1320)))
 
 
 
