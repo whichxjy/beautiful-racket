@@ -9,9 +9,9 @@
                       SRC-EXPR ...))))
 (provide read-syntax)
 
-(define #'(stacker-module-begin READER-LINE ...)
+(define #'(stacker-module-begin _READER-LINE ...)
   #'(#%module-begin
-     READER-LINE ...
+     _READER-LINE ...
      (display (first stack))))
 (provide (rename-out [stacker-module-begin #%module-begin]))
 (provide #%top-interaction)

@@ -1,13 +1,13 @@
 #lang br
 
-(define #'(bf-module-begin PARSE-TREE ...)
+(define #'(bf-module-begin _PARSE-TREE ...)
   #'(#%module-begin
-     PARSE-TREE ...)) 
+     _PARSE-TREE ...)) 
 (provide (rename-out [bf-module-begin #%module-begin])
          #%top-interaction)
 
-(define #'(bf-program OP-OR-LOOP ...)
-  #'(begin OP-OR-LOOP ...))
+(define #'(bf-program _OP-OR-LOOP ...)
+  #'(begin _OP-OR-LOOP ...))
 (provide bf-program)
 
 (define-cases #'op
@@ -30,7 +30,7 @@
 (define (set-current-byte! val)
   (vector-set! bf-vector bf-pointer val))
 
-(define #'(loop "[" OP-OR-LOOP ... "]")
+(define #'(loop "[" _OP-OR-LOOP ... "]")
   #'(until (zero? (get-current-byte))
-           OP-OR-LOOP ...))
+           _OP-OR-LOOP ...))
 (provide loop)

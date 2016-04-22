@@ -5,13 +5,13 @@
 ;; everything is prefixed br: whether it needs it or not so it can be stripped by #lang br
 
 (define-for-syntax (generate-literals pats)
-  ;; generate literals for any symbols that are not ... or _ or UPPERCASE
+  ;; generate literals for any symbols that are not ... or _ or _underscore-prefixed
   (for*/list ([pat-arg (in-list (flatten (map (λ(stx) (or (syntax->list stx) stx)) (syntax->list pats))))]
               [pat-datum (in-value (syntax->datum pat-arg))]
               #:when (and (symbol? pat-datum)
                           (not (eq? pat-datum '...)) (not (eq? pat-datum '_))
                           (not (let ([str (symbol->string pat-datum)])
-                                 (equal? (string-upcase str) str)))))
+                                 (regexp-match #rx"^_" str)))))
              pat-arg))
 
 ;; todo: support `else` case
@@ -62,7 +62,7 @@
   (define (foo-func) 'got-foo-func)
   (br:define-cases #'op
                    [#'(_ "+") #''got-plus]
-                   [#'(_ ARG) #''got-something-else]
+                   [#'(_ _ARG) #''got-something-else]
                    [#'(_) #'(foo-func)]
                    [#'_ #'foo-val])
   
@@ -129,20 +129,20 @@
   (br:define #'plusser #'plus)
   (check-equal? (plusser 42) +)
   (check-equal? plusser +)
-  (br:define #'(times ARG) #'(* ARG ARG))
+  (br:define #'(times _ARG) #'(* _ARG _ARG))
   (check-equal? (times 10) 100)
   (br:define #'timeser #'times)
   (check-equal? (timeser 12) 144)
   (br:define #'fortytwo #'42)
   (check-equal? fortytwo 42)
   (check-equal? (let ()
-                  (br:define #'(foo X)
+                  (br:define #'(foo _X)
                              (with-syntax ([zam +])
-                               #'(zam X X))) (foo 42)) 84) 
+                               #'(zam _X _X))) (foo 42)) 84) 
   ;; todo: error from define not trapped by check-exn 
   #;(check-exn exn:fail:syntax? (λ _ (br:define (#'times stx stx2) #'*)))
   (begin
-    (br:define #'(redefine ID) #'(define ID 42))
+    (br:define #'(redefine _id) #'(define _id 42))
     (redefine zoombar)
     (check-equal? zoombar 42)))
 
@@ -164,11 +164,11 @@
   (require rackunit racket/port)
   (parameterize ([current-output-port (open-output-nowhere)])
     (check-equal? (let ()
-                    (br:debug-define #'(foo X Y Z)
-                                     #'(apply + (list X Y Z)))
+                    (br:debug-define #'(foo _X _Y _Z)
+                                     #'(apply + (list _X _Y _Z)))
                     (foo 1 2 3)) 6)  
     (check-equal? (let ()
-                    (br:debug-define #'(foo X ...) #'(apply * (list X ...)))
+                    (br:debug-define #'(foo _X ...) #'(apply * (list _X ...)))
                     (foo 10 11 12)) 1320)))
 
 
