@@ -4,9 +4,9 @@
   (define (make-datum str) (format-datum '(dispatch ~a) str))
   (define src-exprs (map make-datum src-strs))
   (strip-context
-   (inject-syntax ([#'(SRC-EXPR ...) src-exprs])
+   (inject-syntax ([#'(_SRC-EXPR ...) src-exprs])
                   #'(module stacker-mod br/demo/stacker
-                      SRC-EXPR ...))))
+                      _SRC-EXPR ...))))
 (provide read-syntax)
 
 (define #'(stacker-module-begin _READER-LINE ...)
