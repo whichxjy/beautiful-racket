@@ -21,8 +21,21 @@
 
 (define #'(program LINE ...) #'(run (list LINE ...)))
 
+
+(struct exn:line-not-found exn:fail ())
+
+
 (define (run lines)
   (define program-lines (list->vector (filter (λ(ln) (not (equal? ln "cr"))) lines)))
+  (define (line-number->index ln)
+    (or
+     (for/or ([idx (in-range (vector-length program-lines))])
+             (and (= (car (vector-ref program-lines idx)) ln)
+                  idx))
+     (raise
+      (exn:line-not-found
+       (format "line number ~a not found in program" ln)
+       (current-continuation-marks)))))
   (void (with-handlers ([exn:program-end? (λ (exn) (void))])
           (for/fold ([program-counter 0])
                     ([i (in-naturals)]
@@ -31,10 +44,7 @@
               (vector-ref program-lines program-counter))
             (define maybe-jump-number (and proc (proc)))
             (if (number? maybe-jump-number)
-                (let ([jump-number maybe-jump-number])
-                  (for/or ([idx (in-range (vector-length program-lines))])
-                          (and (= (car (vector-ref program-lines idx)) jump-number)
-                               idx)))
+                (line-number->index maybe-jump-number)
                 (add1 program-counter))))))
 
 (define #'(cr-line ARG ...) #'(begin ARG ...))
@@ -43,10 +53,16 @@
 (define current-return-stack (make-parameter empty))
 
 (define-cases #'line
-  [#'(_ NUMBER (STATEMENT "GOSUB" WHERE)) #'(cons NUMBER
-                                                  (λ _
-                                                    (current-return-stack (cons NUMBER (current-return-stack)))
-                                                    (GOTO WHERE)))]
+  [#'(_ NUMBER (STATEMENT "GOSUB" WHERE))
+   #'(cons NUMBER
+           (λ _
+             (let ([return-stack (current-return-stack)])
+               (cond
+                 [(or (empty? return-stack)
+                      (not (= NUMBER (car return-stack))))
+                  (current-return-stack (cons NUMBER (current-return-stack)))
+                  (GOTO WHERE)]
+                 [else (current-return-stack (cdr (current-return-stack)))]))))]
   [#'(_ NUMBER STATEMENT ...)  #'(cons NUMBER (λ _ STATEMENT ...))])
 
 
@@ -125,13 +141,8 @@
 (define (GOTO where)
   where)
 
-(define (GOSUB where)
-  where)
-
 (define (RETURN)
-  (define where (car (current-return-stack)))
-  (current-return-stack (cdr (current-return-stack)))
-  where)
+  (car (current-return-stack)))
 
 
 (struct exn:program-end exn:fail ())
@@ -140,5 +151,6 @@
    (exn:program-end
     "program ended"
     (current-continuation-marks))))
+
 
 (define (comment . args) void)
