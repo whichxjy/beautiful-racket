@@ -28,15 +28,15 @@
                 (values rator rand))))
 
 
-(define #'(define-datatype <base-type> <base-type-predicate?>
-            (<subtype> [<field> <field-predicate?>] ...) ...)
+(define #'(define-datatype _base-type _base-type-predicate?
+            (_subtype [_field _field-predicate?] ...) ...)
   #'(begin
-      (struct <base-type> () #:transparent #:mutable)
-      (struct <subtype> <base-type> (<field> ...) #:transparent #:mutable
-        #:guard (λ(<field> ... name)
-                  (unless (<field-predicate?> <field>)
-                    (error name (format "arg ~a is not ~a" <field> '<field-predicate?>))) ...
-                  (values <field> ...))) ...))
+      (struct _base-type () #:transparent #:mutable)
+      (struct _subtype _base-type (_field ...) #:transparent #:mutable
+        #:guard (λ(_field ... name)
+                  (unless (_field-predicate? _field)
+                    (error name (format "arg ~a is not ~a" _field '_field-predicate?))) ...
+                  (values _field ...))) ...))
 
 
 (define-datatype lc-exp lc-exp?
