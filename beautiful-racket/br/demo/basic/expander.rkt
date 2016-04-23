@@ -39,18 +39,18 @@
       (exn:line-not-found
        (format "line number ~a not found in program" ln)
        (current-continuation-marks)))))
-  (with-handlers ([exn:program-end? (λ _ (void))])
-    (for/fold ([program-counter 0])
-              ([i (in-naturals)])
-      (cond
-        [(= program-counter (vector-length program-lines)) (basic:END)]
-        [else
-         (match-define (cons line-number proc)
-           (vector-ref program-lines program-counter))
-         (define maybe-jump-number (and proc (proc)))
-         (if (number? maybe-jump-number)
-             (line-number->index maybe-jump-number)
-             (add1 program-counter))])))
+  (for/fold ([program-counter 0])
+            ([i (in-naturals)]
+             #:break (eq? program-counter 'end))
+    (cond
+      [(= program-counter (vector-length program-lines)) (basic:END)]
+      [else
+       (define line-function (cdr (vector-ref program-lines program-counter)))
+       (define maybe-next-line (and line-function (line-function)))
+       (cond
+         [(number? maybe-next-line) (line-number->index maybe-next-line)]
+         [(eq? 'end maybe-next-line) 'end]
+         [else (add1 program-counter)])]))
   (void))
 
 (define #'(cr-line _arg ...) #'(begin _arg ...))
@@ -115,7 +115,7 @@
 (define-cases #'comp-expr
   [#'(_ _LEXPR "=" _REXPR) #'(comp-expr _LEXPR "equal?" _REXPR)] ; special case because = is overloaded
   [#'(_ _LEXPR _op _REXPR) (inject-syntax ([#'OP (string->symbol (syntax->datum #'_op))])
-                                       #'(cond->int (OP _LEXPR _REXPR)))]
+                                          #'(cond->int (OP _LEXPR _REXPR)))]
   [#'(_ _ARG) #'_ARG])
 (define <> (compose1 not equal?))
 
@@ -151,17 +151,12 @@
        (basic:PRINT (append _PRINT-LIST (list ";")))
        (basic:INPUT _ID))]
   [#'(_ _ID) #'(set! _ID (let* ([str (read-line)]
-                              [num (string->number str)])
-                         (if num num str)))])
+                                [num (string->number str)])
+                           (if num num str)))])
 
 (define (basic:GOTO where) where)
 
 (define (basic:RETURN) (car (current-return-stack)))
 
-
-(struct exn:program-end exn:fail ())
 (define (basic:END)
-  (raise
-   (exn:program-end
-    "program ended"
-    (current-continuation-marks))))
+  'end)
