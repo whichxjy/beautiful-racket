@@ -103,6 +103,10 @@
 (define (basic:and . args) (cond->int (andmap true? args)))
 (define (basic:or . args) (cond->int (ormap true? args)))
 
+(define-cases #'expr-list
+  [#'(_ _EXPR) #'_EXPR]
+  [#'(_ _EXPR "," _EXPR-LIST) #'(_EXPR _EXPR-LIST)])
+
 (define-cases #'expr
   [#'(_ _COMP-EXPR "AND" _SUBEXPR) #'(basic:and _COMP-EXPR _SUBEXPR)]
   [#'(_ _COMP-EXPR "OR" _SUBEXPR) #'(basic:or _COMP-EXPR _SUBEXPR)]
@@ -121,9 +125,9 @@
   [#'(_ _TERM) #'_TERM])
 
 (define-cases #'product
-  [#'(_ _FACTOR "*" _PRODUCT) #'(* _FACTOR _PRODUCT)]
-  [#'(_ _FACTOR "/" _PRODUCT) #'(/ _FACTOR _PRODUCT)]
-  [#'(_ _FACTOR) #'_FACTOR])
+  [#'(_ _value "*" _product) #'(* _value _product)]
+  [#'(_ _value "/" _product) #'(/ _value _product)]
+  [#'(_ _value) #'_value])
 
 (define print-list list)
 
