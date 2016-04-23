@@ -90,7 +90,7 @@
          _TRUE-RESULT
          _FALSE-RESULT)]
   [#'(_ _COND "THEN" _TRUE-RESULT)
-   #'(when (true? COND)
+   #'(when (true? _COND)
        _TRUE-RESULT)])
 
 (define-cases #'value
@@ -131,7 +131,7 @@
   (match args
     [(list) (displayln "")]
     [(list print-list-item ... ";" pl) (begin (for-each display print-list-item)
-                                              (print pl))]
+                                              (basic:PRINT pl))]
     [(list print-list-item ... ";") (for-each display print-list-item)]
     [(list print-list-item ...) (for-each displayln print-list-item)]))
 

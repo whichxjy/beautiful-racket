@@ -26,8 +26,8 @@ sum : product [("+" | "-") sum]
 
 product : value [("*" | "/") product]
 
-value : "(" expr ")"
-| ID ["(" expr* ")"]
+value : ID ["(" expr* ")"]
+| "(" expr ")"
 | STRING
 | NUMBER
 
