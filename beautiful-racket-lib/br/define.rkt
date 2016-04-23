@@ -14,6 +14,12 @@
                                  (regexp-match #rx"^_" str)))))
              pat-arg))
 
+;; expose the caller context within br:define macros with syntax parameter
+(begin-for-syntax
+  (require (for-syntax racket/base) racket/stxparam)
+  (provide caller-stx)
+  (define-syntax-parameter caller-stx (λ(stx) (error 'not-parameterized))))
+
 ;; todo: support `else` case
 (define-syntax (br:define-cases stx)
   (define-syntax-class syntaxed-id
@@ -43,7 +49,8 @@
        #'(define-syntax top-id.name (λ (stx)
                                       (define result
                                         (syntax-case stx (LITERAL ...)
-                                          [pat body ...] ...
+                                          [pat (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
+                                                 body ...)] ...
                                           [else (raise-syntax-error 'define-cases (format "no matching case for syntax pattern `~a`" (syntax->datum stx)) (syntax->datum #'top-id.name))]))
                                       (if (not (syntax? result))
                                           (datum->syntax stx result)
@@ -144,7 +151,15 @@
   (begin
     (br:define #'(redefine _id) #'(define _id 42))
     (redefine zoombar)
-    (check-equal? zoombar 42)))
+    (check-equal? zoombar 42))
+
+  ;; use caller-stx parameter to introduce identifier unhygienically
+  (br:define #'(zam _arg1 _arg2 _arg3)
+    (with-syntax ([dz (datum->syntax caller-stx 'dirty-zam)])
+      #`(define dz 'got-dirty-zam)))
+  
+  (zam 'this 'that 42)
+  (check-equal? dirty-zam 'got-dirty-zam))
 
 
 (define-syntax-rule (br:debug-define (syntax (id pat-arg ... . rest-arg)) body-exp)
