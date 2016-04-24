@@ -1,0 +1,7 @@
+#lang racket/base
+(provide Or)
+(define (Or #:a a #:b b)
+  (define out (if (or (not (zero? a)) (not (zero? b)))
+                  1
+                  0))
+  out)

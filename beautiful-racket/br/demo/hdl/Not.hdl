@@ -1,0 +1,7 @@
+#lang racket/base
+(provide Not)
+(define (Not #:in in)
+  (define out (if (zero? in)
+                  1
+                  0))
+  out)
