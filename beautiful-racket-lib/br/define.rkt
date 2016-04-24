@@ -4,9 +4,17 @@
 
 ;; everything is prefixed br: whether it needs it or not so it can be stripped by #lang br
 
+(define-for-syntax (syntax-flatten stx)
+  (flatten
+   (let loop ([stx stx])
+     (define maybe-list (syntax->list stx))
+     (if maybe-list
+         (map loop maybe-list)
+         stx))))
+
 (define-for-syntax (generate-literals pats)
   ;; generate literals for any symbols that are not ... or _ or _underscore-prefixed
-  (for*/list ([pat-arg (in-list (flatten (map (λ(stx) (or (syntax->list stx) stx)) (syntax->list pats))))]
+  (for*/list ([pat-arg (in-list (syntax-flatten pats))]
               [pat-datum (in-value (syntax->datum pat-arg))]
               #:when (and (symbol? pat-datum)
                           (not (eq? pat-datum '...)) (not (eq? pat-datum '_))
@@ -51,7 +59,7 @@
                                         (syntax-case stx (LITERAL ...)
                                           [pat (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
                                                  body ...)] ...
-                                          [else (raise-syntax-error 'define-cases (format "no matching case for syntax pattern `~a`" (syntax->datum stx)) (syntax->datum #'top-id.name))]))
+                                          [else (raise-syntax-error 'define-cases (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'top-id.name))]))
                                       (if (not (syntax? result))
                                           (datum->syntax stx result)
                                           result))))]
@@ -136,10 +144,10 @@
   (br:define #'plusser #'plus)
   (check-equal? (plusser 42) +)
   (check-equal? plusser +)
-  (br:define #'(times _ARG) #'(* _ARG _ARG))
-  (check-equal? (times 10) 100)
+  (br:define #'(times [nested _ARG]) #'(* _ARG _ARG))
+  (check-equal? (times [nested 10]) 100)
   (br:define #'timeser #'times)
-  (check-equal? (timeser 12) 144)
+  (check-equal? (timeser [nested 12]) 144)
   (br:define #'fortytwo #'42)
   (check-equal? fortytwo 42)
   (check-equal? (let ()
@@ -152,11 +160,11 @@
     (br:define #'(redefine _id) #'(define _id 42))
     (redefine zoombar)
     (check-equal? zoombar 42))
-
+  
   ;; use caller-stx parameter to introduce identifier unhygienically
   (br:define #'(zam _arg1 _arg2 _arg3)
-    (with-syntax ([dz (datum->syntax caller-stx 'dirty-zam)])
-      #`(define dz 'got-dirty-zam)))
+             (with-syntax ([dz (datum->syntax caller-stx 'dirty-zam)])
+               #`(define dz 'got-dirty-zam)))
   
   (zam 'this 'that 42)
   (check-equal? dirty-zam 'got-dirty-zam))

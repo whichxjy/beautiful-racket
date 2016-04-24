@@ -1,4 +1,4 @@
-#lang s-exp "hdl.rkt"
+#lang s-exp br/demo/hdl/expander
 
 (chip Xor (IN a b)
       (OUT out)

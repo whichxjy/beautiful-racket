@@ -1,7 +1,14 @@
-#lang racket/base
-(provide And)
-(define (And #:a a #:b b)
-  (define out (if (and (not (zero? a)) (not (zero? b)))
-                  1
-                  0))
-  out)
+#lang s-exp br/demo/hdl/expander
+
+(chip And
+      (a b)
+      (out)
+      ((Nand [a a] [b b] [out nand-out])
+       (Not [in nand-out] [out out])))
+
+(module+ test
+  (require rackunit)
+  (check-equal? (And #:a 0 #:b 0) 0)
+  (check-equal? (And #:a 0 #:b 1) 0)
+  (check-equal? (And #:a 1 #:b 0) 0)
+  (check-equal? (And #:a 1 #:b 1) 1))

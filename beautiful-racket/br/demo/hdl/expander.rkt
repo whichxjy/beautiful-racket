@@ -3,10 +3,9 @@
 
 
 (define #'(chip _Chip
-                (IN _input-pin ...)
-                (OUT _output-pin)
-                (PARTS
-                 (_Part [_pin-in _val-id] ... [out _pin-out]) ...))
+                (_input-pin ...)
+                (_output-pin)
+                ((_Part [_pin-in _val-id] ... [out _pin-out]) ...))
   #'(begin
       (provide _Chip)
       (define _Chip

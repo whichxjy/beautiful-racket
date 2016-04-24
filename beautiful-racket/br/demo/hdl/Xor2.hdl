@@ -1,4 +1,4 @@
-#lang reader "hdl-reader.rkt"
+#lang br/demo/hdl
 
 CHIP Xor {
           IN a, b;
@@ -12,9 +12,4 @@ CHIP Xor {
 }
 
 
-(module+ test
-  (require rackunit)
-  (check-equal? (Xor #:a 0 #:b 0) 0)
-  (check-equal? (Xor #:a 0 #:b 1) 1)
-  (check-equal? (Xor #:a 1 #:b 0) 1)
-  (check-equal? (Xor #:a 1 #:b 1) 0))
+

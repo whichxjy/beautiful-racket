@@ -1,7 +1,16 @@
-#lang racket/base
-(provide Or)
-(define (Or #:a a #:b b)
-  (define out (if (or (not (zero? a)) (not (zero? b)))
-                  1
-                  0))
-  out)
+#lang s-exp br/demo/hdl/expander
+
+(chip Or
+      (a b)
+      (out)
+      ((Not [in a] [out nota])
+       (Not [in b] [out notb])
+       (And [a nota] [b notb] [out and-out])
+       (Not [in and-out] [out out])))
+
+(module+ test
+  (require rackunit)
+  (check-equal? (Or #:a 0 #:b 0) 0)
+  (check-equal? (Or #:a 0 #:b 1) 1)
+  (check-equal? (Or #:a 1 #:b 0) 1)
+  (check-equal? (Or #:a 1 #:b 1) 1))

@@ -1,7 +1,11 @@
-#lang racket/base
-(provide Not)
-(define (Not #:in in)
-  (define out (if (zero? in)
-                  1
-                  0))
-  out)
+#lang s-exp br/demo/hdl/expander
+
+(chip Not
+      (in)
+      (out)
+      ((Nand [a in] [b in] [out out])))
+
+(module+ test
+  (require rackunit)
+  (check-equal? (Not #:in 0) 1)
+  (check-equal? (Not #:in 1) 0))
