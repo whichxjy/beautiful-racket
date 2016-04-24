@@ -1,7 +1,7 @@
 #lang br/demo/hdl
 
 CHIP Not {
-          IN x;
+          IN x, y, z;
 }
 
 
