@@ -1,5 +1,5 @@
 #lang br
-(provide (all-from-out br) chip)
+(provide (all-from-out br) chip call-part)
 
 
 (define #'(chip _Chip

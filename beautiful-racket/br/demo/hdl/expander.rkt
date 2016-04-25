@@ -22,23 +22,27 @@ chip-name parser should generate outer define/provide form.
 
 (define #'(make-kw-procedure
            (pin-spec-in "IN" _pinin-or-comma ... ";")
-           (pin-spec-out "OUT" _pinout-or-comma ... ";"))
+           (pin-spec-out "OUT" _pinout-or-comma ... ";")
+           _part-spec)
   (inject-syntax ([#'(_pinin ...) (remove-commas #'(_pinin-or-comma ...))]
                 [#'(_pinout ...) (remove-commas #'(_pinout-or-comma ...))])
     #'(make-keyword-procedure
        (λ (kws kw-args . rest)
          (define kw-pairs (map cons kws kw-args))
          (let ([_pinin (cdr (assq (string->keyword (format "~a" '_pinin)) kw-pairs))] ...)
+           #;_part-spec
            (define _pinout (list _pinin ...)) ...
            (list _pinout ...))))))
 
 
+;; next: make part-spec work
+#;(define #'(part-spec "PARTS:" _part ...))
 
-(define #'(chip-program "CHIP" _topid "{" _pin-spec-in _pin-spec-out "}")
+(define #'(chip-program "CHIP" _topid "{" _pin-spec-in _pin-spec-out _part-spec "}")
   #`(begin
       (provide _topid)
       (define _topid
-        (make-kw-procedure _pin-spec-in _pin-spec-out)
+        (make-kw-procedure _pin-spec-in _pin-spec-out _part-spec)
         )
       (require rackunit)
       (check-equal? (_topid #:a 1 #:b 2 #:c 3 #:d 4) '((1 2 3 4)(1 2 3 4)(1 2 3 4)))))
