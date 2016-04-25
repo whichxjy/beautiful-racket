@@ -1,13 +1,10 @@
 #lang ragg
 
-chip-program : "CHIP" ID "{" pin-spec "}"
+chip-program : "CHIP" ID "{" pin-spec-in pin-spec-out "}"
 
-pin-spec : ("IN" | "OUT") pin-list ";"
+pin-spec-in : "IN" ID ["," ID]* ";"
 
-pin-list : ID ["," pin-list]
+pin-spec-out : "OUT" ID ["," ID]* ";"
 
-part-spec : "PARTS:" part+
 
-part : ID "(" part-arg-list ")" ";"
-
-part-arg-list : ID "=" ID ["," part-arg-list]
+part-spec : "PARTS:" [ID "(" [ID "=" ID]+ ")" ";"]+

@@ -1,8 +1,9 @@
 #lang br/demo/hdl
 
 CHIP Not {
-          IN x, y, z;
-}
+          IN a, b, c, d;
+             OUT x, y, z;
+             }
 
 
 
