@@ -20,20 +20,17 @@ chip-name parser should generate outer define/provide form.
   (filter (λ(i)
             (not (equal? "," (syntax->datum i)))) (syntax->list stx-expr)))
 
-(define #'(pin-spec-out "OUT" _pin-or-comma ... ";")
-  (with-syntax ([(_pinid ...) (remove-commas #'(_pin-or-comma ...))])
-    #'(begin
-        (define _pinid '(1 2 3 4)) ...
-        (list _pinid ...))))
-
-(define #'(make-kw-procedure (pin-spec-in "IN" _pin-or-comma ... ";") _pin-spec-out)
-  (with-syntax ([(_pinid ...) (remove-commas #'(_pin-or-comma ...))])
+(define #'(make-kw-procedure
+           (pin-spec-in "IN" _pinin-or-comma ... ";")
+           (pin-spec-out "OUT" _pinout-or-comma ... ";"))
+  (inject-syntax ([#'(_pinin ...) (remove-commas #'(_pinin-or-comma ...))]
+                [#'(_pinout ...) (remove-commas #'(_pinout-or-comma ...))])
     #'(make-keyword-procedure
        (λ (kws kw-args . rest)
          (define kw-pairs (map cons kws kw-args))
-         (let ([_pinid (cdr (assq (string->keyword (format "~a" '_pinid)) kw-pairs))] ...)
-           
-           _pin-spec-out)))))
+         (let ([_pinin (cdr (assq (string->keyword (format "~a" '_pinin)) kw-pairs))] ...)
+           (define _pinout (list _pinin ...)) ...
+           (list _pinout ...))))))
 
 
 
@@ -45,3 +42,9 @@ chip-name parser should generate outer define/provide form.
         )
       (require rackunit)
       (check-equal? (_topid #:a 1 #:b 2 #:c 3 #:d 4) '((1 2 3 4)(1 2 3 4)(1 2 3 4)))))
+
+#|
+ PARTS:
+             Nand(a=a, b=a, out=x);
+
+|#

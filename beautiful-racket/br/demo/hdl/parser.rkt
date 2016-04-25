@@ -7,4 +7,4 @@ pin-spec-in : "IN" ID ["," ID]* ";"
 pin-spec-out : "OUT" ID ["," ID]* ";"
 
 
-part-spec : "PARTS:" [ID "(" [ID "=" ID]+ ")" ";"]+
+part-spec : "PARTS:" [ID "(" ID "=" ID ["," ID "=" ID]* ")" ";"]+
