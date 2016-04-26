@@ -203,11 +203,35 @@
 (define-for-syntax (expand-macro mac)
   (syntax-disarm (local-expand mac 'expression #f) #f))
 
+#|
+    [(_ (syntax (id pat-arg ... . rest-arg)) body ...) ; (define #'(foo arg) #'(+ arg arg))
+     #'(br:define-cases (syntax id) [(syntax (_ pat-arg ... . rest-arg)) body ...])]
+|#
 
-(br:define #'(define-inverting (syntax (_id . _patargs)) _syntaxexpr)
-           #'(br:define (syntax (_id . rest))
-                        (with-syntax ([_patargs (map expand-macro (syntax->list #'rest))])
-                          _syntaxexpr)))
+(define-syntax (br:define-inverting stx)
+  (syntax-case stx (syntax)
+    [(_ (syntax (_id _patarg ... . _restarg)) _syntaxexpr ...)
+     #'(br:define-cases-inverting (syntax _id)
+                                  [(syntax (_ _patarg ... . _restarg)) _syntaxexpr ...])]))
+
+
+(define-syntax (br:define-cases-inverting stx)
+  (syntax-case stx (syntax)
+    [(_ (syntax _id) [(syntax _pat) _body ...] ...)
+     (with-syntax ([(LITERAL ...) (generate-literals #'(_pat ...))])
+       #'(define-syntax (_id stx)
+           (syntax-case stx ()
+             [(_id . rest)
+              (let ([expanded-stx (map expand-macro (syntax->list #'rest))])
+                (define result
+                  (syntax-case #`(#,#'_id #,@expanded-stx) (LITERAL ...) ;; put id back together with args to make whole pattern
+                    [_pat (syntax-parameterize ([caller-stx (make-rename-transformer #'expanded-stx)])
+                            _body ...)] ...
+                    [else (raise-syntax-error 'define-cases-inverting (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'_id))]))
+                (if (not (syntax? result))
+                    (datum->syntax stx result)
+                    result))])))]))
+
 
 (module+ test
   ;; an inverting macro expands its arguments.
@@ -215,12 +239,13 @@
   ;; but rather the result of their expansion, namely `((#f a) (#f b) (#f c))`
   ;; and `tree` does not get `(foo (#f a) (#f b) (#f c))` as its first argument,
   ;; but rather the result of its expansion, namely (a b c).
-  (define-inverting #'(tree (_id ...) _vals)
-    #'(let ()
-        (define-values (_id ...) _vals)
-        (list _id ...)))
+  (br:define-inverting #'(tree (_id ...) _vals)
+                       #'(let ()
+                           (define-values (_id ...) _vals)
+                           (list _id ...)))
   
-  (define-inverting #'(foo (#f _id) ...)  #'(_id ...))
+  (br:define-cases-inverting #'foo
+                             [#'(_ (#f _id) ...) #'(_id ...)])
   
   (define-syntax-rule (falsy id) (#f id))
   
