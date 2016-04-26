@@ -197,4 +197,32 @@
 
 
 (define-syntax-rule (br:define+provide arg ...)
-  (define+provide arg ...)) 
+  (define+provide arg ...))
+
+
+(br:define #'(define-inverting (syntax (_id . _patargs)) _syntaxexpr)
+           #'(define-syntax (_id stx)
+               (let ()
+                 (define (expand-macro mac)
+                   (syntax-disarm (local-expand mac 'expression #f) #f))
+                 (syntax-case stx ()
+                   [(_ . rest)
+                    (with-syntax ([_patargs (map expand-macro (syntax->list #'rest))])
+                      _syntaxexpr)]))))
+
+(module+ test
+  ;; an inverting macro expands its arguments.
+  ;; so `foo` does not get `(falsy a) (falsy b) (falsy c)` as arguments,
+  ;; but rather the result of their expansion, namely `((#f a) (#f b) (#f c))`
+  ;; and `tree` does not get `(foo (#f a) (#f b) (#f c))` as its first argument,
+  ;; but rather the result of its expansion, namely (a b c).
+  (define-inverting #'(tree (_id ...) _vals)
+    #'(let ()
+        (define-values (_id ...) _vals)
+        (list _id ...)))
+  
+  (define-inverting #'(foo (#f _id) ...)  #'(_id ...))
+  
+  (define-syntax-rule (falsy id) (#f id))
+  
+  (check-equal? (tree (foo (falsy a) (falsy b) (falsy c)) (values 1 2 3)) '(1 2 3)))
