@@ -1,16 +1,13 @@
-#lang s-exp br/demo/hdl/expander0
+#lang br/demo/hdl
 
-(chip Or
-      (a b)
-      (out)
-      ((Not [in a] [out nota])
-       (Not [in b] [out notb])
-       (And [a nota] [b notb] [out and-out])
-       (Not [in and-out] [out out])))
-
-(module+ test
-  (require rackunit)
-  (check-equal? (Or #:a 0 #:b 0) 0)
-  (check-equal? (Or #:a 0 #:b 1) 1)
-  (check-equal? (Or #:a 1 #:b 0) 1)
-  (check-equal? (Or #:a 1 #:b 1) 1))
+CHIP Or {
+         IN a, b;
+            OUT out;
+            
+            PARTS:
+            Not(in=a, out=nota);
+            Not(in=b, out=notb);
+            And(a=nota, b=notb, out=andout);
+            Not(in=andout, out=out);
+            
+            }

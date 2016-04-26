@@ -1,11 +1,13 @@
-#lang s-exp br/demo/hdl/expander0
+#lang br/demo/hdl
 
-(chip Not
-      (in)
-      (out)
-      ((Nand [a in] [b in] [out out])))
+CHIP Not {
+          IN in;
+          OUT out;
+             
+             PARTS:
+             Nand(a=in, b=in, out=out);
+             
+             }
 
-(module+ test
-  (require rackunit)
-  (check-equal? (Not #:in 0) 1)
-  (check-equal? (Not #:in 1) 0))
+
+

@@ -12,6 +12,6 @@
        [(union #\tab #\space #\newline) (get-token input-port)]
        [(union "CHIP" "IN" "OUT" "PARTS:") lexeme]
        [(char-set "{}(),;=") lexeme]
-       [(repetition 1 +inf.0 (union alphabetic numeric)) (token 'ID (string->symbol lexeme))]))
+       [(repetition 1 +inf.0 (union alphabetic numeric "-")) (token 'ID (string->symbol lexeme))]))
     (get-token input-port))  
   next-token)

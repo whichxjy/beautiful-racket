@@ -1,11 +1,12 @@
 #lang br/demo/hdl
 
-CHIP Not {
-          IN in;
+CHIP And {
+          IN a, b;
              OUT out;
              
              PARTS:
-             Nand(a=in, b=in, out=out);
+             Nand(a=a, b=b, out=nandout);
+             Not(in=nandout, out=out);
              }
 
 
