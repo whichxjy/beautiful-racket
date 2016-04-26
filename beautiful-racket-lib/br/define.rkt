@@ -200,15 +200,14 @@
   (define+provide arg ...))
 
 
+(define-for-syntax (expand-macro mac)
+  (syntax-disarm (local-expand mac 'expression #f) #f))
+
+
 (br:define #'(define-inverting (syntax (_id . _patargs)) _syntaxexpr)
-           #'(define-syntax (_id stx)
-               (let ()
-                 (define (expand-macro mac)
-                   (syntax-disarm (local-expand mac 'expression #f) #f))
-                 (syntax-case stx ()
-                   [(_ . rest)
-                    (with-syntax ([_patargs (map expand-macro (syntax->list #'rest))])
-                      _syntaxexpr)]))))
+           #'(br:define (syntax (_id . rest))
+                        (with-syntax ([_patargs (map expand-macro (syntax->list #'rest))])
+                          _syntaxexpr)))
 
 (module+ test
   ;; an inverting macro expands its arguments.
