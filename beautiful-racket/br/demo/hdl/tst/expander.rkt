@@ -1,47 +1,54 @@
 #lang br
-(provide #%top-interaction #%module-begin #%datum #%top #%app)
+(provide #%top-interaction #%module-begin #%datum (rename-out [my-top #%top]) #%app
+         (all-defined-out))
 
-(provide tst-program)
-(define #'(tst-program _arg ...)
-  #'(begin _arg ...))
+; #%app and #%datum have to be present to make #%top work
+(define #'(my-top . id)
+  #'(begin
+      (displayln (format "got unbound identifier: ~a" 'id))
+      (procedure-rename (λ xs (cons 'id xs)) (string->symbol (format "undefined:~a" 'id)))))
 
+(define-inverting #'(tst-program _arg ...)
+  #'(begin 
+      _arg ...))
 
-(define-for-syntax private-proc-name (generate-temporary))
+(define-for-syntax output-here #'output-here)
 
-(provide load-expr)
-;; parse shape: (load-expr "load" Xor.hdl ",")
-(define #'(load-expr "load" _filename ",")
+(define-inverting #'(header-expr (_filename-string _procname) (_colid ... _outid) ";")
+  (inject-syntax ([#'output (syntax-local-introduce output-here)])
+    #'(begin
+        (provide (all-defined-out))
+        (define _procname (dynamic-require _filename-string '_procname))
+        (display-header '_colid ... '_outid)
+        (define _colid #f) ...
+        (define (_outid)
+          (keyword-apply _procname
+                         (map (compose1 string->keyword symbol->string) (list '_colid ...))
+                         (list _colid ...) null))
+        
+        (define (output)
+          (display-values _colid ... (_outid))))))
+
+(define-inverting #'(load-expr "load" (_filename-string _procname) ",")
+  #'(_filename-string _procname))
+
+(define #'(filename _filename)
   (inject-syntax ([#'filename-string (symbol->string (syntax->datum #'_filename))]
                   [#'proc-name (string->symbol (cadr (regexp-match #rx"^(.*)\\.hdl$"(symbol->string (syntax->datum #'_filename)))))])
-                 #'(begin
-                     (define _filename (dynamic-require filename-string 'proc-name)))))
+                 #'(filename-string proc-name)))
 
-(begin-for-syntax
-  (define (expand-macro mac)
-    (syntax-disarm (local-expand mac 'expression #f) #f)))
+(define-inverting #'(table-expr "output-list" _column-id ...)
+  #'(_column-id ...))
 
-;; parse shape:
-;; (header-expr "output-list" a (comma-id "," b)  "," "out" ";")
-(provide header-expr)
-(define #'(header-expr "output-list" _first-id _comma-id ... "," "out" ";")
-  (inject-syntax ([#'(_other-id ...) (map expand-macro (syntax->list #'(_comma-id ...)))])
-                 #'(begin
-                     (display-header _first-id _other-id ... out)
-                     (define _first-id #f)
-                     (define _other-id #f) ...
-                     (define (out)
-                       (keyword-apply proc '(#:a #:b) (list a b) null))
-                     )))
-
-(provide comma-id)
-(define #'(comma-id "," _id)
-  #'_id)
+(define-cases #'column-id
+  [#'(_ _colid) #'_colid]
+  [#'(_ _colid ",") #'_colid])
 
 
-(define #'(display-header _val ...)
+(define #'(display-header _sym ...)
   #'(begin
-      (apply display-values (list '_val ...))
-      (apply display-dashes (list '_val ...))))
+      (apply display-values (list _sym ...))
+      (apply display-dashes (list _sym ...))))
 
 (define (vals->text vals)
   (string-join (map ~a vals) " | "))
@@ -53,30 +60,23 @@
   (displayln (make-string (string-length (vals->text vals)) #\-)))
 
 
-(provide test-expr)
-(define #'(test-expr _first-step _comma-step ... ";")
-  (inject-syntax ([#'(_other-step ...) (expand-macro #'(_comma-step ...))])
-                 #'(let ()
-                     _first-step
-                     _other-step ...)))
+(define-inverting #'(test-expr _step-expr ... ";")
+  #'(begin
+      _step-expr ...))
 
-(provide step-expr)
-(define #'(step-expr _step)
-  #'_step)
 
-(provide set-expr)
+(define-cases #'step-expr
+  [#'(_ _step) #'_step]
+  [#'(_ _step ",") #'_step])
+
+
 (define #'(set-expr "set" _id _val)
   #'(set! _id _val))
 
-(provide comma-step)
-(define #'(comma-step "," _step)
-  #'_step)
 
-(provide eval-expr)
 (define #'(eval-expr "eval")
-  #'(set! result (param-proc)))
+  #'(void))
 
-#|
-(tst-program (load-expr "load" Xor.hdl ",") (header-expr "output-list" a "," b "," out ";") (test-expr (step-expr (set-expr "set" a 0)) "," (step-expr (set-expr "set" b 0)) "," (step-expr (eval-expr "eval")) "," (step-expr (output-expr "output")) ";") (test-expr (step-expr (set-expr "set" a 0)) "," (step-expr (set-expr "set" b 1)) "," (step-expr (eval-expr "eval")) "," (step-expr (output-expr "output")) ";") (test-expr (step-expr (set-expr "set" a 1)) "," (step-expr (set-expr "set" b 0)) "," (step-expr (eval-expr "eval")) "," (step-expr (output-expr "output")) ";") (test-expr (step-expr (set-expr "set" a 1)) "," (step-expr (set-expr "set" b 1)) "," (step-expr (eval-expr "eval")) "," (step-expr (output-expr "output")) ";"))
-|#
 
+(define #'(output-expr "output")
+  #'(output-here))

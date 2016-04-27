@@ -1,6 +1,8 @@
 #lang br/demo/hdl/tst
 
-load Xor.hdl,
+/* or */
+
+load Or.hdl,
 output-list a, b, out;
 set a 0, set b 0,
 eval, output;

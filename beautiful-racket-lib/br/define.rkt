@@ -222,10 +222,11 @@
        #'(define-syntax (_id stx)
            (syntax-case stx ()
              [(_id . rest)
-              (let ([expanded-stx (map expand-macro (syntax->list #'rest))])
+              (let* ([expanded-stx (map expand-macro (syntax->list #'rest))]
+                    [fused-stx #`(#,#'_id #,@expanded-stx)])
                 (define result
-                  (syntax-case #`(#,#'_id #,@expanded-stx) (LITERAL ...) ;; put id back together with args to make whole pattern
-                    [_pat (syntax-parameterize ([caller-stx (make-rename-transformer #'expanded-stx)])
+                  (syntax-case fused-stx (LITERAL ...) ;; put id back together with args to make whole pattern
+                    [_pat (syntax-parameterize ([caller-stx (make-rename-transformer #'fused-stx)])
                             _body ...)] ...
                     [else (raise-syntax-error 'define-cases-inverting (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'_id))]))
                 (if (not (syntax? result))

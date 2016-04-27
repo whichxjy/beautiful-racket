@@ -1,18 +1,20 @@
 #lang ragg
 
-tst-program : load-expr header-expr test-expr*
+tst-program : header-expr test-expr*
 
-load-expr : "load" ID ","
+header-expr : load-expr table-expr ";"
 
-header-expr : "output-list" ID comma-id* "," "out" ";"
+load-expr : "load" filename ","
 
-comma-id : "," ID
+filename : ID
 
-test-expr : step-expr comma-step* ";"
+table-expr : "output-list" column-id+
 
-comma-step : "," step-expr
+column-id :  ID [","]
 
-step-expr : set-expr | eval-expr | output-expr
+test-expr : step-expr+ ";"
+
+step-expr : (set-expr | eval-expr | output-expr) [","]
 
 set-expr : "set" ID VAL
 

@@ -12,7 +12,7 @@
        [(seq "/*" (complement (seq any-string "*/" any-string)) "*/")
         (token 'COMMENT lexeme #:skip? #t)]
        [(union #\tab #\space #\newline) (get-token input-port)]
-       [(union "load" "output-list" "set" "eval" "output" "out" (char-set ",;")) lexeme]
+       [(union "load" "output-list" "set" "eval" "output" (char-set ",;")) lexeme]
        [(repetition 1 +inf.0 numeric) (token 'VAL (string->number lexeme))]
        [(repetition 1 +inf.0 (union alphabetic numeric (char-set "-."))) (token 'ID (string->symbol lexeme))]))
     (get-token input-port))  
