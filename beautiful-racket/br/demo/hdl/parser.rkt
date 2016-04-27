@@ -1,17 +1,21 @@
 #lang ragg
 
+;; rule of thumb: use [optional] bits judiciously as they multiply the cases needed for a production rule
+;; rule of thumb: for a set of related IDs, put each into the same grammar entity
+;; rule of thumb: avoid mushing unrelated IDs into one grammar entity
+;; whereas a * corresponds directly to an ... in the expander macro
+;; syntax patterns are good for
+;; + single case / nonrecursive structure
+;; + nonalternating pattern (no "this that this that ...")
+
 chip-program : "CHIP" ID "{" pin-spec pin-spec part-spec "}"
 
-pin-spec : ("IN" | "OUT") pin-list ";"
+pin-spec : ("IN" | "OUT") pin+ ";"
 
-pin-list : ID another-id*
+pin : ID [","]
 
-another-id : "," ID
+part-spec : "PARTS:" part+
 
-part-spec : "PARTS:" part-list
+part : ID "(" pin-val-pair+ ")" ";"
 
-part-list : part+
-
-part : ID "(" ID "=" ID another-id-pair* ")" ";"
-
-another-id-pair : "," ID "=" ID
+pin-val-pair : ID "=" ID [","]
