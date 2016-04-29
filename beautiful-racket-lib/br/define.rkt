@@ -17,7 +17,7 @@
   (for*/list ([pat-arg (in-list (syntax-flatten pats))]
               [pat-datum (in-value (syntax->datum pat-arg))]
               #:when (and (symbol? pat-datum)
-                          (not (eq? pat-datum '...)) (not (eq? pat-datum '_))
+                          (not (eq? pat-datum '...)) (not (eq? pat-datum '_)) (not (eq? pat-datum 'else))
                           (not (let ([str (symbol->string pat-datum)])
                                  (regexp-match #rx"^_" str)))))
              pat-arg))
@@ -28,7 +28,7 @@
   (provide caller-stx)
   (define-syntax-parameter caller-stx (λ(stx) (error 'not-parameterized))))
 
-;; todo: support `else` case
+
 (define-syntax (br:define-cases stx)
   (define-syntax-class syntaxed-id
     #:literals (syntax)
@@ -52,14 +52,25 @@
      (raise-syntax-error 'define-cases "definition of a syntax transformer must use lambda notation, because otherwise it's too easy to confuse the compile-time shape and the run-time shape" (syntax->datum #'sid.name))]
     
     ;; syntax matcher
-    [(_ top-id:syntaxed-id [(syntax pat) body ...] ...+)
-     (with-syntax ([(LITERAL ...) (generate-literals #'(pat ...))])
+    [(_ top-id:syntaxed-id . patexprs)
+     ;; todo: rephrase this check as a syntax-parse pattern above
+     (let ([all-but-last-pat-datums (map syntax->datum (syntax->list (syntax-case #'patexprs ()
+                                                                       [((pat result) ... last-one) #'(pat ...)])))])
+       (when (member 'else all-but-last-pat-datums)
+         (raise-syntax-error 'define-cases "else case must be last" (syntax->datum #'top-id.name))))
+     (with-syntax* ([((pat result-expr) ... else-result-expr)
+                     (syntax-case #'patexprs (syntax else)
+                       [(((syntax pat) result-expr) ... (else else-result-expr))
+                        #'((pat result-expr) ... else-result-expr)]
+                       [(((syntax pat) result-expr) ...)
+                        #'((pat result-expr) ... (raise-syntax-error 'define-cases (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'top-id.name)))])]
+                    [(LITERAL ...) (generate-literals #'(pat ...))])
        #'(define-syntax top-id.name (λ (stx)
                                       (define result
                                         (syntax-case stx (LITERAL ...)
                                           [pat (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
-                                                 body ...)] ...
-                                          [else (raise-syntax-error 'define-cases (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'top-id.name))]))
+                                                 result-expr)] ...
+                                          [else else-result-expr]))
                                       (if (not (syntax? result))
                                           (datum->syntax #'top-id.name result)
                                           result))))]
@@ -70,6 +81,9 @@
          (case-lambda
            [(pat-arg ... . rest-arg) body ...] ...
            [else (raise-syntax-error 'define-cases "no matching case for argument pattern" (object-name top-id))]))]))
+
+
+
 
 (module+ test
   (require rackunit)
@@ -85,6 +99,19 @@
   (check-equal? (op 42) 'got-something-else)
   (check-equal? (op) 'got-foo-func)
   (check-equal? op 'got-foo-val)
+  
+  (br:define-cases #'elseop
+                   [#'(_ _arg) #''got-arg]
+                   [else #''got-else])
+  
+  (check-equal? (elseop "+") 'got-arg)
+  (check-equal? (elseop "+" 42) 'got-else)
+  
+  ;; todo: how to check for syntax error?
+  ;; `define-cases: else case must be last in: badelseop`
+  #;(check-exn exn:fail? (λ _ (br:define-cases #'badelseop
+                                               [else #''got-else]
+                                               [#'(_ _arg) #''got-arg])))
   
   (br:define-cases f
                    [(_ arg) (add1 arg)]
@@ -223,7 +250,7 @@
            (syntax-case stx ()
              [(_id . rest)
               (let* ([expanded-stx (map expand-macro (syntax->list #'rest))]
-                    [fused-stx #`(#,#'_id #,@expanded-stx)])
+                     [fused-stx #`(#,#'_id #,@expanded-stx)])
                 (define result
                   (syntax-case fused-stx (LITERAL ...) ;; put id back together with args to make whole pattern
                     [_pat (syntax-parameterize ([caller-stx (make-rename-transformer #'fused-stx)])
