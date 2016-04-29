@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/list racket/base syntax/parse racket/syntax syntax/datum syntax/strip-context) sugar/define)
+(require (for-syntax racket/list racket/base syntax/parse racket/syntax syntax/datum syntax/strip-context racket/string) sugar/define)
 (provide (all-defined-out))
 
 ;; everything is prefixed br: whether it needs it or not so it can be stripped by #lang br
@@ -14,13 +14,13 @@
 
 (define-for-syntax (generate-literals pats)
   ;; generate literals for any symbols that are not ... or _ or _underscore-prefixed
-  (for*/list ([pat-arg (in-list (syntax-flatten pats))]
-              [pat-datum (in-value (syntax->datum pat-arg))]
-              #:when (and (symbol? pat-datum)
-                          (not (eq? pat-datum '...)) (not (eq? pat-datum '_)) (not (eq? pat-datum 'else))
-                          (not (let ([str (symbol->string pat-datum)])
-                                 (regexp-match #rx"^_" str)))))
-             pat-arg))
+  (define pattern-arg-prefixer "_")
+  (for/list ([pat-arg (in-list (syntax-flatten pats))]
+             #:when (let ([pat-datum (syntax->datum pat-arg)])
+                      (and (symbol? pat-datum)
+                           (not (member pat-datum '(... _ else))) ; exempted from literality
+                           (not (string-prefix? (symbol->string pat-datum) pattern-arg-prefixer)))))
+            pat-arg))
 
 ;; expose the caller context within br:define macros with syntax parameter
 (begin-for-syntax
@@ -65,26 +65,24 @@
                         #'((pat result-expr) ... else-result-expr)]
                        [(((syntax pat) result-expr) ...)
                         #'((pat result-expr) ... (raise-syntax-error 'define-cases (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'top-id.name)))])]
-                    [(LITERAL ...) (generate-literals #'(pat ...))])
+                    [LITERALS (generate-literals #'(pat ...))])
        #'(define-syntax top-id.name (λ (stx)
                                       (define result
-                                        (syntax-case stx (LITERAL ...)
+                                        (syntax-case stx LITERALS
                                           [pat (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
                                                  (syntax-parameterize ([shared-syntax (make-shared-syntax-macro caller-stx)])
                                                    result-expr))] ...
                                           [else else-result-expr]))
-                                      (if (not (syntax? result))
-                                          (datum->syntax #'top-id.name result)
-                                          result))))]
+                                      (if (syntax? result)
+                                          result
+                                          (datum->syntax #'top-id.name result)))))]
     
     ;; function matcher
-    [(_ top-id:id [(_ pat-arg ... . rest-arg) body ...] ...)
+    [(_ top-id:id [(_ . pat-args) . body] ...)
      #'(define top-id
          (case-lambda
-           [(pat-arg ... . rest-arg) body ...] ...
+           [pat-args . body] ...
            [else (raise-syntax-error 'define-cases "no matching case for argument pattern" (object-name top-id))]))]))
-
-
 
 
 (module+ test
@@ -147,8 +145,8 @@
     #:literals (syntax)
     
     ;; syntax
-    [(_ (syntax (id pat-arg ... . rest-arg)) body ...) ; (define #'(foo arg) #'(+ arg arg))
-     #'(br:define-cases (syntax id) [(syntax (_ pat-arg ... . rest-arg)) body ...])]
+    [(_ (syntax (id . pat-args)) . body) ; (define #'(foo arg) #'(+ arg arg))
+     #'(br:define-cases (syntax id) [(syntax (_ . pat-args)) . body])]
     
     [(_ sid:syntaxed-id sid2:syntaxed-id) ; (define #'f1 #'f2)
      #'(define-syntax sid.name (make-rename-transformer sid2))]
@@ -162,9 +160,10 @@
     [(_ sid:syntaxed-id (λ (stx-arg ...) expr ...)) ; (define #'f1 (λ(stx) expr ...)
      #:fail-when (not (= (length (syntax->datum #'(stx-arg ...))) 1))
      (raise-syntax-error 'define "did not get exactly one argument for macro" (syntax->datum #'(stx-arg ...)))
-     #'(define-syntax (sid.name stx-arg ...) expr ...)]
+     (with-syntax ([(first-stx-arg other ...) #'(stx-arg ...)])
+     #'(define-syntax (sid.name first-stx-arg) expr ...))]
     
-    [(_ args ...) #'(define args ...)]))
+    [(_ arg ...) #'(define arg ...)]))
 
 (module+ test
   (require rackunit)
@@ -254,7 +253,7 @@
 (define-syntax (br:define-cases-inverting stx)
   (syntax-case stx (syntax)
     [(_ (syntax _id) [(syntax _pat) . _bodyexprs] ...)
-     (with-syntax ([(LITERAL ...) (generate-literals #'(_pat ...))])
+     (with-syntax ([LITERALS (generate-literals #'(_pat ...))])
        #'(define-syntax (_id stx)
            (syntax-case stx ()
              [(_id . rest)
@@ -262,14 +261,14 @@
                      [fused-stx (with-syntax ([(expanded-macro (... ...)) expanded-macros])
                                   #`(_id expanded-macro (... ...)))])
                 (define result
-                  (syntax-case fused-stx (LITERAL ...) ;; put id back together with args to make whole pattern
+                  (syntax-case fused-stx LITERALS ;; put id back together with args to make whole pattern
                     [_pat (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
                             (syntax-parameterize ([shared-syntax (make-shared-syntax-macro caller-stx)])
                               . _bodyexprs))] ...
                     [else (raise-syntax-error 'define-cases-inverting (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'_id))]))
-                (if (not (syntax? result))
-                    (datum->syntax #'_id result)
-                    result))])))]))
+                (if (syntax? result)
+                    result
+                    (datum->syntax #'_id result)))])))]))
 
 
 (module+ test
