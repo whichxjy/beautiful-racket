@@ -15,19 +15,20 @@
 (define-for-syntax output-here #'output-here)
 
 (define-inverting #'(header-expr (_filename-string _procname) (_colid ... _outid) ";")
-  (inject-syntax ([#'output (syntax-local-introduce output-here)])
+  (inject-syntax ([#'shared-procname (shared-syntax #'_procname)]
+                  [#'output (shared-syntax 'output)])
     #'(begin
         (provide (all-defined-out))
-        (define _procname (dynamic-require _filename-string '_procname))
+        (define shared-procname (dynamic-require _filename-string 'shared-procname))
         (display-header '_colid ... '_outid)
-        (define _colid #f) ...
+        (define _colid (make-parameter 0)) ...
         (define (_outid)
-          (keyword-apply _procname
+          (keyword-apply shared-procname
                          (map (compose1 string->keyword symbol->string) (list '_colid ...))
-                         (list _colid ...) null))
+                         (list (_colid) ...) null))
         
         (define (output)
-          (display-values _colid ... (_outid))))))
+          (display-values (_colid) ... (_outid))))))
 
 (define-inverting #'(load-expr "load" (_filename-string _procname) ",")
   #'(_filename-string _procname))
@@ -71,7 +72,7 @@
 
 
 (define #'(set-expr "set" _id _val)
-  #'(set! _id _val))
+  #'(_id _val))
 
 
 (define #'(eval-expr "eval")
@@ -79,4 +80,5 @@
 
 
 (define #'(output-expr "output")
-  #'(output-here))
+  (inject-syntax ([#'output (shared-syntax 'output)])
+  #'(output)))

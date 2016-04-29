@@ -25,8 +25,9 @@
 ;; expose the caller context within br:define macros with syntax parameter
 (begin-for-syntax
   (require (for-syntax racket/base) racket/stxparam)
-  (provide caller-stx)
-  (define-syntax-parameter caller-stx (λ(stx) (error 'not-parameterized))))
+  (provide caller-stx shared-syntax)
+  (define-syntax-parameter caller-stx (λ(stx) (error 'caller-stx-not-parameterized)))
+  (define-syntax-parameter shared-syntax (λ(stx) (error 'shared-syntax-not-parameterized))))
 
 
 (define-syntax (br:define-cases stx)
@@ -69,7 +70,8 @@
                                       (define result
                                         (syntax-case stx (LITERAL ...)
                                           [pat (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
-                                                 result-expr)] ...
+                                                 (syntax-parameterize ([shared-syntax (make-shared-syntax-macro caller-stx)])
+                                                   result-expr))] ...
                                           [else else-result-expr]))
                                       (if (not (syntax? result))
                                           (datum->syntax #'top-id.name result)
@@ -230,10 +232,6 @@
 (define-for-syntax (expand-macro mac)
   (syntax-disarm (local-expand mac 'expression #f) #f))
 
-#|
-    [(_ (syntax (id pat-arg ... . rest-arg)) body ...) ; (define #'(foo arg) #'(+ arg arg))
-     #'(br:define-cases (syntax id) [(syntax (_ pat-arg ... . rest-arg)) body ...])]
-|#
 
 (define-syntax (br:define-inverting stx)
   (syntax-case stx (syntax)
@@ -241,20 +239,33 @@
      #'(br:define-cases-inverting (syntax _id)
                                   [(syntax (_ _patarg ... . _restarg)) _syntaxexpr ...])]))
 
+(begin-for-syntax
+  (begin-for-syntax
+    (require (for-syntax racket/base))
+    (define-syntax (make-shared-syntax-macro stx)
+      (syntax-case stx ()
+        [(_ caller-stx)
+         #'(λ(stx) (syntax-case stx ()
+                     [(_ form)
+                      #'(datum->syntax caller-stx (if (syntax? form)
+                                                      (syntax-e form)
+                                                      form))]))]))))
 
 (define-syntax (br:define-cases-inverting stx)
   (syntax-case stx (syntax)
-    [(_ (syntax _id) [(syntax _pat) _body ...] ...)
+    [(_ (syntax _id) [(syntax _pat) . _bodyexprs] ...)
      (with-syntax ([(LITERAL ...) (generate-literals #'(_pat ...))])
        #'(define-syntax (_id stx)
            (syntax-case stx ()
              [(_id . rest)
-              (let* ([expanded-stx (map expand-macro (syntax->list #'rest))]
-                     [fused-stx #`(#,#'_id #,@expanded-stx)])
+              (let* ([expanded-macros (map expand-macro (syntax->list #'rest))]
+                     [fused-stx (with-syntax ([(expanded-macro (... ...)) expanded-macros])
+                                  #`(_id expanded-macro (... ...)))])
                 (define result
                   (syntax-case fused-stx (LITERAL ...) ;; put id back together with args to make whole pattern
-                    [_pat (syntax-parameterize ([caller-stx (make-rename-transformer #'fused-stx)])
-                            _body ...)] ...
+                    [_pat (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
+                            (syntax-parameterize ([shared-syntax (make-shared-syntax-macro caller-stx)])
+                              . _bodyexprs))] ...
                     [else (raise-syntax-error 'define-cases-inverting (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'_id))]))
                 (if (not (syntax? result))
                     (datum->syntax #'_id result)
