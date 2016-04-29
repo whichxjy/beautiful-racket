@@ -9,7 +9,9 @@
     (define get-token
       (lexer
        [(eof) eof]
-       [(seq "/*" (complement (seq any-string "*/" any-string)) "*/")
+        [(union
+         (seq "/*" (complement (seq any-string "*/" any-string)) "*/")
+         (seq "//" (repetition 1 +inf.0 (char-complement #\newline)) #\newline))
         (token 'COMMENT lexeme #:skip? #t)]
        [(union #\tab #\space #\newline) (get-token input-port)]
        [(union "load" "output-list" "set" "eval" "output" (char-set ",;")) lexeme]
