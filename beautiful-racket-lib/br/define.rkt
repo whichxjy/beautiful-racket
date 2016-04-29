@@ -61,7 +61,7 @@
                                                  body ...)] ...
                                           [else (raise-syntax-error 'define-cases (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'top-id.name))]))
                                       (if (not (syntax? result))
-                                          (datum->syntax stx result)
+                                          (datum->syntax #'top-id.name result)
                                           result))))]
     
     ;; function matcher
@@ -230,7 +230,7 @@
                             _body ...)] ...
                     [else (raise-syntax-error 'define-cases-inverting (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'_id))]))
                 (if (not (syntax? result))
-                    (datum->syntax stx result)
+                    (datum->syntax #'_id result)
                     result))])))]))
 
 
