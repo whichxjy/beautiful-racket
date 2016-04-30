@@ -252,7 +252,7 @@
        #'(define-syntax (_id stx)
            (syntax-case stx ()
              [(_id . rest)
-              (let* ([expanded-stx (with-syntax ([expanded-macros (map expand-macro (syntax->list #'rest))])
+              (let ([expanded-stx (with-syntax ([expanded-macros (map expand-macro (syntax->list #'rest))])
                                   #'(_id . expanded-macros))])
                 (define result
                   (syntax-case expanded-stx LITERALS
