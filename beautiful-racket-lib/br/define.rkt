@@ -107,21 +107,18 @@
   (check-equal? (elseop "+") 'got-arg)
   (check-equal? (elseop "+" 42) 'got-else)
   
-  ;; todo: how to check for syntax error?
-  ;; `define-cases: else case must be last in: badelseop`
-  #;(check-exn exn:fail? (λ _ (br:define-cases #'badelseop
+ (check-exn exn:fail:syntax? (λ _ (expand-once #'(br:define-cases #'badelseop
                                                [else #''got-else]
-                                               [#'(_ _arg) #''got-arg])))
+                                               [#'(_ _arg) #''got-arg]))))
   
   (br:define-cases f
                    [(_ arg) (add1 arg)]
                    [(_ arg1 arg2) (+ arg1 arg2)])
   
   (check-equal? (f 42) 43)
-  (check-equal? (f 42 5) 47))
+  (check-equal? (f 42 5) 47)
   
-  ;; todo: error from define-cases not trapped by check-exn 
-  ;;(check-exn exn:fail:syntax? (λ _ (define-cases (#'times stx stx2) #'*)))
+  (check-exn exn:fail:syntax? (λ _ (expand-once #'(br:define-cases (#'times stx stx2) #'*)))))
 
 
 
@@ -181,8 +178,7 @@
                   (br:define #'(foo _X)
                              (with-syntax ([zam +])
                                #'(zam _X _X))) (foo 42)) 84) 
-  ;; todo: error from define not trapped by check-exn 
-  #;(check-exn exn:fail:syntax? (λ _ (br:define (#'times stx stx2) #'*)))
+  (check-exn exn:fail:syntax? (λ _ (expand-once #'(br:define (#'times stx stx2) #'*))))
   (begin
     (br:define #'(redefine _id) #'(define _id 42))
     (redefine zoombar)
