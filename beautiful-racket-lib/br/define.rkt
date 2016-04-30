@@ -49,7 +49,7 @@
      (raise-syntax-error 'define-cases "no cases given" (syntax->datum #'top-id))]
     
     ;; defective for syntax
-    [(_ (sid:syntaxed-id _ ...) _ ...)  ; (define (#'f1 stx) expr ...)
+    [(_ (sid:syntaxed-id . _) . _)  ; (define (#'f1 stx) expr ...)
      (raise-syntax-error 'define-cases "definition of a syntax transformer must use lambda notation, because otherwise it's too easy to confuse the compile-time shape and the run-time shape" (syntax->datum #'sid.name))]
     
     ;; syntax matcher
@@ -59,20 +59,20 @@
                                                                        [((pat result) ... last-one) #'(pat ...)])))])
        (when (member 'else all-but-last-pat-datums)
          (raise-syntax-error 'define-cases "else case must be last" (syntax->datum #'top-id.name))))
-     (with-syntax* ([((pat result-expr) ... else-result-expr)
+     (with-syntax* ([((pat . result-exprs) ... else-result-exprs)
                      (syntax-case #'patexprs (syntax else)
-                       [(((syntax pat) result-expr) ... (else else-result-expr))
-                        #'((pat result-expr) ... else-result-expr)]
+                       [(((syntax pat) result-expr) ... (else . else-result-exprs))
+                        #'((pat result-expr) ... else-result-exprs)]
                        [(((syntax pat) result-expr) ...)
-                        #'((pat result-expr) ... (raise-syntax-error 'define-cases (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'top-id.name)))])]
+                        #'((pat result-expr) ... (list (raise-syntax-error 'define-cases (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'top-id.name))))])]
                     [LITERALS (generate-literals #'(pat ...))])
        #'(define-syntax top-id.name (λ (stx)
                                       (define result
                                         (syntax-case stx LITERALS
                                           [pat (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
                                                  (syntax-parameterize ([shared-syntax (make-shared-syntax-macro caller-stx)])
-                                                   result-expr))] ...
-                                          [else else-result-expr]))
+                                                   . result-exprs))] ...
+                                          [else . else-result-exprs]))
                                       (if (syntax? result)
                                           result
                                           (datum->syntax #'top-id.name result)))))]
@@ -118,12 +118,11 @@
                    [(_ arg1 arg2) (+ arg1 arg2)])
   
   (check-equal? (f 42) 43)
-  (check-equal? (f 42 5) 47)
+  (check-equal? (f 42 5) 47))
   
   ;; todo: error from define-cases not trapped by check-exn 
   ;;(check-exn exn:fail:syntax? (λ _ (define-cases (#'times stx stx2) #'*)))
-  
-  )
+
 
 
 
@@ -198,14 +197,14 @@
   (check-equal? dirty-zam 'got-dirty-zam))
 
 
-(define-syntax-rule (br:debug-define (syntax (id pat-arg ... . rest-arg)) body-exp)
-  (br:define #'(id pat-arg ... . rest-arg)
+(define-syntax-rule (br:debug-define (syntax (id . pat-args)) body-exp)
+  (br:define #'(id . pat-args)
              #`(begin
                  (for-each displayln
                            (list
-                            (format "input pattern = #'~a" '#,'(id pat-arg ... . rest-arg))
+                            (format "input pattern = #'~a" '#,'(id . pat-args))
                             (format "output pattern = #'~a" (cadr '#,'body-exp))
-                            (format "invoked as = ~a" (syntax->datum #'(id pat-arg ... . rest-arg)))
+                            (format "invoked as = ~a" (syntax->datum #'(id . pat-args)))
                             (format "expanded as = ~a" '#,(syntax->datum body-exp))
                             (format "evaluated as = ~a" #,body-exp)))
                  #,body-exp)))
@@ -224,8 +223,8 @@
 
 
 
-(define-syntax-rule (br:define+provide arg ...)
-  (define+provide arg ...))
+(define-syntax-rule (br:define+provide . args)
+  (define+provide . args))
 
 
 (define-for-syntax (expand-macro mac)
@@ -234,9 +233,9 @@
 
 (define-syntax (br:define-inverting stx)
   (syntax-case stx (syntax)
-    [(_ (syntax (_id _patarg ... . _restarg)) _syntaxexpr ...)
+    [(_ (syntax (_id . _pat-args)) . _syntaxexprs)
      #'(br:define-cases-inverting (syntax _id)
-                                  [(syntax (_ _patarg ... . _restarg)) _syntaxexpr ...])]))
+                                  [(syntax (_ . _pat-args)) . _syntaxexprs])]))
 
 (begin-for-syntax
   (begin-for-syntax
@@ -252,17 +251,16 @@
 
 (define-syntax (br:define-cases-inverting stx)
   (syntax-case stx (syntax)
-    [(_ (syntax _id) [(syntax _pat) . _bodyexprs] ...)
-     (with-syntax ([LITERALS (generate-literals #'(_pat ...))])
+    [(_ (syntax _id) [(syntax _patarg) . _bodyexprs] ...)
+     (with-syntax ([LITERALS (generate-literals #'(_patarg ...))])
        #'(define-syntax (_id stx)
            (syntax-case stx ()
              [(_id . rest)
-              (let* ([expanded-macros (map expand-macro (syntax->list #'rest))]
-                     [fused-stx (with-syntax ([(expanded-macro (... ...)) expanded-macros])
-                                  #`(_id expanded-macro (... ...)))])
+              (let* ([expanded-stx (with-syntax ([expanded-macros (map expand-macro (syntax->list #'rest))])
+                                  #'(_id . expanded-macros))])
                 (define result
-                  (syntax-case fused-stx LITERALS ;; put id back together with args to make whole pattern
-                    [_pat (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
+                  (syntax-case expanded-stx LITERALS
+                    [_patarg (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
                             (syntax-parameterize ([shared-syntax (make-shared-syntax-macro caller-stx)])
                               . _bodyexprs))] ...
                     [else (raise-syntax-error 'define-cases-inverting (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'_id))]))
