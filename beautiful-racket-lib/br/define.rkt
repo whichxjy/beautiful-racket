@@ -154,16 +154,16 @@
     [(_ (syntax id) (syntax thing)) ; (define #'f1 #'42)
      #'(br:define-cases (syntax id) [#'_ (syntax thing)])]
     
-    [(_ (sid:syntaxed-id stx-arg ...) expr ...)  ; (define (#'f1 stx) expr ...)
+    [(_ (sid:syntaxed-id stx-arg ...) . exprs)  ; (define (#'f1 stx) expr ...)
      (raise-syntax-error 'define "definition of a syntax transformer must use lambda notation, because otherwise it's too easy to confuse the compile-time shape and the run-time shape" (syntax->datum #'sid.name))]
     
-    [(_ sid:syntaxed-id (λ (stx-arg ...) expr ...)) ; (define #'f1 (λ(stx) expr ...)
+    [(_ sid:syntaxed-id (λ (stx-arg ...) . exprs)) ; (define #'f1 (λ(stx) expr ...)
      #:fail-when (not (= (length (syntax->datum #'(stx-arg ...))) 1))
      (raise-syntax-error 'define "did not get exactly one argument for macro" (syntax->datum #'(stx-arg ...)))
      (with-syntax ([(first-stx-arg other ...) #'(stx-arg ...)])
-     #'(define-syntax (sid.name first-stx-arg) expr ...))]
+     #'(define-syntax (sid.name first-stx-arg) . exprs))]
     
-    [(_ arg ...) #'(define arg ...)]))
+    [(_ . args) #'(define . args)]))
 
 (module+ test
   (require rackunit)
