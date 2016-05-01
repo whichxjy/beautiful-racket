@@ -19,7 +19,7 @@
                   [#'output (shared-syntax 'output)])
     #'(begin
         (provide (all-defined-out))
-        (define shared-procname (dynamic-require _filename-string 'shared-procname))
+        (define shared-procname (dynamic-require (findf file-exists? (list _filename-string (format "~a.rkt" _filename-string))) 'shared-procname))
         (display-header '_colid ... '_outid)
         (define _colid (make-parameter 0)) ...
         (define (_outid)

@@ -1,4 +1,4 @@
-#lang br/demo/hdl/tst
+#lang br/demo/hdl-tst
 
 /* and */
 
