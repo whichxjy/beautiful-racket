@@ -51,6 +51,15 @@
 (define-inverting #'(everywhere-action _name _desc)
   #'(_name _desc))
 
+(provide things-section)
+(define-inverting #'(things-section _heading _thing ...)
+  #'(begin _thing ...))
+
+(provide thing-entry)
+(define #'(thing-entry (thing-id _thingname) (thing-action _actionname _actiondesc) ...)
+  #''(define-thing _thingname [_actionname _actiondesc] ...))
+
+
 (provide desc)
 (define #'(desc _d) #'_d)
 

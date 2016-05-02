@@ -75,11 +75,20 @@ inventory
 get
   "Ouch!"
 
+
 ---door---
 open 
-  (if (have-thing? key)
+  (if 
+      this
+      that)
+
+
+/*
+---door---
+open 
+  (if 
       (begin
-        (set-thing-state! door 'open)
+        (set-thing-state door open)
         "The door is now unlocked and open.")
       "The door is locked.")
 
@@ -113,6 +122,8 @@ get
   (begin
    (take-thing! trophy)
    "You win!")
+
+*/
 
 
 /*

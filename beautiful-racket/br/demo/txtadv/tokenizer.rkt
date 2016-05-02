@@ -16,8 +16,11 @@
        [(union #\tab #\space #\newline) (get-token input-port)]
        [(repetition 1 +inf.0 (union upper-case (char-set "="))) lexeme]
        [(seq "\"" (complement (seq any-string "\"" any-string)) "\"") (token 'STRING lexeme)]
-       [(char-set "()[]{},_") lexeme]
-       [(repetition 1 +inf.0 (union alphabetic numeric (char-set "-.")))
-        (token 'ID (string->symbol lexeme))]))
+       [(seq "---"
+             (repetition 1 +inf.0 (union alphabetic numeric punctuation))
+             "---") (token 'THING-NAME (string-trim lexeme "-" #:repeat? #t))]
+       [(repetition 1 +inf.0 (union alphabetic numeric punctuation))
+        (token 'ID (string->symbol lexeme))]
+       [any-char lexeme]))
     (get-token input-port))  
   next-token)
