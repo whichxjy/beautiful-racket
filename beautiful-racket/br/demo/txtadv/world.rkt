@@ -49,12 +49,6 @@ look, show
 inventory
  "check inventory"
 
-help
-
-save
-
-load
-
 
 ===EVERYWHERE===
 
@@ -69,14 +63,6 @@ look
 inventory 
  (show-inventory)
 
-save
- (save-game)
-
-load
- (load-game)
-
-help
- (show-help)
 
 
 ===THINGS===

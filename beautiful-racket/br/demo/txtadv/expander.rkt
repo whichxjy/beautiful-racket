@@ -1,4 +1,4 @@
-#lang racket
+#lang br
 
 (provide define-verbs
          define-thing
@@ -7,9 +7,6 @@
          
          show-current-place
          show-inventory
-         save-game
-         load-game
-         show-help
          
          have-thing?
          take-thing!
@@ -17,29 +14,27 @@
          thing-state
          set-thing-state!
          
-         (except-out (all-from-out racket) #%module-begin)
+         (except-out (all-from-out br) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
 ;; ============================================================
 ;; Overall module:
 
-(define-syntax module-begin
-  (syntax-rules (define-verbs define-everywhere)
-    [(_ (define-verbs all-verbs cmd ...)
-        (define-everywhere everywhere-actions act ...)
-        decl ...
-        id)
-     (#%module-begin
-      (define-verbs all-verbs cmd ...)
-      (define-everywhere everywhere-actions act ...)
-      decl ...
-      (init-game (check-type id "place")
-                 all-verbs
-                 everywhere-actions)
-      (provide do-verb do-place)
-      (module+ main
-        (cmd-line-mode? #t)
-        (do-place)))]))
+(define #'(module-begin (define-verbs _all-verbs _cmd ...)
+                        (define-everywhere _everywhere-actions _act ...)
+                        _decl ...
+                        _id)
+  #'(#%module-begin
+     (define-verbs _all-verbs _cmd ...)
+     (define-everywhere _everywhere-actions _act ...)
+     _decl ...
+     (init-game (check-type _id "place")
+                _all-verbs
+                _everywhere-actions)
+     (provide do-verb do-place)
+     (module+ main
+       (parameterize ([cmd-line-mode? #t])
+         (do-place)))))
 
 ;; ============================================================
 ;; Model:
@@ -74,97 +69,91 @@
     #:property prop:procedure (λ (self stx) (typed-id self))
     #:omit-define-syntaxes))
 
-(define-syntax (check-type stx)
-  (syntax-case stx ()
-    [(_ id type)
-     (let ([v (and (identifier? #'id)
-                   (syntax-local-value #'id (λ _ #f)))])
-       (unless (and (typed? v)
-                    (equal? (syntax-e #'type) (typed-type v)))
-         (raise-syntax-error
-          #f
-          (format "not defined as ~a" (syntax-e #'type))
-          #'id))
-       #'id)]))
+(define #'(check-type _id _type)
+  (let ([v (and (identifier? #'_id)
+                (syntax-local-value #'_id (λ () #f)))])
+    (unless (and (typed? v)
+                 (equal? (syntax-e #'_type) (typed-type v)))
+      (raise-syntax-error
+       #f
+       (format "not defined as ~a" (syntax-e #'_type))
+       #'_id))
+    #'_id))
 
 ;; ============================================================
 ;; Macros for constructing and registering elements:
 
-(define-syntax-rule (define-verbs all-id
-                      [id spec ...] ...)
-  (begin
-    (define-one-verb id spec ...) ...
-    (record-element! 'id id) ...
-    (define all-id (list id ...))))
-
-(define-syntax define-one-verb
-  (syntax-rules (= _)
-    [(define-one-verb id (= alias ...) desc)
-     (begin
-       (define gen-id (verb (list 'id 'alias ...) desc #f))
-       (define-syntax id (typed #'gen-id "intransitive verb")))]
-    [(define-one-verb id _ (= alias ...) desc)
-     (begin
-       (define gen-id (verb (list 'id 'alias ...) desc #t))
-       (define-syntax id (typed #'gen-id "transitive verb")))]
-    [(define-one-verb id)
-     (define-one-verb id (=) (symbol->string 'id))]
-    [(define-one-verb id _)
-     (define-one-verb id _ (=) (symbol->string 'id))]))
-
-(define-syntax-rule (define-thing id 
-                      [vrb expr] ...)
-  (begin
-    (define gen-id 
-      (thing 'id #f (list (cons (check-type vrb "transitive verb")
-                                (λ _ expr)) ...)))
-    (define-syntax id (typed #'gen-id "thing"))
-    (record-element! 'id id)))
+(define #'(define-verbs _all-id [_id _spec ...] ...)
+  #'(begin
+      (define-one-verb _id _spec ...) ...
+      (record-element! '_id _id) ...
+      (define _all-id (list _id ...))))
 
 
-(define-syntax-rule (define-place id 
-                      desc 
-                      (thng ...) 
-                      ([vrb expr] ...))
-  (begin
-    (define gen-id 
-      (place desc
-             (list (check-type thng "thing") ...)
-             (list (cons (check-type vrb "intransitive verb")
-                         (λ _ expr)) 
-                   ...)))
-    (define-syntax id (typed #'gen-id "place"))
-    (record-element! 'id id)))
+;; todo: the underscore arguments in cases 2 & 4 should be literal underscores, not wildcards
+(define-cases #'define-one-verb
+  [#'(_ _id (= _alias ...) _desc)
+   #'(begin
+       (define gen-id (verb (list '_id '_alias ...) _desc #f))
+       (define-syntax _id (typed #'gen-id "intransitive verb")))]
+  [#'(_ _id _ (= _alias ...) _desc)
+   #'(begin
+       (define gen-id (verb (list '_id '_alias ...) _desc #t))
+       (define-syntax _id (typed #'gen-id "transitive verb")))]
+  [#'(_ _id)
+   #'(define-one-verb _id (=) (symbol->string '_id))]
+  [#'(_ _id _)
+   #'(define-one-verb _id _ (=) (symbol->string '_id))])
 
 
-(define-syntax-rule (define-everywhere id ([vrb expr] ...))
-  (define id (list (cons (check-type vrb "intransitive verb")
-                         (λ _ expr)) 
-                   ...)))
+(define #'(define-thing _id [_verb _expr] ...)
+  #'(begin
+      (define gen-id 
+        (thing '_id #f (list (cons (check-type _verb "transitive verb")
+                                   (λ () _expr)) ...)))
+      (define-syntax _id (typed #'gen-id "thing"))
+      (record-element! '_id _id)))
+
+
+(define #'(define-place _id _desc (_thing ...) ([_verb _expr] ...))
+  #'(begin
+      (define gen-id 
+        (place _desc
+               (list (check-type _thing "thing") ...)
+               (list (cons (check-type _verb "intransitive verb")
+                           (λ () _expr)) 
+                     ...)))
+      (define-syntax _id (typed #'gen-id "place"))
+      (record-element! '_id _id)))
+
+
+(define #'(define-everywhere _id ([_verb _expr] ...))
+  #'(define _id (list (cons (check-type _verb "intransitive verb") (λ () _expr)) ...)))
 
 ;; ============================================================
 ;; Game state
 
 (define cmd-line-mode? (make-parameter #f))
+
 ;; Initialized on startup:
 (define all-verbs null)          ; list of verbs
 (define everywhere-actions null) ; list of verb--thunk pairs
 
 ;; Things carried by the player:
-(define stuff null) ; list of things
+(define player-inventory null) ; list of things
 
 ;; Current location:
 (define current-place #f) ; place (or #f until started)
 
 ;; Fuctions to be used by verb responses:
-(define (have-thing? t)
-  (memq t stuff))
-(define (take-thing! t) 
-  (set-place-things! current-place (remq t (place-things current-place)))
-  (set! stuff (cons t stuff)))
-(define (drop-thing! t) 
-  (set-place-things! current-place (cons t (place-things current-place)))
-  (set! stuff (remq t stuff)))
+(define (have-thing? thing)
+  (memq thing player-inventory))
+(define (take-thing! thing) 
+  (set-place-things! current-place (remq thing (place-things current-place)))
+  (set! player-inventory (cons thing player-inventory)))
+(define (drop-thing! thing) 
+  (set-place-things! current-place (cons thing (place-things current-place)))
+  (set! player-inventory (remq thing player-inventory)))
 
 ;; ============================================================
 ;; Game execution
@@ -172,15 +161,14 @@
 ;; Show the player the current place, then get a command:
 (define (do-place)
   (show-current-place)
-  (when (cmd-line-mode?)
-    (do-verb)))
+  (when (cmd-line-mode?) (do-verb)))
 
 ;; Show the current place:
 (define (show-current-place)
   (printf "~a\n" (place-desc current-place))
-  (for-each (λ (thing)
-              (printf "There is a ~a here.\n" (thing-name thing)))
-            (place-things current-place)))
+  (for-each
+   (λ (thing) (printf "There is a ~a here.\n" (thing-name thing)))
+   (place-things current-place)))
 
 ;; Get and handle a command:
 
@@ -197,13 +185,13 @@
   (if (and (list? input)
            (andmap symbol? input)
            (<= 1 (length input) 2))
-      (let* ([vrb (car input)]
+      (let* ([verb (car input)]
              [response
               (cond
                 [(= 2 (length input))
-                 (handle-transitive-verb vrb (cadr input))]
+                 (handle-transitive-verb verb (cadr input))]
                 [(= 1 (length input))
-                 (handle-intransitive-verb vrb)])]
+                 (handle-intransitive-verb verb)])]
              [result (response)])
         (cond
           [(place? result)
@@ -225,15 +213,15 @@
    (using-verb 
     verb all-verbs
     (λ (verb)
-      (λ _ (if (verb-transitive? verb)
-               (format "~a what?" (string-titlecase (verb-desc verb)))
-               (format "Can't ~a here." (verb-desc verb))))))
-   (λ _ (format "I don't know how to ~a." verb))))
+      (λ () (if (verb-transitive? verb)
+                (format "~a what?" (string-titlecase (verb-desc verb)))
+                (format "Can't ~a here." (verb-desc verb))))))
+   (λ () (format "I don't know how to ~a." verb))))
 
 ;; Handle a transitive-verb command:
-(define (handle-transitive-verb vrb obj)
+(define (handle-transitive-verb verb-in obj)
   (or (using-verb 
-       vrb all-verbs
+       verb-in all-verbs
        (λ (verb)
          (and 
           (verb-transitive? verb)
@@ -242,25 +230,25 @@
                       (and (eq? (thing-name thing) obj)
                            thing))
                     (append (place-things current-place)
-                            stuff))
+                            player-inventory))
              => (λ (thing)
-                  (or (find-verb vrb (thing-actions thing))
-                      (λ _
+                  (or (find-verb verb-in (thing-actions thing))
+                      (λ ()
                         (format "Don't know how to ~a ~a."
                                 (verb-desc verb) obj))))]
             [else
-             (λ _ (format "There's no ~a here to ~a." obj 
-                          (verb-desc verb)))]))))
-      (λ _ (format "I don't know how to ~a ~a." vrb obj))))
+             (λ () (format "There's no ~a here to ~a." obj 
+                           (verb-desc verb)))]))))
+      (λ () (format "I don't know how to ~a ~a." verb-in obj))))
 
 ;; Show what the player is carrying:
 (define (show-inventory)
   (printf "You have")
-  (if (null? stuff)
+  (if (null? player-inventory)
       (printf " no items.")
       (for-each (λ (thing)
                   (printf "\n  a ~a" (thing-name thing)))
-                stuff))
+                player-inventory))
   (printf "\n"))
 
 ;; Look for a command match in a list of verb--response pairs,
@@ -279,62 +267,6 @@
                 (success-k vrb)))
          verbs))
 
-;; Print help information:
-(define (show-help)
-  (printf "Use `look' to look around.\n")
-  (printf "Use `inventory' to see what you have.\n")
-  (printf "Use `save' or `load' to save or restore your game.\n")
-  (printf "There are some other verbs, and you can name a thing after some verbs.\n"))
-
-;; ============================================================
-;; Save and load
-
-;; Prompt the user for a filename and apply `proc' to it,
-;; catching errors to report a reasonably nice message:
-(define (with-filename proc)
-  (printf "File name: ")
-  (flush-output)
-  (let ([v (read-line)])
-    (unless (eof-object? v)
-      (with-handlers ([exn? (λ (exn)
-                              (printf "~a\n" (exn-message exn)))])
-        (unless (path-string? v)
-          (raise-user-error "bad filename"))
-        (proc v)))))
-
-;; Save the current game state:
-(define (save-game)
-  (with-filename
-   (λ (v)
-     (with-output-to-file v
-       (λ _
-         (write
-          (list
-           (map element->name stuff)
-           (element->name current-place)
-           (hash-map names
-                     (λ (k v)
-                       (cons k
-                             (cond
-                               [(place? v) (map element->name (place-things v))]
-                               [(thing? v) (thing-state v)]
-                               [else #f])))))))))))
-
-;; Restore a game state:
-(define (load-game)
-  (with-filename
-   (λ (v)
-     (let ([v (with-input-from-file v read)])
-       (set! stuff (map name->element (car v)))
-       (set! current-place (name->element (cadr v)))
-       (for-each
-        (λ (p)
-          (let ([v (name->element (car p))]
-                [state (cdr p)])
-            (cond
-              [(place? v) (set-place-things! v (map name->element state))]
-              [(thing? v) (set-thing-state! v state)])))
-        (caddr v))))))
 
 ;; ============================================================
 ;; To go:
