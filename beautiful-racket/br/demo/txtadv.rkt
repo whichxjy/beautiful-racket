@@ -1,5 +1,5 @@
 #lang br
 
 (module reader br
-  (require "txtadv/reader.rkt")
-  (provide (all-from-out "txtadv/reader.rkt")))
+  (require "txtadv/reader0.rkt")
+  (provide (all-from-out "txtadv/reader0.rkt")))

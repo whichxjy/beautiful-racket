@@ -1,4 +1,5 @@
 #lang br
+(require (for-syntax racket/string))
 
 (provide define-verbs
          define-thing
@@ -20,7 +21,41 @@
 ;; ============================================================
 ;; Overall module:
 
-(define #'(module-begin (define-verbs _all-verbs _cmd ...)
+(define #'(module-begin _arg ...)
+  #'(#%module-begin
+     '_arg ...))
+
+(provide txtadv-program)
+(define-inverting #'(txtadv-program _verb-section ...)
+  #'(_verb-section ...))
+
+(provide verb-section)
+(define-inverting #'(verb-section _heading _verb-entry ...)
+  #'(define-verbs all-verbs
+        _verb-entry ...))
+
+(provide verb-entry)
+(define-inverting #'(verb-entry (_name0 _transitive0?) (_name _transitive?) ... _desc)
+  #`[_name0 #,@(if #'transitive0? #'(_) #'()) (= _name ...) _desc])
+
+(provide verb-name)
+(define-cases #'verb-name
+  ;; cases with literals go first, so they're not caught by wildcards
+  [#'(_ "," _id) #'(_id #f)]
+  [#'(_ "," _id _underscore) #'(_id #t)]
+  [#'(_ _id) #'(_id #f)]
+  [#'(_ _id _underscore) #'(_id #t)])
+
+(provide s-exp)
+(define #'(s-exp _sx)
+  #'_sx)
+
+(provide desc)
+(define #'(desc _d)
+  #'_d)
+
+
+#;(define #'(module-begin (define-verbs _all-verbs _cmd ...)
                         (define-everywhere _everywhere-actions _act ...)
                         _decl ...
                         _id)

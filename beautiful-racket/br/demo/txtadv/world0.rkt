@@ -1,5 +1,4 @@
-#lang reader "reader.rkt"
-
+#lang br/demo/txtadv
 
 ===VERBS===
 
@@ -8,8 +7,6 @@ north, n
 
 south, s
  "go south"
-
-
 
 east, e
  "go east"
@@ -52,7 +49,6 @@ look, show
 inventory
  "check inventory"
 
-/*
 
 ===EVERYWHERE===
 
@@ -164,5 +160,3 @@ west
 
 out
   house-front
-
-*/
