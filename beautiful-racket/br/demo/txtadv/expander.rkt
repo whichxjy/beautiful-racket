@@ -21,22 +21,18 @@
 ;; ============================================================
 ;; Overall module:
 
-(define #'(module-begin _arg ...)
+(define #'(module-begin (txtadv-program _section ...))
   #'(#%module-begin
-     '_arg ...))
-
-(provide txtadv-program)
-(define-inverting #'(txtadv-program _verb-section ...)
-  #'(_verb-section ...))
+     _section ...))
 
 (provide verb-section)
 (define-inverting #'(verb-section _heading _verb-entry ...)
-  #'(define-verbs all-verbs
+  #''(define-verbs all-verbs
         _verb-entry ...))
 
 (provide verb-entry)
 (define-inverting #'(verb-entry (_name0 _transitive0?) (_name _transitive?) ... _desc)
-  #`[_name0 #,@(if #'transitive0? #'(_) #'()) (= _name ...) _desc])
+  #`[_name0 #,@(if (syntax->datum #'_transitive0?) #'(_) #'()) (= _name ...) _desc])
 
 (provide verb-name)
 (define-cases #'verb-name
@@ -46,13 +42,23 @@
   [#'(_ _id) #'(_id #f)]
   [#'(_ _id _underscore) #'(_id #t)])
 
-(provide s-exp)
-(define #'(s-exp _sx)
-  #'_sx)
+(provide everywhere-section)
+(define-inverting #'(everywhere-section _heading [_name _desc] ...)
+  #''(define-everywhere everywhere-actions
+        ([_name _desc] ...)))
+
+(provide everywhere-action)
+(define-inverting #'(everywhere-action _name _desc)
+  #'(_name _desc))
 
 (provide desc)
-(define #'(desc _d)
-  #'_d)
+(define #'(desc _d) #'_d)
+
+(provide s-exp)
+(define-cases-inverting #'s-exp
+  [#'(_ "(" _sx ... ")") #'(_sx ...)]
+  [#'(_ _sx) #'_sx])
+
 
 
 #;(define #'(module-begin (define-verbs _all-verbs _cmd ...)

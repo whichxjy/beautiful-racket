@@ -1,6 +1,6 @@
 #lang reader "reader.rkt"
 
-
+/*
 ===VERBS===
 
 north, n
@@ -8,8 +8,6 @@ north, n
 
 south, s
  "go south"
-
-
 
 east, e
  "go east"
@@ -42,6 +40,7 @@ close _, lock _
  "close"
 
 knock _
+ "" // change: don't leave a blank line, makes grammar simpler
 
 quit, exit
  "quit"
@@ -52,7 +51,7 @@ look, show
 inventory
  "check inventory"
 
-/*
+
 
 ===EVERYWHERE===
 
@@ -67,6 +66,7 @@ look
 inventory 
  (show-inventory)
 
+*/
 
 
 ===THINGS===
@@ -115,6 +115,7 @@ get
    "You win!")
 
 
+/*
 ===PLACES===
 
 ---meadow---
