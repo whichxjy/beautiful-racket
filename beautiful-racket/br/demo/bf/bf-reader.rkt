@@ -1,5 +1,5 @@
 #lang br
-(require parser-tools/lex ragg/support)
+(require parser-tools/lex br/ragg/support)
 (define (tokenize input-port)
   (define (next-token)
     (define get-token

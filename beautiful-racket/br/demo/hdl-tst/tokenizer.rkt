@@ -1,6 +1,6 @@
 #lang br
 (require parser-tools/lex parser-tools/lex-sre
-         ragg/support
+         br/ragg/support
          racket/string)
 
 (provide tokenize)
