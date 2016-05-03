@@ -1,41 +1,31 @@
 #lang ragg
 
-txtadv-program : [verb-section] [everywhere-section] [things-section] places-section start-section
+txtadv-program : verb-section everywhere-section things-section places-section start-section
 
 verb-section : "===VERBS===" verb-item+
 
-verb-item : verb-name+ desc
+verb-item : verb-name+ s-exp
 
 verb-name : [","] ID ["_"]
 
-everywhere-section : "===EVERYWHERE===" everywhere-item+
-
-everywhere-item : ID desc
+everywhere-section : "===EVERYWHERE===" id-desc+
 
 things-section : "===THINGS===" thing-item+
 
-thing-item : thing-id thing-action+
-
-thing-id : DASHED-NAME
-
-thing-action : ID desc
+thing-item : DASHED-NAME id-desc+
 
 places-section : "===PLACES===" place-item+
 
-place-item : place-id place-descrip place-items place-action+
+place-item : DASHED-NAME place-descrip place-items id-desc+
 
-place-id : DASHED-NAME
+place-descrip : STRING ; `place-desc` is already used in expander
 
-place-descrip : STRING ; place-desc is already used in expander
-
-place-items : "[" place-name* "]" ; place-things is already used
+place-items : "[" place-name* "]" ; `place-things` is already used
 
 place-name : [","] ID
 
-place-action : ID desc
-
 start-section : "===START===" place-name
 
-desc : s-exp
+id-desc : ID s-exp
 
-s-exp : ID | STRING | ("(" | "[" | "{") s-exp* (")" | "]" | "}")
+s-exp : ID | STRING | "(" s-exp* ")"

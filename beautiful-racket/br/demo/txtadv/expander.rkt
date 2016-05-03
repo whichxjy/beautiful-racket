@@ -35,10 +35,10 @@
   #'(module-begin _section ...))
 
 (provide verb-section)
-(define-inverting #'(verb-section _heading _verb-entry ...)
+(define-inverting #'(verb-section _heading _verb-item ...)
   (inject-syntax ([#'in-verbs (shared-syntax 'in-verbs)])
                  #'(define-verbs in-verbs
-                     _verb-entry ...)))
+                     _verb-item ...)))
 
 (provide verb-item)
 (define-inverting #'(verb-item (_name0 _transitive0?) (_name _transitive?) ... _desc)
@@ -57,21 +57,17 @@
   #'(define-everywhere everywhere-actions
       ([_name _desc] ...)))
 
-(provide everywhere-item)
-(define-inverting #'(everywhere-item _name _desc)
-  #'(_name _desc))
+(provide id-desc)
+(define-inverting #'(id-desc _id _desc)
+  #'(_id _desc))
 
 (provide things-section)
 (define-inverting #'(things-section _heading _thing ...)
   #'(begin _thing ...))
 
 (provide thing-item)
-(define-inverting #'(thing-item (thing-id _thingname) (_actionname _actiondesc) ...)
+(define-inverting #'(thing-item _thingname (_actionname _actiondesc) ...)
   #'(define-thing _thingname [_actionname _actiondesc] ...))
-
-(provide thing-action)
-(define-inverting #'(thing-action _actionname _actiondesc)
-  #'(_actionname _actiondesc))
 
 (provide places-section)
 (define-inverting #'(places-section _heading _placeitem ...)
@@ -80,9 +76,6 @@
 (provide place-item)
 (define-inverting #'(place-item _place-id _place-desc [_place-item ...] [_actionname _actiondesc] ...)
   #'(define-place _place-id _place-desc [_place-item ...] ([_actionname _actiondesc] ...)))
-
-(provide place-id)
-(define #'(place-id _id) #'_id)
 
 (provide place-descrip)
 (define #'(place-descrip _desc) #'_desc)
@@ -95,11 +88,6 @@
   [#'(_ "," _id) #'_id]
   [#'(_ _id) #'_id])
 
-(provide place-action)
-(define-inverting #'(place-action _id _desc) #'(_id _desc))
-
-(provide desc)
-(define #'(desc _d) #'_d)
 
 (provide s-exp)
 (define-cases-inverting #'s-exp
