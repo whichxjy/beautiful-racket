@@ -30,10 +30,7 @@
 (define-everywhere everywhere-actions
   ([quit (begin (printf "Bye!\n") (exit))]
    [look (show-current-place)]
-   [inventory (show-inventory)]
-   [save (save-game)]
-   [load (load-game)]
-   [help (show-help)]))
+   [inventory (show-inventory)]))
 
 ;; Objects ----------------------------------------
 

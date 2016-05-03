@@ -21,19 +21,23 @@
 ;; ============================================================
 ;; Overall module:
 
-(define #'(module-begin (txtadv-program _section ...))
+(define #'(module-begin _lines ...)
   #'(#%module-begin
-     _section ...
+     _lines ...
      
      (provide do-verb do-place)
      (module+ main
        (parameterize ([cmd-line-mode? #t])
          (do-place)))))
 
+(provide txtadv-program)
+(define #'(txtadv-program _section ...)
+  #'(module-begin _section ...))
+
 (provide verb-section)
 (define-inverting #'(verb-section _heading _verb-entry ...)
-  (inject-syntax ([#'all-verbs (shared-syntax 'all-verbs)])
-                 #'(define-verbs all-verbs
+  (inject-syntax ([#'in-verbs (shared-syntax 'in-verbs)])
+                 #'(define-verbs in-verbs
                      _verb-entry ...)))
 
 (provide verb-item)
@@ -105,9 +109,9 @@
 
 (provide start-section)
 (define #'(start-section _heading _where)
-  (inject-syntax ([#'all-verbs (shared-syntax 'all-verbs)])
+  (inject-syntax ([#'in-verbs (shared-syntax 'in-verbs)])
                  #'(init-game _where
-                              all-verbs
+                              in-verbs
                               everywhere-actions)))
 
 ;; ============================================================
@@ -120,9 +124,13 @@
 (struct thing (name         ; symbol
                [state #:mutable] ; any value
                actions) #:transparent)    ; list of verb--thunk pairs
+
 (struct place (desc         ; string
                [things #:mutable] ; list of things
                actions) #:transparent)    ; list of verb--thunk pairs
+
+(define action-verb car)
+(define action-response cdr)
 
 ;; Tables mapping names<->things for save and load
 (define names (make-hash))
@@ -146,39 +154,34 @@
 
 
 ;; todo: the underscore arguments in cases 2 & 4 should be literal underscores, not wildcards
-(define-syntax define-one-verb
-  (syntax-rules (= _)
-    [(define-one-verb id (= alias ...) desc)
-     (define id (verb (list 'id 'alias ...) desc #f))]
-    [(define-one-verb id _ (= alias ...) desc)
-     (define id (verb (list 'id 'alias ...) desc #t))]
-    [(define-one-verb id)
-     (define id (verb (list 'id) (symbol->string 'id) #f))]
-    [(define-one-verb id _)
-     (define id (verb (list 'id) (symbol->string 'id) #t))]))
+(define-cases #'define-one-verb
+  [#'(_ _id (= _alias ...) _desc)
+   #'(define _id (verb (list '_id '_alias ...) _desc #f))]
+  [#'(_ _id _ (= _alias ...) _desc)
+   #'(define _id (verb (list '_id '_alias ...) _desc #t))]
+  [#'(_ _id)
+   #'(define _id (verb (list '_id) (symbol->string '_id) #f))]
+  [#'(_ _id _)
+   #'(define _id (verb (list '_id) (symbol->string '_id) #t))])
 
 
-(define-syntax-rule (define-thing id 
-                      [vrb expr] ...)
-  (begin
-    (define id 
-      (thing 'id #f (list (cons vrb (lambda () expr)) ...)))
-    (record-element! 'id id)))
+(define #'(define-thing _id [_vrb _expr] ...)
+  #'(begin
+      (define _id
+        (thing '_id #f (list (cons _vrb (λ () _expr)) ...)))
+      (record-element! '_id _id)))
 
 
-(define-syntax-rule (define-place id 
-                      desc 
-                      (thng ...) 
-                      ([vrb expr] ...))
-  (begin
-    (define id (place desc
-                      (list thng ...)
-                      (list (cons vrb (lambda () expr)) ...)))
-    (record-element! 'id id)))
+(define #'(define-place _id _desc (_thng ...) ([_vrb _expr] ...))
+  #'(begin
+      (define _id (place _desc
+                         (list _thng ...)
+                         (list (cons _vrb (λ () _expr)) ...)))
+      (record-element! '_id _id)))
 
 
-(define-syntax-rule (define-everywhere id ([vrb expr] ...))
-  (define id (list (cons vrb (lambda () expr)) ...)))
+(define #'(define-everywhere _id ([_vrb _expr] ...))
+  #'(define _id (list (cons _vrb (λ () _expr)) ...)))
 
 ;; ============================================================
 ;; Game state
@@ -186,7 +189,7 @@
 (define cmd-line-mode? (make-parameter #f))
 
 ;; Initialized on startup:
-(define all-verbs null)          ; list of verbs
+(define game-verbs null)          ; list of verbs
 (define everywhere-actions null) ; list of verb--thunk pairs
 
 ;; Things carried by the player:
@@ -261,7 +264,7 @@
    (find-verb verb (place-actions current-place))
    (find-verb verb everywhere-actions)
    (using-verb 
-    verb all-verbs
+    verb game-verbs
     (λ (verb)
       (λ () (if (verb-transitive? verb)
                 (format "~a what?" (string-titlecase (verb-desc verb)))
@@ -271,7 +274,7 @@
 ;; Handle a transitive-verb command:
 (define (handle-transitive-verb verb-in obj)
   (or (using-verb 
-       verb-in all-verbs
+       verb-in game-verbs
        (λ (verb)
          (and 
           (verb-transitive? verb)
@@ -304,26 +307,24 @@
 ;; Look for a command match in a list of verb--response pairs,
 ;; and returns the response thunk if a match is found:
 (define (find-verb cmd actions)
-  (ormap (λ (a)
-           (and (memq cmd (verb-aliases (car a)))
-                (cdr a)))
-         actions))
+  (for/first ([action (in-list actions)]
+              #:when (memq cmd (verb-aliases (action-verb action))))
+             (action-response action)))
 
 ;; Looks for a command in a list of verbs, and
-;; applies `success-k' to the verb if one is found:
-(define (using-verb cmd verbs success-k)
-  (ormap (λ (vrb)
-           (and (memq cmd (verb-aliases vrb))
-                (success-k vrb)))
-         verbs))
+;; applies `success-func' to the verb if one is found:
+(define (using-verb cmd verbs success-func)
+  (for/first ([verb (in-list verbs)]
+              #:when (memq cmd (verb-aliases verb)))
+             (success-func verb)))
 
 
 ;; ============================================================
 ;; To go:
 
 (define (init-game in-place
-                   in-all-verbs
+                   in-verbs
                    in-everywhere-actions)
   (set! current-place in-place)
-  (set! all-verbs in-all-verbs)
+  (set! game-verbs in-verbs)
   (set! everywhere-actions in-everywhere-actions))
