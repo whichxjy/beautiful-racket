@@ -66,7 +66,6 @@ look
 inventory 
  (show-inventory)
 
-*/
 
 
 ===THINGS===
@@ -79,18 +78,12 @@ get
 ---door---
 open 
   (if 
-      this
-      that)
-
-
-/*
----door---
-open 
-  (if 
       (begin
-        (set-thing-state door open)
+        (set-thing-state! door open)
         "The door is now unlocked and open.")
       "The door is locked.")
+
+
 
 close
   (begin
@@ -123,10 +116,11 @@ get
    (take-thing! trophy)
    "You win!")
 
+
+
 */
 
 
-/*
 ===PLACES===
 
 ---meadow---
@@ -176,5 +170,3 @@ west
 
 out
   house-front
-
-*/

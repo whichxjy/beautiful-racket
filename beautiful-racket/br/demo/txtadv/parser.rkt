@@ -2,19 +2,19 @@
 
 txtadv-program : [verb-section] [everywhere-section] [things-section]
 
-verb-section : "===VERBS===" verb-entry+
+verb-section : "===VERBS===" verb-item+
 
-verb-entry : verb-name+ desc
+verb-item : verb-name+ desc
 
 verb-name : [","] ID ["_"]
 
-everywhere-section : "===EVERYWHERE===" everywhere-action+
+everywhere-section : "===EVERYWHERE===" everywhere-item+
 
-everywhere-action : ID desc
+everywhere-item : ID desc
 
-things-section : "===THINGS===" thing-entry+
+things-section : "===THINGS===" thing-item+
 
-thing-entry : thing-id thing-action+
+thing-item : thing-id thing-action+
 
 thing-id : THING-NAME
 
@@ -22,4 +22,4 @@ thing-action : ID desc
 
 desc : s-exp
 
-s-exp : ID | STRING | ("(" "[" "{") s-exp* (")" "]" "}")
+s-exp : ID | STRING | ("(" | "[" | "{") s-exp* (")" | "]" | "}")

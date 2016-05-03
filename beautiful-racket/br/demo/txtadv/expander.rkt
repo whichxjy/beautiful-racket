@@ -30,8 +30,8 @@
   #''(define-verbs all-verbs
         _verb-entry ...))
 
-(provide verb-entry)
-(define-inverting #'(verb-entry (_name0 _transitive0?) (_name _transitive?) ... _desc)
+(provide verb-item)
+(define-inverting #'(verb-item (_name0 _transitive0?) (_name _transitive?) ... _desc)
   #`[_name0 #,@(if (syntax->datum #'_transitive0?) #'(_) #'()) (= _name ...) _desc])
 
 (provide verb-name)
@@ -47,18 +47,21 @@
   #''(define-everywhere everywhere-actions
         ([_name _desc] ...)))
 
-(provide everywhere-action)
-(define-inverting #'(everywhere-action _name _desc)
+(provide everywhere-item)
+(define-inverting #'(everywhere-item _name _desc)
   #'(_name _desc))
 
 (provide things-section)
 (define-inverting #'(things-section _heading _thing ...)
   #'(begin _thing ...))
 
-(provide thing-entry)
-(define #'(thing-entry (thing-id _thingname) (thing-action _actionname _actiondesc) ...)
+(provide thing-item)
+(define-inverting #'(thing-item (thing-id _thingname) (_actionname _actiondesc) ...)
   #''(define-thing _thingname [_actionname _actiondesc] ...))
 
+(provide thing-action)
+(define-inverting #'(thing-action _actionname _actiondesc)
+  #'(_actionname _actiondesc))
 
 (provide desc)
 (define #'(desc _d) #'_d)

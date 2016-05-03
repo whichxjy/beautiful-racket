@@ -18,9 +18,9 @@
        [(seq "\"" (complement (seq any-string "\"" any-string)) "\"") (token 'STRING lexeme)]
        [(seq "---"
              (repetition 1 +inf.0 (union alphabetic numeric punctuation))
-             "---") (token 'THING-NAME (string-trim lexeme "-" #:repeat? #t))]
-       [(repetition 1 +inf.0 (union alphabetic numeric punctuation))
-        (token 'ID (string->symbol lexeme))]
+             "---") (token 'THING-NAME (string->symbol (string-trim lexeme "-" #:repeat? #t)))]
+       [(repetition 1 +inf.0 (union alphabetic numeric (char-set "-!?.#")))
+        (token 'ID (read (open-input-string lexeme)))]
        [any-char lexeme]))
     (get-token input-port))  
   next-token)
