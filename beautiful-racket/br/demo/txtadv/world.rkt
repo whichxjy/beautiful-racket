@@ -1,6 +1,5 @@
 #lang reader "reader.rkt"
 
-/*
 ===VERBS===
 
 north, n
@@ -77,9 +76,9 @@ get
 
 ---door---
 open 
-  (if 
+  (if (have-thing? key)
       (begin
-        (set-thing-state! door open)
+        (set-thing-state! door 'open)
         "The door is now unlocked and open.")
       "The door is locked.")
 
@@ -118,7 +117,6 @@ get
 
 
 
-*/
 
 
 ===PLACES===
@@ -126,6 +124,7 @@ get
 ---meadow---
 "You're standing in a meadow. There is a house to the north."
 []
+
 
 north
  house-front
@@ -170,3 +169,8 @@ west
 
 out
   house-front
+
+
+===START===
+
+meadow

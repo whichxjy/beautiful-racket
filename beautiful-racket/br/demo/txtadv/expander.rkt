@@ -23,12 +23,17 @@
 
 (define #'(module-begin (txtadv-program _section ...))
   #'(#%module-begin
-     _section ...))
+     _section ...
+     
+       (provide do-verb do-place)
+       (module+ main
+         (parameterize ([cmd-line-mode? #t])
+           (do-place)))))
 
 (provide verb-section)
 (define-inverting #'(verb-section _heading _verb-entry ...)
-  #''(define-verbs all-verbs
-        _verb-entry ...))
+  #'(define-verbs all-verbs
+       _verb-entry ...))
 
 (provide verb-item)
 (define-inverting #'(verb-item (_name0 _transitive0?) (_name _transitive?) ... _desc)
@@ -44,8 +49,8 @@
 
 (provide everywhere-section)
 (define-inverting #'(everywhere-section _heading [_name _desc] ...)
-  #''(define-everywhere everywhere-actions
-        ([_name _desc] ...)))
+  #'(define-everywhere everywhere-actions
+       ([_name _desc] ...)))
 
 (provide everywhere-item)
 (define-inverting #'(everywhere-item _name _desc)
@@ -57,11 +62,37 @@
 
 (provide thing-item)
 (define-inverting #'(thing-item (thing-id _thingname) (_actionname _actiondesc) ...)
-  #''(define-thing _thingname [_actionname _actiondesc] ...))
+  #'(define-thing _thingname [_actionname _actiondesc] ...))
 
 (provide thing-action)
 (define-inverting #'(thing-action _actionname _actiondesc)
   #'(_actionname _actiondesc))
+
+(provide places-section)
+(define-inverting #'(places-section _heading _placeitem ...)
+  #'(begin _placeitem ...))
+
+(provide place-item)
+(define-inverting #'(place-item _place-id _place-desc [_place-item ...] [_actionname _actiondesc] ...)
+  #'(define-place _place-id _place-desc [_place-item ...] ([_actionname _actiondesc] ...)))
+
+(provide place-id)
+(define #'(place-id _id) #'_id)
+
+(provide place-descrip)
+(require sugar/debug)
+(define #'(place-descrip _desc) #'_desc)
+
+(provide place-items)
+(define-inverting #'(place-items "[" _id ... "]") #'(_id ...))
+
+(provide place-name)
+(define-cases #'place-name
+  [#'(_ "," _id) #'_id]
+  [#'(_ _id) #'_id])
+  
+(provide place-action)
+(define-inverting #'(place-action _id _desc) #'(_id _desc))
 
 (provide desc)
 (define #'(desc _d) #'_d)
@@ -72,22 +103,11 @@
   [#'(_ _sx) #'_sx])
 
 
-
-#;(define #'(module-begin (define-verbs _all-verbs _cmd ...)
-                        (define-everywhere _everywhere-actions _act ...)
-                        _decl ...
-                        _id)
-  #'(#%module-begin
-     (define-verbs _all-verbs _cmd ...)
-     (define-everywhere _everywhere-actions _act ...)
-     _decl ...
-     (init-game (check-type _id "place")
-                _all-verbs
-                _everywhere-actions)
-     (provide do-verb do-place)
-     (module+ main
-       (parameterize ([cmd-line-mode? #t])
-         (do-place)))))
+(provide start-section)
+(define #'(start-section _heading _where)
+  #'(init-game _where
+                  all-verbs
+                  everywhere-actions))
 
 ;; ============================================================
 ;; Model:
@@ -115,25 +135,6 @@
 (define (element->name obj) (hash-ref elements obj #f))
 
 ;; ============================================================
-;; Simple type layer:
-
-(begin-for-syntax 
-  (struct typed (id type) 
-    #:property prop:procedure (λ (self stx) (typed-id self))
-    #:omit-define-syntaxes))
-
-(define #'(check-type _id _type)
-  (let ([v (and (identifier? #'_id)
-                (syntax-local-value #'_id (λ () #f)))])
-    (unless (and (typed? v)
-                 (equal? (syntax-e #'_type) (typed-type v)))
-      (raise-syntax-error
-       #f
-       (format "not defined as ~a" (syntax-e #'_type))
-       #'_id))
-    #'_id))
-
-;; ============================================================
 ;; Macros for constructing and registering elements:
 
 (define #'(define-verbs _all-id [_id _spec ...] ...)
@@ -144,44 +145,39 @@
 
 
 ;; todo: the underscore arguments in cases 2 & 4 should be literal underscores, not wildcards
-(define-cases #'define-one-verb
-  [#'(_ _id (= _alias ...) _desc)
-   #'(begin
-       (define gen-id (verb (list '_id '_alias ...) _desc #f))
-       (define-syntax _id (typed #'gen-id "intransitive verb")))]
-  [#'(_ _id _ (= _alias ...) _desc)
-   #'(begin
-       (define gen-id (verb (list '_id '_alias ...) _desc #t))
-       (define-syntax _id (typed #'gen-id "transitive verb")))]
-  [#'(_ _id)
-   #'(define-one-verb _id (=) (symbol->string '_id))]
-  [#'(_ _id _)
-   #'(define-one-verb _id _ (=) (symbol->string '_id))])
+(define-syntax define-one-verb
+  (syntax-rules (= _)
+    [(define-one-verb id (= alias ...) desc)
+     (define id (verb (list 'id 'alias ...) desc #f))]
+    [(define-one-verb id _ (= alias ...) desc)
+     (define id (verb (list 'id 'alias ...) desc #t))]
+    [(define-one-verb id)
+     (define id (verb (list 'id) (symbol->string 'id) #f))]
+    [(define-one-verb id _)
+     (define id (verb (list 'id) (symbol->string 'id) #t))]))
 
 
-(define #'(define-thing _id [_verb _expr] ...)
-  #'(begin
-      (define gen-id 
-        (thing '_id #f (list (cons (check-type _verb "transitive verb")
-                                   (λ () _expr)) ...)))
-      (define-syntax _id (typed #'gen-id "thing"))
-      (record-element! '_id _id)))
+(define-syntax-rule (define-thing id 
+                      [vrb expr] ...)
+  (begin
+    (define id 
+      (thing 'id #f (list (cons vrb (lambda () expr)) ...)))
+    (record-element! 'id id)))
 
 
-(define #'(define-place _id _desc (_thing ...) ([_verb _expr] ...))
-  #'(begin
-      (define gen-id 
-        (place _desc
-               (list (check-type _thing "thing") ...)
-               (list (cons (check-type _verb "intransitive verb")
-                           (λ () _expr)) 
-                     ...)))
-      (define-syntax _id (typed #'gen-id "place"))
-      (record-element! '_id _id)))
+(define-syntax-rule (define-place id 
+                      desc 
+                      (thng ...) 
+                      ([vrb expr] ...))
+  (begin
+    (define id (place desc
+                      (list thng ...)
+                      (list (cons vrb (lambda () expr)) ...)))
+    (record-element! 'id id)))
 
 
-(define #'(define-everywhere _id ([_verb _expr] ...))
-  #'(define _id (list (cons (check-type _verb "intransitive verb") (λ () _expr)) ...)))
+(define-syntax-rule (define-everywhere id ([vrb expr] ...))
+  (define id (list (cons vrb (lambda () expr)) ...)))
 
 ;; ============================================================
 ;; Game state
