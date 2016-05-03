@@ -25,15 +25,16 @@
   #'(#%module-begin
      _section ...
      
-       (provide do-verb do-place)
-       (module+ main
-         (parameterize ([cmd-line-mode? #t])
-           (do-place)))))
+     (provide do-verb do-place)
+     (module+ main
+       (parameterize ([cmd-line-mode? #t])
+         (do-place)))))
 
 (provide verb-section)
 (define-inverting #'(verb-section _heading _verb-entry ...)
-  #'(define-verbs all-verbs
-       _verb-entry ...))
+  (inject-syntax ([#'all-verbs (shared-syntax 'all-verbs)])
+                 #'(define-verbs all-verbs
+                     _verb-entry ...)))
 
 (provide verb-item)
 (define-inverting #'(verb-item (_name0 _transitive0?) (_name _transitive?) ... _desc)
@@ -50,7 +51,7 @@
 (provide everywhere-section)
 (define-inverting #'(everywhere-section _heading [_name _desc] ...)
   #'(define-everywhere everywhere-actions
-       ([_name _desc] ...)))
+      ([_name _desc] ...)))
 
 (provide everywhere-item)
 (define-inverting #'(everywhere-item _name _desc)
@@ -80,7 +81,6 @@
 (define #'(place-id _id) #'_id)
 
 (provide place-descrip)
-(require sugar/debug)
 (define #'(place-descrip _desc) #'_desc)
 
 (provide place-items)
@@ -90,7 +90,7 @@
 (define-cases #'place-name
   [#'(_ "," _id) #'_id]
   [#'(_ _id) #'_id])
-  
+
 (provide place-action)
 (define-inverting #'(place-action _id _desc) #'(_id _desc))
 
@@ -105,9 +105,10 @@
 
 (provide start-section)
 (define #'(start-section _heading _where)
-  #'(init-game _where
-                  all-verbs
-                  everywhere-actions))
+  (inject-syntax ([#'all-verbs (shared-syntax 'all-verbs)])
+                 #'(init-game _where
+                              all-verbs
+                              everywhere-actions)))
 
 ;; ============================================================
 ;; Model:
@@ -115,13 +116,13 @@
 ;; Elements of the world:
 (struct verb (aliases       ; list of symbols
               desc          ; string
-              transitive?)) ; boolean
+              transitive?) #:transparent) ; boolean
 (struct thing (name         ; symbol
                [state #:mutable] ; any value
-               actions))    ; list of verb--thunk pairs
+               actions) #:transparent)    ; list of verb--thunk pairs
 (struct place (desc         ; string
                [things #:mutable] ; list of things
-               actions))    ; list of verb--thunk pairs
+               actions) #:transparent)    ; list of verb--thunk pairs
 
 ;; Tables mapping names<->things for save and load
 (define names (make-hash))

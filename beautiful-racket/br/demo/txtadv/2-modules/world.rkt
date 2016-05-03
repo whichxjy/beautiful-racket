@@ -1,8 +1,12 @@
-#lang s-exp "txtadv.rkt"
+#lang racket
+(require "txtadv.rkt")
 
 ;; Verbs ----------------------------------------
+;; Declare all the verbs that can be used in the game.
+;; Each verb has a canonical name, a `_' if it needs
+;; an object (i.e., a transitive verb), a set of aliases, 
+;; and a printed form.
 
-;; This declaration must be first:
 (define-verbs all-verbs
   [north (= n) "go north"]
   [south (= s) "go south"]
@@ -25,8 +29,8 @@
   [load])
 
 ;; Global actions ----------------------------------------
+;; Handle verbs that work anywhere.
 
-;; This declaration must be second:
 (define-everywhere everywhere-actions
   ([quit (begin (printf "Bye!\n") (exit))]
    [look (show-current-place)]
@@ -36,6 +40,7 @@
    [help (show-help)]))
 
 ;; Objects ----------------------------------------
+;; Each object handles a set of transitive verbs.
 
 (define-thing cactus
   [get "Ouch!"])
@@ -69,6 +74,7 @@
          "You win!")])
 
 ;; Places ----------------------------------------
+;; Each place handles a set of non-transitive verbs.
 
 (define-place meadow
   "You're standing in a meadow. There is a house to the north."
@@ -97,7 +103,9 @@
   [trophy]
   ([out house-front]))
 
-;; Starting place ----------------------------------
 
-;; The module must end with the starting place name:
-meadow
+;; Go! ---------------------------------------------------
+
+(start-game meadow
+            all-verbs
+            everywhere-actions)

@@ -1,42 +1,5 @@
 #lang racket
 
-(provide define-verbs
-         define-thing
-         define-place
-         define-everywhere
-         
-         show-current-place
-         show-inventory
-         save-game
-         load-game
-         show-help
-
-         have-thing?
-         take-thing!
-         drop-thing!
-         thing-state
-         set-thing-state!
-          
-         (except-out (all-from-out racket) #%module-begin)
-         (rename-out [module-begin #%module-begin]))
-
-;; ============================================================
-;; Overall module:
-
-(define-syntax module-begin
-  (syntax-rules (define-verbs define-everywhere)
-    [(_ (define-verbs all-verbs cmd ...)
-        (define-everywhere everywhere-actions act ...)
-        decl ...
-        id)
-     (#%module-begin
-      (define-verbs all-verbs cmd ...)
-      (define-everywhere everywhere-actions act ...)
-      decl ...
-      (start-game id
-                  all-verbs
-                  everywhere-actions))]))
-
 ;; ============================================================
 ;; Model:
 
@@ -107,17 +70,118 @@
   (define id (list (cons vrb (lambda () expr)) ...)))
 
 ;; ============================================================
-;; Game state
+;; The world:
 
-;; Initialized on startup:
-(define all-verbs null)          ; list of verbs
-(define everywhere-actions null) ; list of verb--thunk pairs
+;; Verbs ----------------------------------------
+;; Declare all the verbs that can be used in the game.
+;; Each verb has a canonical name, a `_' if it needs
+;; a thing (i.e., a transitive verb), a set of aliases, 
+;; and a printed form.
+
+(define-verbs all-verbs
+  [north (= n) "go north"]
+  [south (= s) "go south"]
+  [east (= e) "go east"]
+  [west (= w) "go west"]
+  [up (=) "go up"]
+  [down (=) "go down"]
+  [in (= enter) "enter"]
+  [out (= leave) "leave"]  
+  [get _ (= grab take) "take"]
+  [put _ (= drop leave) "drop"]
+  [open _ (= unlock) "open"]
+  [close _ (= lock) "close"]
+  [knock _]
+  [quit (= exit) "quit"]
+  [look (= show) "look"]
+  [inventory (=) "check inventory"]
+  [help]
+  [save]
+  [load])
+
+;; Global actions ----------------------------------------
+;; Handle verbs that work anywhere.
+
+(define-everywhere everywhere-actions
+  ([quit (begin (printf "Bye!\n") (exit))]
+   [look (show-current-place)]
+   [inventory (show-inventory)]
+   [save (save-game)]
+   [load (load-game)]
+   [help (show-help)]))
+
+;; Things ----------------------------------------
+;; Each thing handles a set of transitive verbs.
+
+(define-thing cactus
+  [get "Ouch!"])
+
+(define-thing door
+  [open (if (have-thing? key)
+            (begin
+              (set-thing-state! door 'open)
+              "The door is now unlocked and open.")
+            "The door is locked.")]
+  [close (begin
+           (set-thing-state! door #f)
+           "The door is now closed.")]
+  [knock "No one is home."])
+
+(define-thing key
+  [get (if (have-thing? key)
+           "You already have the key."
+           (begin
+             (take-thing! key)
+             "You now have the key."))]
+  [put (if (have-thing? key)
+           (begin
+             (drop-thing! key)
+             "You have dropped the key.")
+           "You don't have the key.")])
+
+(define-thing trophy
+  [get (begin
+         (take-thing! trophy)
+         "You win!")])
+
+;; Places ----------------------------------------
+;; Each place handles a set of non-transitive verbs.
+
+(define-place meadow
+  "You're standing in a meadow. There is a house to the north."
+  []
+  ([north house-front]
+   [south desert]))
+
+(define-place house-front
+  "You are standing in front of a house."
+  [door]
+  ([in (if (eq? (thing-state door) 'open)
+           room
+           "The door is not open.")]
+   [south meadow]))
+
+(define-place desert
+  "You're in a desert. There is nothing for miles around."
+  [cactus key]
+  ([north meadow]
+   [south desert]
+   [east desert]
+   [west desert]))
+
+(define-place room
+  "You're in the house."
+  [trophy]
+  ([out house-front]))
+
+;; ============================================================
+;; Game state
 
 ;; Things carried by the player:
 (define stuff null) ; list of things
 
 ;; Current location:
-(define current-place #f) ; place (or #f until started)
+(define current-place meadow) ; place
 
 ;; Fuctions to be used by verb responses:
 (define (have-thing? t)
@@ -156,13 +220,13 @@
     (if (and (list? input)
              (andmap symbol? input)
              (<= 1 (length input) 2))
-        (let ([vrb (car input)])
+        (let ([cmd (car input)])
             (let ([response
                    (cond
                     [(= 2 (length input))
-                     (handle-transitive-verb vrb (cadr input))]
+                     (handle-transitive-verb cmd (cadr input))]
                     [(= 1 (length input))
-                     (handle-intransitive-verb vrb)])])
+                     (handle-intransitive-verb cmd)])])
               (let ([result (response)])
                 (cond
                  [(place? result)
@@ -177,24 +241,24 @@
             (do-verb)))))
 
 ;; Handle an intransitive-verb command:
-(define (handle-intransitive-verb vrb)
+(define (handle-intransitive-verb cmd)
   (or
-   (find-verb vrb (place-actions current-place))
-   (find-verb vrb everywhere-actions)
+   (find-verb cmd (place-actions current-place))
+   (find-verb cmd everywhere-actions)
    (using-verb 
-    vrb all-verbs
+    cmd all-verbs
     (lambda (verb)
       (lambda () 
         (if (verb-transitive? verb)
             (format "~a what?" (string-titlecase (verb-desc verb)))
             (format "Can't ~a here." (verb-desc verb))))))
    (lambda ()
-     (format "I don't know how to ~a." vrb))))
+     (format "I don't know how to ~a." cmd))))
 
 ;; Handle a transitive-verb command:
-(define (handle-transitive-verb vrb obj)
+(define (handle-transitive-verb cmd obj)
   (or (using-verb 
-       vrb all-verbs
+       cmd all-verbs
        (lambda (verb)
          (and 
           (verb-transitive? verb)
@@ -205,7 +269,7 @@
                    (append (place-things current-place)
                            stuff))
             => (lambda (thing)
-                 (or (find-verb vrb (thing-actions thing))
+                 (or (find-verb cmd (thing-actions thing))
                      (lambda ()
                        (format "Don't know how to ~a ~a."
                                (verb-desc verb) obj))))]
@@ -214,7 +278,7 @@
               (format "There's no ~a here to ~a." obj 
                       (verb-desc verb)))]))))
       (lambda ()
-        (format "I don't know how to ~a ~a." vrb obj))))
+        (format "I don't know how to ~a ~a." cmd obj))))
 
 ;; Show what the player is carrying:
 (define (show-inventory)
@@ -300,12 +364,6 @@
         (caddr v))))))
 
 ;; ============================================================
-;; To go:
+;; Go!
 
-(define (start-game in-place
-                    in-all-verbs
-                    in-everywhere-actions)
-  (set! current-place in-place)
-  (set! all-verbs in-all-verbs)
-  (set! everywhere-actions in-everywhere-actions)
-  (do-place))
+(do-place)
