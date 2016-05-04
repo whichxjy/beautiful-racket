@@ -34,18 +34,21 @@
 
 
 
+
+;; errors with position are sensitive to length of lang line
+(define lang-line "#lang br/ragg")
                      
-(check-compile-error "#lang br/ragg"
+(check-compile-error (format "~a" lang-line)
                      "The grammar does not appear to have any rules")
 
-(check-compile-error "#lang br/ragg\nfoo"
-                     "Error while parsing grammar near: foo [line=2, column=0, position=12]")
+(check-compile-error (format "~a\nfoo" lang-line)
+                     "Error while parsing grammar near: foo [line=2, column=0, position=15]")
 
-(check-compile-error "#lang br/ragg\nnumber : 42"
-                     "Error while parsing grammar near: 42 [line=2, column=9, position=21]")
+(check-compile-error (format "~a\nnumber : 42" lang-line)
+                     "Error while parsing grammar near: 42 [line=2, column=9, position=24]")
 
-(check-compile-error "#lang br/ragg\nnumber : 1"
-                     "Error while parsing grammar near: 1 [line=2, column=9, position=21]")
+(check-compile-error (format "~a\nnumber : 1" lang-line)
+                     "Error while parsing grammar near: 1 [line=2, column=9, position=24]")
 
 
 
@@ -127,7 +130,7 @@ EOF
 
 (check-compile-error #<<EOF
 #lang racket/base
-(require ragg/examples/simple-line-drawing)
+(require br/ragg/examples/simple-line-drawing)
 (define bad-parser (make-rule-parser crunchy))
 EOF
                      "Rule crunchy is not defined in the grammar"
