@@ -32,10 +32,10 @@
          [struct-out pattern-lit]
          [struct-out pattern-token]
          [struct-out pattern-choice]
-         [struct-out pattern-elide]
          [struct-out pattern-repeat]
          [struct-out pattern-maybe]
-         [struct-out pattern-seq])
+         [struct-out pattern-seq]
+         [struct-out pattern-elide])
 
 (define-tokens tokens (LPAREN
                        RPAREN
@@ -168,14 +168,14 @@
      (pattern-lit start-pos end-pos v)]
     [(pattern-choice _ _ vs)
      (pattern-choice start-pos end-pos vs)]
-    [(pattern-elide _ _ vs)
-     (pattern-elide start-pos end-pos vs)]
     [(pattern-repeat _ _ m v)
      (pattern-repeat start-pos end-pos m v)]
     [(pattern-maybe _ _ v)
      (pattern-maybe start-pos end-pos v)]
     [(pattern-seq _ _ vs)
      (pattern-seq start-pos end-pos vs)]
+    [(pattern-elide _ _ vs)
+     (pattern-elide start-pos end-pos vs)]
     [else
      (error 'relocate-pattern "Internal error when relocating ~s\n" a-pat)]))
 

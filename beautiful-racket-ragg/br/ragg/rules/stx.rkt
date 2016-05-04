@@ -67,12 +67,12 @@
                     `(token ,(datum->syntax #f (string->symbol val) source-location))]
                    [(struct pattern-choice (start end vals))
                     `(choice ,@(map recur vals))]
-                   [(struct pattern-elide (start end vals))
-                    `(elide ,@(map recur vals))]
                    [(struct pattern-repeat (start end min val))
                     `(repeat ,min ,(recur val))]
                    [(struct pattern-maybe (start end val))
                     `(maybe ,(recur val))]
                    [(struct pattern-seq (start end vals))
-                    `(seq ,@(map recur vals))])
+                    `(seq ,@(map recur vals))]
+                   [(struct pattern-elide (start end vals))
+                    `(elide ,@(map recur vals))])
                  source-location))

@@ -1,4 +1,11 @@
-#lang br/ragg
+#lang racket/base
+
+#|
+This grammar is permanently broken with the <elider> operator active.
+|#
+
+
+#|
 
 
 ## The following comes from: http://en.wikipedia.org/wiki/Backus%E2%80%93Naur_Form
@@ -12,3 +19,5 @@
 <list>    : <term> | <term> <opt-whitespace> <list>
 <term>    : <literal> | "<" <RULE-NAME> ">"
 <literal> : '"' <TEXT> '"' | "'" <TEXT> "'"   ## actually, the original BNF did not use quotes
+
+|#

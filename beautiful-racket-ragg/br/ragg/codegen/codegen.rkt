@@ -260,7 +260,7 @@
   (let loop ([a-pattern a-pattern]
              [implicit implicit]
              [explicit explicit])
-    (syntax-case a-pattern (id lit token choice elide repeat maybe seq)
+    (syntax-case a-pattern (id lit token choice repeat maybe seq elide)
       [(id val)
        (values implicit explicit)]
       [(lit val)
@@ -275,16 +275,16 @@
                   [explicit explicit])
                  ([v (in-list (syntax->list #'(vals ...)))])
          (loop v implicit explicit))]
-      [(elide vals ...)
-       (for/fold ([implicit implicit]
-                  [explicit explicit])
-                 ([v (in-list (syntax->list #'(vals ...)))])
-         (loop v implicit explicit))]
       [(repeat min val)
        (loop #'val implicit explicit)]
       [(maybe val)
        (loop #'val implicit explicit)]
       [(seq vals ...)
+       (for/fold ([implicit implicit]
+                  [explicit explicit])
+                 ([v (in-list (syntax->list #'(vals ...)))])
+         (loop v implicit explicit))]
+      [(elide vals ...)
        (for/fold ([implicit implicit]
                   [explicit explicit])
                  ([v (in-list (syntax->list #'(vals ...)))])
@@ -347,7 +347,7 @@
 (define (pattern-collect-used-ids a-pattern acc)
   (let loop ([a-pattern a-pattern]
              [acc acc])
-    (syntax-case a-pattern (id lit token choice elide repeat maybe seq)
+    (syntax-case a-pattern (id lit token choice repeat maybe seq elide)
       [(id val)
        (cons #'val acc)]
       [(lit val)
@@ -358,15 +358,15 @@
        (for/fold ([acc acc])
                  ([v (in-list (syntax->list #'(vals ...)))])
          (loop v acc))]
-      [(elide vals ...)
-       (for/fold ([acc acc])
-                 ([v (in-list (syntax->list #'(vals ...)))])
-         (loop v acc))]
       [(repeat min val)
        (loop #'val acc)]
       [(maybe val)
        (loop #'val acc)]
       [(seq vals ...)
+       (for/fold ([acc acc])
+                 ([v (in-list (syntax->list #'(vals ...)))])
+         (loop v acc))]
+      [(elide vals ...)
        (for/fold ([acc acc])
                  ([v (in-list (syntax->list #'(vals ...)))])
          (loop v acc))])))
@@ -394,7 +394,7 @@
     a-leaf)
   
   (define (process-pattern a-pattern)
-    (syntax-case a-pattern (id lit token choice elide repeat maybe  seq)
+    (syntax-case a-pattern (id lit token choice repeat maybe seq elide)
       [(id val)
        (free-id-table-ref toplevel-rule-table #'val)]
       [(lit val)
@@ -402,13 +402,6 @@
       [(token val)
        (make-leaf)]
       [(choice vals ...)
-       (begin
-         (define an-or-node (sat:make-or))
-         (for ([v (in-list (syntax->list #'(vals ...)))])
-              (define a-child (process-pattern v))
-              (sat:add-child! an-or-node a-child))
-         an-or-node)]
-      [(elide vals ...)
        (begin
          (define an-or-node (sat:make-or))
          (for ([v (in-list (syntax->list #'(vals ...)))])
@@ -424,6 +417,13 @@
       [(maybe val)
        (make-leaf)]
       [(seq vals ...)
+       (begin
+         (define an-and-node (sat:make-and))
+         (for ([v (in-list (syntax->list #'(vals ...)))])
+              (define a-child (process-pattern v))
+              (sat:add-child! an-and-node a-child))
+         an-and-node)]
+      [(elide vals ...)
        (begin
          (define an-and-node (sat:make-and))
          (for ([v (in-list (syntax->list #'(vals ...)))])

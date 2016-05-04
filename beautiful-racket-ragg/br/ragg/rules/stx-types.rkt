@@ -11,7 +11,7 @@
 (define (lit stx) (raise-syntax-error #f "Used out of context of rules" stx))
 (define (token stx) (raise-syntax-error #f "Used out of context of rules" stx))
 (define (choice stx) (raise-syntax-error #f "Used out of context of rules" stx))
-(define (elide stx) (raise-syntax-error #f "Used out of context of rules" stx))
 (define (repeat stx) (raise-syntax-error #f "Used out of context of rules" stx))
 (define (maybe stx) (raise-syntax-error #f "Used out of context of rules" stx))
 (define (seq stx) (raise-syntax-error #f "Used out of context of rules" stx))
+(define (elide stx) (raise-syntax-error #f "Used out of context of rules" stx))
