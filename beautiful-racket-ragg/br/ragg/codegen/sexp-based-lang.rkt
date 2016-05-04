@@ -87,7 +87,8 @@
                      "codegen.rkt"))
 
 (provide rules
-         (rename-out [#%plain-module-begin #%module-begin]))
+         (rename-out [#%plain-module-begin #%module-begin])
+         #%top-interaction)
 
 (define-syntax (rules stx)
   (rules-codegen #:parser-provider-module 'br/ragg/cfg-parser/cfg-parser ;; 'parser-tools/yacc 
