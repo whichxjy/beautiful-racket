@@ -40,6 +40,7 @@
                  #'(define-verbs in-verbs
                      _verb-item ...)))
 
+
 (provide verb-item)
 (define-inverting #'(verb-item (_name0 _transitive0?) (_name _transitive?) ... _desc)
   #`[_name0 #,@(if (syntax->datum #'_transitive0?) #'(_) #'()) (= _name ...) _desc])
@@ -94,6 +95,16 @@
   [#'(_ "(" _sx ... ")") #'(_sx ...)]
   [#'(_ _sx) #'_sx])
 
+
+;; todo: consolidate the game-starters.
+;; `start-game-at` works with s-exp language,
+;; `start-section` works with text lang. 
+(provide start-game-at)
+(define #'(start-game-at _where)
+  (inject-syntax ([#'in-verbs (shared-syntax 'in-verbs)])
+                 #'(init-game _where
+                              in-verbs
+                              everywhere-actions)))
 
 (provide start-section)
 (define #'(start-section _heading _where)

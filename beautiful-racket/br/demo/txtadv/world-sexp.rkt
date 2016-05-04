@@ -3,7 +3,7 @@
 ;; Verbs ----------------------------------------
 
 ;; This declaration must be first:
-(define-verbs all-verbs
+(define-verbs in-verbs
   [north (= n) "go north"]
   [south (= s) "go south"]
   [east (= e) "go east"]
@@ -97,4 +97,4 @@
 ;; Starting place ----------------------------------
 
 ;; The module must end with the starting place name:
-meadow
+(start-game-at meadow)
