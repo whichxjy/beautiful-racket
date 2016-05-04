@@ -10,10 +10,10 @@
 (provide tokens
          token-LPAREN
          token-RPAREN
-         token-LBRACKET
-         token-RBRACKET
          token-LANGLE ; for elider
          token-RANGLE ; for elider
+         token-LBRACKET
+         token-RBRACKET
          token-PIPE
          token-REPEAT
          token-RULE_HEAD
@@ -32,9 +32,9 @@
          [struct-out pattern-lit]
          [struct-out pattern-token]
          [struct-out pattern-choice]
+         [struct-out pattern-elide]
          [struct-out pattern-repeat]
          [struct-out pattern-maybe]
-         [struct-out pattern-elide]
          [struct-out pattern-seq])
 
 (define-tokens tokens (LPAREN
@@ -49,7 +49,7 @@
                        ID
                        LIT
                        EOF))
-
+(require sugar/debug)
 ;; grammar-parser: (-> token) -> (listof rule)
 (define grammar-parser
   (parser
@@ -145,12 +145,10 @@
                      (position->pos $3-end-pos)
                      $2)]
      
-     [(LANGLE pattern RANGLE)
-      (pattern-elide (position->pos $1-start-pos)
-                     (position->pos $3-end-pos)
-                     $2)]
-     
      [(LPAREN pattern RPAREN)
+      (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $3-end-pos))]
+     
+     [(LANGLE pattern RANGLE)
       (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $3-end-pos))]])
    
    
@@ -170,12 +168,12 @@
      (pattern-lit start-pos end-pos v)]
     [(pattern-choice _ _ vs)
      (pattern-choice start-pos end-pos vs)]
+    [(pattern-elide _ _ vs)
+     (pattern-elide start-pos end-pos vs)]
     [(pattern-repeat _ _ m v)
      (pattern-repeat start-pos end-pos m v)]
     [(pattern-maybe _ _ v)
      (pattern-maybe start-pos end-pos v)]
-    [(pattern-elide _ _ v)
-     (pattern-elide start-pos end-pos v)]
     [(pattern-seq _ _ vs)
      (pattern-seq start-pos end-pos vs)]
     [else

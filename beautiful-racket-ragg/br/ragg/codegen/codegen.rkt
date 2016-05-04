@@ -26,12 +26,12 @@
      (begin
        ;; (listof stx)
        (define rules (syntax->list #'(r ...)))
-
+       
        (when (empty? rules)
          (raise-syntax-error 'ragg
                              (format "The grammar does not appear to have any rules")
                              stx))
-
+       
        (check-all-rules-defined! rules)
        (check-all-rules-no-duplicates! rules)
        (check-all-rules-satisfiable! rules)
@@ -39,28 +39,28 @@
        ;; We flatten the rules so we can use the yacc-style ruleset that parser-tools
        ;; supports.
        (define flattened-rules (flatten-rules rules))
-
+       
        (define generated-rule-codes (map flat-rule->yacc-rule flattened-rules))
        
        ;; The first rule, by default, is the start rule.
        (define rule-ids (for/list ([a-rule (in-list rules)])
-                          (rule-id a-rule)))
+                                  (rule-id a-rule)))
        (define start-id (first rule-ids))
        
        
        (define-values (implicit-tokens    ;; (listof identifier)
                        explicit-tokens)   ;; (listof identifier)
          (rules-collect-token-types rules))
-
+       
        ;; (listof symbol)
        (define implicit-token-types
          (map string->symbol
               (set->list (list->set (map syntax-e implicit-tokens)))))
-
+       
        ;; (listof symbol)
        (define explicit-token-types
          (set->list (list->set (map syntax-e explicit-tokens))))
-
+       
        ;; (listof symbol)
        (define token-types
          (set->list (list->set (append (map (lambda (x) (string->symbol (syntax-e x)))
@@ -68,13 +68,13 @@
                                        (map syntax-e explicit-tokens)))))
        
        (with-syntax ([start-id start-id]
-
+                     
                      [(token-type ...) token-types]
-
+                     
                      [(token-type-constructor ...)
                       (map (lambda (x) (string->symbol (format "token-~a" x)))
                            token-types)]
-
+                     
                      [(explicit-token-types ...) explicit-token-types]
                      [(implicit-token-types ...) implicit-token-types]
                      [(implicit-token-types-str ...) (map symbol->string implicit-token-types)]
@@ -102,27 +102,27 @@
                       #;current-tokenizer-error-handler
                       #;[struct-out exn:fail:parsing]
                       )
-
+             
              (define-tokens enumerated-tokens (token-type ...))
-
+             
              ;; all-token-types lists all the tokens (except for EOF)
              (define all-token-types 
                (set-remove (set 'token-type ...) 'EOF))
-
+             
              ;; For internal use by the permissive tokenizer only:
              (define all-tokens-hash/mutable
                (make-hash (list ;; Note: we also allow the eof object here, to make
-                                ;; the permissive tokenizer even nicer to work with.
-                                (cons eof token-EOF) 
-                                (cons 'token-type token-type-constructor) ...)))
-
+                           ;; the permissive tokenizer even nicer to work with.
+                           (cons eof token-EOF) 
+                           (cons 'token-type token-type-constructor) ...)))
+             
              
              #;(define default-lex/1
                  (lexer-src-pos [implicit-token-types-str
                                  (token 'implicit-token-types lexeme)]
                                 ...
                                 [(eof) (token eof)]))
-
+             
              (define-syntax (make-rule-parser stx-2)
                (syntax-parse stx-2
                  [(_ start-rule:id)
@@ -172,7 +172,7 @@
        (with-syntax ([(translated-clause ...) translated-clauses])
          #`[name translated-clause ...]))]))
 
-  
+
 
 ;; translates a single primitive rule clause.
 ;; A clause is a simple list of ids, lit, vals, and inferred-id elements.
@@ -181,44 +181,44 @@
   (define translated-patterns
     (let loop ([primitive-patterns (syntax->list a-clause)])
       (cond
-       [(empty? primitive-patterns)
-        '()]
-       [else
-        (cons (syntax-case (first primitive-patterns) (id lit token inferred-id)
-                [(id val)
-                 #'val]
-                [(lit val)
-                 (datum->syntax #f (string->symbol (syntax-e #'val)) #'val)]
-                [(token val)
-                 #'val]
-                [(inferred-id val reason)
-                 #'val])
-              (loop (rest primitive-patterns)))])))
+        [(empty? primitive-patterns)
+         '()]
+        [else
+         (cons (syntax-case (first primitive-patterns) (id lit token inferred-id)
+                 [(id val)
+                  #'val]
+                 [(lit val)
+                  (datum->syntax #f (string->symbol (syntax-e #'val)) #'val)]
+                 [(token val)
+                  #'val]
+                 [(inferred-id val reason)
+                  #'val])
+               (loop (rest primitive-patterns)))])))
   
   (define translated-actions
     (for/list ([translated-pattern (in-list translated-patterns)]
                [primitive-pattern (syntax->list a-clause)]
                [pos (in-naturals 1)])
-      (with-syntax ([$X 
-                     (format-id translated-pattern "$~a" pos)]
-                    [$X-start-pos 
-                     (format-id translated-pattern "$~a-start-pos" pos)]
-                    [$X-end-pos
-                     (format-id translated-pattern "$~a-end-pos" pos)])
-        (syntax-case primitive-pattern (id lit token inferred-id)
-          ;; When a rule usage is inferred, the value of $X is a syntax object
-          ;; whose head is the name of the inferred rule . We strip that out,
-          ;; leaving the residue to be absorbed.
-          [(inferred-id val reason)
-           #'(syntax-case $X ()
-               [(inferred-rule-name . rest)
-                (syntax->list #'rest)])]
-          [(id val)
-           #`(list $X)]
-          [(lit val)
-           #`(list (atomic-datum->syntax $X $X-start-pos $X-end-pos))]
-          [(token val)
-           #`(list (atomic-datum->syntax $X $X-start-pos $X-end-pos))]))))
+              (with-syntax ([$X 
+                             (format-id translated-pattern "$~a" pos)]
+                            [$X-start-pos 
+                             (format-id translated-pattern "$~a-start-pos" pos)]
+                            [$X-end-pos
+                             (format-id translated-pattern "$~a-end-pos" pos)])
+                (syntax-case primitive-pattern (id lit token inferred-id)
+                  ;; When a rule usage is inferred, the value of $X is a syntax object
+                  ;; whose head is the name of the inferred rule . We strip that out,
+                  ;; leaving the residue to be absorbed.
+                  [(inferred-id val reason)
+                   #'(syntax-case $X ()
+                       [(inferred-rule-name . rest)
+                        (syntax->list #'rest)])]
+                  [(id val)
+                   #`(list $X)]
+                  [(lit val)
+                   #`(list (atomic-datum->syntax $X $X-start-pos $X-end-pos))]
+                  [(token val)
+                   #`(list (atomic-datum->syntax $X $X-start-pos $X-end-pos))]))))
   
   (define whole-rule-loc
     (if (empty? translated-patterns)
@@ -247,10 +247,10 @@
   (define-values (implicit explicit)
     (for/fold ([implicit '()]
                [explicit (list (datum->syntax (first rules) 'EOF))])
-        ([r (in-list rules)])
+              ([r (in-list rules)])
       (rule-collect-token-types r implicit explicit)))
   (values (reverse implicit) (reverse explicit)))
-  
+
 (define (rule-collect-token-types a-rule implicit explicit)
   (syntax-case a-rule (rule)
     [(rule id a-pattern)
@@ -260,7 +260,7 @@
   (let loop ([a-pattern a-pattern]
              [implicit implicit]
              [explicit explicit])
-    (syntax-case a-pattern (id lit token choice repeat maybe elide seq)
+    (syntax-case a-pattern (id lit token choice elide repeat maybe seq)
       [(id val)
        (values implicit explicit)]
       [(lit val)
@@ -275,11 +275,14 @@
                   [explicit explicit])
                  ([v (in-list (syntax->list #'(vals ...)))])
          (loop v implicit explicit))]
+      [(elide vals ...)
+       (for/fold ([implicit implicit]
+                  [explicit explicit])
+                 ([v (in-list (syntax->list #'(vals ...)))])
+         (loop v implicit explicit))]
       [(repeat min val)
        (loop #'val implicit explicit)]
       [(maybe val)
-       (loop #'val implicit explicit)]
-      [(elide val)
        (loop #'val implicit explicit)]
       [(seq vals ...)
        (for/fold ([implicit implicit]
@@ -292,12 +295,12 @@
 ;; rule-id: rule -> identifier-stx
 ;; Get the binding id of a rule.
 (define (rule-id a-rule)
- (syntax-case a-rule (rule)
+  (syntax-case a-rule (rule)
     [(rule id a-pattern)
      #'id]))
 
 (define (rule-pattern a-rule)
- (syntax-case a-rule (rule)
+  (syntax-case a-rule (rule)
     [(rule id a-pattern)
      #'a-pattern]))
 
@@ -309,26 +312,26 @@
   (define table (make-free-id-table))
   ;; Pass one: collect all the defined rule names.
   (for ([a-rule (in-list rules)])
-    (free-id-table-set! table (rule-id a-rule) #t))
+       (free-id-table-set! table (rule-id a-rule) #t))
   ;; Pass two: check each referenced id, and make sure it's been defined.
   (for ([a-rule (in-list rules)])
-    (for ([referenced-id (in-list (rule-collect-used-ids a-rule))])
-      (unless (free-id-table-ref table referenced-id (lambda () #f))
-        (raise-syntax-error #f (format "Rule ~a has no definition" (syntax-e referenced-id))
-                            referenced-id)))))
+       (for ([referenced-id (in-list (rule-collect-used-ids a-rule))])
+            (unless (free-id-table-ref table referenced-id (lambda () #f))
+              (raise-syntax-error #f (format "Rule ~a has no definition" (syntax-e referenced-id))
+                                  referenced-id)))))
 
 ;; check-all-rules-no-duplicates!: (listof rule-stx) -> void
 (define (check-all-rules-no-duplicates! rules)
   (define table (make-free-id-table))
   ;; Pass one: collect all the defined rule names.
   (for ([a-rule (in-list rules)])
-    (define maybe-other-rule-id (free-id-table-ref table (rule-id a-rule) (lambda () #f)))
-    (when maybe-other-rule-id
-      (raise-syntax-error #f (format "Rule ~a has a duplicate definition" (syntax-e (rule-id a-rule)))
-                          (rule-id a-rule)
-                          #f
-                          (list (rule-id a-rule) maybe-other-rule-id)))
-    (free-id-table-set! table (rule-id a-rule) (rule-id a-rule))))
+       (define maybe-other-rule-id (free-id-table-ref table (rule-id a-rule) (lambda () #f)))
+       (when maybe-other-rule-id
+         (raise-syntax-error #f (format "Rule ~a has a duplicate definition" (syntax-e (rule-id a-rule)))
+                             (rule-id a-rule)
+                             #f
+                             (list (rule-id a-rule) maybe-other-rule-id)))
+       (free-id-table-set! table (rule-id a-rule) (rule-id a-rule))))
 
 
 
@@ -344,7 +347,7 @@
 (define (pattern-collect-used-ids a-pattern acc)
   (let loop ([a-pattern a-pattern]
              [acc acc])
-    (syntax-case a-pattern (id lit token choice repeat maybe elide seq)
+    (syntax-case a-pattern (id lit token choice elide repeat maybe seq)
       [(id val)
        (cons #'val acc)]
       [(lit val)
@@ -355,11 +358,13 @@
        (for/fold ([acc acc])
                  ([v (in-list (syntax->list #'(vals ...)))])
          (loop v acc))]
+      [(elide vals ...)
+       (for/fold ([acc acc])
+                 ([v (in-list (syntax->list #'(vals ...)))])
+         (loop v acc))]
       [(repeat min val)
        (loop #'val acc)]
       [(maybe val)
-       (loop #'val acc)]
-      [(elide val)
        (loop #'val acc)]
       [(seq vals ...)
        (for/fold ([acc acc])
@@ -378,18 +383,18 @@
 (define (check-all-rules-satisfiable! rules)
   (define toplevel-rule-table (make-free-id-table))
   (for ([a-rule (in-list rules)])
-    (free-id-table-set! toplevel-rule-table 
-                        (rule-id a-rule) 
-                        (sat:make-and)))
+       (free-id-table-set! toplevel-rule-table 
+                           (rule-id a-rule) 
+                           (sat:make-and)))
   (define leaves '())
   
   (define (make-leaf)
     (define a-leaf (sat:make-and))
     (set! leaves (cons a-leaf leaves))
     a-leaf)
-
+  
   (define (process-pattern a-pattern)
-    (syntax-case a-pattern (id lit token choice repeat maybe elide seq)
+    (syntax-case a-pattern (id lit token choice elide repeat maybe  seq)
       [(id val)
        (free-id-table-ref toplevel-rule-table #'val)]
       [(lit val)
@@ -400,8 +405,15 @@
        (begin
          (define an-or-node (sat:make-or))
          (for ([v (in-list (syntax->list #'(vals ...)))])
-           (define a-child (process-pattern v))
-           (sat:add-child! an-or-node a-child))
+              (define a-child (process-pattern v))
+              (sat:add-child! an-or-node a-child))
+         an-or-node)]
+      [(elide vals ...)
+       (begin
+         (define an-or-node (sat:make-or))
+         (for ([v (in-list (syntax->list #'(vals ...)))])
+              (define a-child (process-pattern v))
+              (sat:add-child! an-or-node a-child))
          an-or-node)]
       [(repeat min val)
        (syntax-case #'min ()
@@ -411,25 +423,23 @@
           (process-pattern #'val)])]
       [(maybe val)
        (make-leaf)]
-      [(elide val)
-       (make-leaf)]
       [(seq vals ...)
        (begin
          (define an-and-node (sat:make-and))
          (for ([v (in-list (syntax->list #'(vals ...)))])
-           (define a-child (process-pattern v))
-           (sat:add-child! an-and-node a-child))
+              (define a-child (process-pattern v))
+              (sat:add-child! an-and-node a-child))
          an-and-node)]))
   
   (for ([a-rule (in-list rules)])
-    (define rule-node (free-id-table-ref toplevel-rule-table (rule-id a-rule)))
-    (sat:add-child! rule-node (process-pattern (rule-pattern a-rule))))
+       (define rule-node (free-id-table-ref toplevel-rule-table (rule-id a-rule)))
+       (sat:add-child! rule-node (process-pattern (rule-pattern a-rule))))
   
   (for ([a-leaf leaves])
-    (sat:visit! a-leaf))
+       (sat:visit! a-leaf))
   
   (for ([a-rule (in-list rules)])
-    (define rule-node (free-id-table-ref toplevel-rule-table (rule-id a-rule)))
-    (unless (sat:node-yes? rule-node)
-      (raise-syntax-error #f (format "Rule ~a has no finite derivation" (syntax-e (rule-id a-rule)))
-                          (rule-id a-rule)))))
+       (define rule-node (free-id-table-ref toplevel-rule-table (rule-id a-rule)))
+       (unless (sat:node-yes? rule-node)
+         (raise-syntax-error #f (format "Rule ~a has no finite derivation" (syntax-e (rule-id a-rule)))
+                             (rule-id a-rule)))))

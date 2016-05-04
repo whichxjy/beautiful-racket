@@ -72,7 +72,7 @@
                   [origin (syntax-case a-rule (rule) [(rule name (pat-head rest ...)) #'pat-head])])
       (syntax-case a-rule (rule)
         [(rule name pat)
-         (syntax-case #'pat (id inferred-id lit token choice repeat maybe elide seq)
+         (syntax-case #'pat (id inferred-id lit token choice elide repeat maybe seq)
 
            ;; The primitive types stay as they are:
            [(id val)
@@ -87,6 +87,18 @@
            
            ;; Everything else might need lifting:
            [(choice sub-pat ...)
+            (begin
+              (define-values (inferred-ruless/rev new-sub-patss/rev)
+                (for/fold ([rs '()] [ps '()])
+                          ([p (syntax->list #'(sub-pat ...))])
+                  (let-values ([(new-r new-p)
+                                (lift-nonprimitive-pattern p)])
+                    (values (cons new-r rs) (cons new-p ps)))))
+              (with-syntax ([((sub-pat ...) ...) (reverse new-sub-patss/rev)])
+                (append (list #'(head origin name [sub-pat ...] ...))
+                        (apply append (reverse inferred-ruless/rev)))))]
+
+           [(elide sub-pat ...)
             (begin
               (define-values (inferred-ruless/rev new-sub-patss/rev)
                 (for/fold ([rs '()] [ps '()])
@@ -123,16 +135,6 @@
                               [])
                       inferred-rules)))]
 
-           [(elide sub-pat)
-            (begin
-              (define-values (inferred-rules new-sub-pats)
-                (lift-nonprimitive-pattern #'sub-pat))
-              (with-syntax ([(sub-pat ...) new-sub-pats])
-                (cons #'(head origin name
-                              [sub-pat ...]
-                              [])
-                      inferred-rules)))]
-
            [(seq sub-pat ...)
             (begin
               (define-values (inferred-rules new-sub-pats)
@@ -149,7 +151,7 @@
 
 ;; Returns true if the pattern looks primitive
 (define (primitive-pattern? a-pat)
-  (syntax-case a-pat (id lit token choice repeat maybe elide seq)
+  (syntax-case a-pat (id lit token choice elide repeat maybe seq)
     [(id val)
      #t]
     [(lit val)
@@ -158,11 +160,11 @@
      #t]
     [(choice sub-pat ...)
      #f]
+    [(elide sub-pat)
+     #f]
     [(repeat min val)
      #f]
     [(maybe sub-pat)
-     #f]
-    [(elide sub-pat)
      #f]
     [(seq sub-pat ...)
      (andmap primitive-pattern? (syntax->list #'(sub-pat ...)))]))

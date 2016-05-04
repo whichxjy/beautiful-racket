@@ -35,14 +35,14 @@
 (struct pattern-choice pattern (vals)
         #:transparent)
 
+(struct pattern-elide pattern (val)
+        #:transparent)
+
 (struct pattern-repeat pattern (min ;; either 0 or 1
                                 val)
         #:transparent)
 
 (struct pattern-maybe pattern (val)
-        #:transparent)
-
-(struct pattern-elide pattern (val)
         #:transparent)
 
 (struct pattern-seq pattern (vals)

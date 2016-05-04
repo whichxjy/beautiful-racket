@@ -11,7 +11,7 @@
                (token 'STRING "'hello world'")
                "}")))
  '(json (object "{"
-                (kvpair "message" (json (string "'hello world'")))
+                (kvpair "message" ":" (json (string "'hello world'")))
                 "}")))
 
 
