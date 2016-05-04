@@ -239,11 +239,9 @@
            (<= 1 (length input) 2))
       (let* ([verb (car input)]
              [response
-              (cond
-                [(= 2 (length input))
-                 (handle-transitive-verb verb (cadr input))]
-                [(= 1 (length input))
-                 (handle-intransitive-verb verb)])]
+              (case (length input)
+                [(2) (handle-transitive-verb verb (cadr input))]
+                [(1) (handle-intransitive-verb verb)])]
              [result (response)])
         (cond
           [(place? result)
@@ -278,11 +276,10 @@
          (and 
           (verb-transitive? verb)
           (cond
-            [(ormap (λ (thing)
-                      (and (eq? (thing-name thing) obj)
-                           thing))
-                    (append (place-things current-place)
-                            player-inventory))
+            [(for/first ([thing (in-list (append (place-things current-place)
+                                                 player-inventory))]
+                         #:when (eq? (thing-name thing) obj))
+                        thing)
              => (λ (thing)
                   (or (find-verb verb-in (thing-actions thing))
                       (λ ()
@@ -296,7 +293,7 @@
 ;; Show what the player is carrying:
 (define (show-inventory)
   (printf "You have")
-  (if (null? player-inventory)
+  (if (zero? (length player-inventory))
       (printf " no items.")
       (for-each (λ (thing)
                   (printf "\n  a ~a" (thing-name thing)))
