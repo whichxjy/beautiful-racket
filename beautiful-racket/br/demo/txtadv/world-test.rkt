@@ -1,4 +1,4 @@
-#lang at-exp racket
+#lang racket
 (require rackunit)
 (require "world.rkt")
 
@@ -19,6 +19,7 @@
 (check-cmd?
  "get key"
  "You now have the key.\n")
+
 
 (check-cmd?
  "n"

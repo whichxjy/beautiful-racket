@@ -71,6 +71,8 @@
                     `(repeat ,min ,(recur val))]
                    [(struct pattern-maybe (start end val))
                     `(maybe ,(recur val))]
+                   [(struct pattern-elide (start end val))
+                    `(elide ,(recur val))]
                    [(struct pattern-seq (start end vals))
                     `(seq ,@(map recur vals))])
                  source-location))

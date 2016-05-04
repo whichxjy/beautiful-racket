@@ -72,7 +72,7 @@
                   [origin (syntax-case a-rule (rule) [(rule name (pat-head rest ...)) #'pat-head])])
       (syntax-case a-rule (rule)
         [(rule name pat)
-         (syntax-case #'pat (id inferred-id lit token choice repeat maybe seq)
+         (syntax-case #'pat (id inferred-id lit token choice repeat maybe elide seq)
 
            ;; The primitive types stay as they are:
            [(id val)
@@ -123,6 +123,16 @@
                               [])
                       inferred-rules)))]
 
+           [(elide sub-pat)
+            (begin
+              (define-values (inferred-rules new-sub-pats)
+                (lift-nonprimitive-pattern #'sub-pat))
+              (with-syntax ([(sub-pat ...) new-sub-pats])
+                (cons #'(head origin name
+                              [sub-pat ...]
+                              [])
+                      inferred-rules)))]
+
            [(seq sub-pat ...)
             (begin
               (define-values (inferred-rules new-sub-pats)
@@ -139,7 +149,7 @@
 
 ;; Returns true if the pattern looks primitive
 (define (primitive-pattern? a-pat)
-  (syntax-case a-pat (id lit token choice repeat maybe seq)
+  (syntax-case a-pat (id lit token choice repeat maybe elide seq)
     [(id val)
      #t]
     [(lit val)
@@ -151,6 +161,8 @@
     [(repeat min val)
      #f]
     [(maybe sub-pat)
+     #f]
+    [(elide sub-pat)
      #f]
     [(seq sub-pat ...)
      (andmap primitive-pattern? (syntax->list #'(sub-pat ...)))]))

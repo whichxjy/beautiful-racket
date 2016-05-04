@@ -42,6 +42,9 @@
 (struct pattern-maybe pattern (val)
         #:transparent)
 
+(struct pattern-elide pattern (val)
+        #:transparent)
+
 (struct pattern-seq pattern (vals)
         #:transparent)
 

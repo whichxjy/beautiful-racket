@@ -260,7 +260,7 @@
   (let loop ([a-pattern a-pattern]
              [implicit implicit]
              [explicit explicit])
-    (syntax-case a-pattern (id lit token choice repeat maybe seq)
+    (syntax-case a-pattern (id lit token choice repeat maybe elide seq)
       [(id val)
        (values implicit explicit)]
       [(lit val)
@@ -278,6 +278,8 @@
       [(repeat min val)
        (loop #'val implicit explicit)]
       [(maybe val)
+       (loop #'val implicit explicit)]
+      [(elide val)
        (loop #'val implicit explicit)]
       [(seq vals ...)
        (for/fold ([implicit implicit]
@@ -342,7 +344,7 @@
 (define (pattern-collect-used-ids a-pattern acc)
   (let loop ([a-pattern a-pattern]
              [acc acc])
-    (syntax-case a-pattern (id lit token choice repeat maybe seq)
+    (syntax-case a-pattern (id lit token choice repeat maybe elide seq)
       [(id val)
        (cons #'val acc)]
       [(lit val)
@@ -356,6 +358,8 @@
       [(repeat min val)
        (loop #'val acc)]
       [(maybe val)
+       (loop #'val acc)]
+      [(elide val)
        (loop #'val acc)]
       [(seq vals ...)
        (for/fold ([acc acc])
@@ -385,7 +389,7 @@
     a-leaf)
 
   (define (process-pattern a-pattern)
-    (syntax-case a-pattern (id lit token choice repeat maybe seq)
+    (syntax-case a-pattern (id lit token choice repeat maybe elide seq)
       [(id val)
        (free-id-table-ref toplevel-rule-table #'val)]
       [(lit val)
@@ -406,6 +410,8 @@
          [else
           (process-pattern #'val)])]
       [(maybe val)
+       (make-leaf)]
+      [(elide val)
        (make-leaf)]
       [(seq vals ...)
        (begin

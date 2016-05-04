@@ -39,10 +39,14 @@
     (token-LPAREN lexeme)]
    ["["
     (token-LBRACKET lexeme)]
+   ["<"
+    (token-LANGLE lexeme)]
    [")"
     (token-RPAREN lexeme)]
    ["]"
     (token-RBRACKET lexeme)]
+   [">"
+    (token-RANGLE lexeme)]
    ["|"
     (token-PIPE lexeme)]
    [(:or "+" "*")
