@@ -172,8 +172,11 @@
        (with-syntax ([(translated-clause ...) translated-clauses])
          #`[name translated-clause ...]))]))
 
-  
-
+#|
+MB: This function generates the input for the parse tree,
+passing it to the two functions in "runtime.rkt".
+|#
+(require (only-in sugar/debug report report*))
 ;; translates a single primitive rule clause.
 ;; A clause is a simple list of ids, lit, vals, and inferred-id elements.
 ;; The action taken depends on the pattern type.
@@ -210,6 +213,7 @@
           ;; whose head is the name of the inferred rule . We strip that out,
           ;; leaving the residue to be absorbed.
           [(inferred-id val reason)
+           (report* #'val #'reason)
            #'(syntax-case $X ()
                [(inferred-rule-name . rest)
                 (syntax->list #'rest)])]

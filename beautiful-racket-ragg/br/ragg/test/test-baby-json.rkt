@@ -14,8 +14,14 @@
                 (kvpair "message" ":" (json (string "'hello world'")))
                 "}")))
 
+(require sugar/debug)
+(syntax-property (report (cadr (syntax->list (cadr (syntax->list (parse (list "{" 
+               (token 'ID "message")
+               ":"
+               (token 'STRING "'hello world'")
+               "}"))))))) 'foo)
 
-(check-equal? 
+#;(check-equal? 
  (syntax->datum
   (parse "[[[{}]],[],[[{}]]]"))
  '(json (array #\[ (json (array #\[ (json (array #\[ (json (object #\{ #\})) #\])) #\])) #\, (json (array #\[ #\])) #\, (json (array #\[ (json (array #\[ (json (object #\{ #\})) #\])) #\])) #\])))

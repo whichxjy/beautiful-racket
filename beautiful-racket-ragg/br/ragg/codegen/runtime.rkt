@@ -141,6 +141,10 @@
             #f)))
 
 
+#|
+MB: The next three functions control the appearance of the generated parse tree.
+|#
+
 ;; We create a syntax using read-syntax; by definition, it should have the
 ;; original? property set to #t, which we then copy over to syntaxes constructed
 ;; with atomic-datum->syntax and rule-components->syntax.
@@ -152,7 +156,7 @@
 ;; Helper that does the ugly work in wrapping a datum into a syntax
 ;; with source location.
 (define (atomic-datum->syntax d start-pos end-pos)
-  (datum->syntax #f d (positions->srcloc start-pos end-pos) stx-with-original?-property))
+  (syntax-property (datum->syntax #f d (positions->srcloc start-pos end-pos) stx-with-original?-property) 'foo 'atom))
 
 
 
@@ -161,10 +165,10 @@
 ;; The location information of the rule spans that of its components.
 (define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] . components)
   (define flattened-components (apply append components))
-  (datum->syntax #f 
+  (syntax-property (datum->syntax #f 
                  (apply append
                         (list 
-                         (datum->syntax #f rule-name/false srcloc stx-with-original?-property))
+                         (syntax-property (datum->syntax #f rule-name/false srcloc stx-with-original?-property) 'foo 'rule-name))
                         components)
                  srcloc
-                 stx-with-original?-property))
+                 stx-with-original?-property) 'foo 'whole-rule))
