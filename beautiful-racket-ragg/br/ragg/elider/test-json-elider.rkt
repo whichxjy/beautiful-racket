@@ -1,4 +1,4 @@
-#lang racket/base
+#lang br
 (require "json-elider.rkt"
          br/ragg/support
          rackunit)
@@ -10,15 +10,13 @@
                ":"
                (token 'STRING "'hello world'")
                "}")))
- '(json (object "{"
-                (kvpair "message" ":" (json (string "'hello world'")))
-                "}")))
+ '(json (object (kvpair (json (string "'hello world'"))))))
 
 
 (check-equal? 
  (syntax->datum
   (parse "[[[{}]],[],[[{}]]]"))
- '(json (array #\[ (json (array #\[ (json (array #\[ (json (object #\{ #\})) #\])) #\])) #\, (json (array #\[ #\])) #\, (json (array #\[ (json (array #\[ (json (object #\{ #\})) #\])) #\])) #\])))
+ '(json (array #\[ (json (array #\[ (json (array #\[ (json (object)) #\])) #\])) #\, (json (array #\[ #\])) #\, (json (array #\[ (json (array #\[ (json (object )) #\])) #\])) #\])))
 
  
                

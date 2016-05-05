@@ -1,4 +1,4 @@
-#lang racket/base
+#lang br
 
 (require (for-template racket/base)
          racket/list
@@ -38,9 +38,25 @@
        
        ;; We flatten the rules so we can use the yacc-style ruleset that parser-tools
        ;; supports.
+       
+       #|
+       MB: `rules` still carries 'hide syntax property
+       |#
+       #;(report flattened-rules)
+
+
+       #|
+       MB: `flattened-rules` still carries 'hide syntax property
+       |#
        (define flattened-rules (flatten-rules rules))
+       #;(report flattened-rules)
        
        (define generated-rule-codes (map flat-rule->yacc-rule flattened-rules))
+
+       #|
+       MB: `generated-rule-codes` loses the 'hide syntax property
+       |#
+       #;(report generated-rule-codes)
        
        ;; The first rule, by default, is the start rule.
        (define rule-ids (for/list ([a-rule (in-list rules)])
@@ -163,6 +179,7 @@
 ;;     stx :== (name (U tokens rule-stx) ...)
 ;;
 (define (flat-rule->yacc-rule a-flat-rule)
+  #;(report a-flat-rule)
   (syntax-case a-flat-rule ()
     [(rule-type origin name clauses ...)
      (begin
@@ -206,6 +223,7 @@
                             [$X-end-pos
                              (format-id translated-pattern "$~a-end-pos" pos)])
                 (syntax-case primitive-pattern (id lit token inferred-id)
+                  
                   ;; When a rule usage is inferred, the value of $X is a syntax object
                   ;; whose head is the name of the inferred rule . We strip that out,
                   ;; leaving the residue to be absorbed.
@@ -214,11 +232,13 @@
                        [(inferred-rule-name . rest)
                         (syntax->list #'rest)])]
                   [(id val)
-                   #`(list $X)]
+                   #'(list $X)]
+                  ;; move the 'hide syntax property into the translated-action
+                  ;; because syntax gets datum-ized
                   [(lit val)
-                   #`(list (atomic-datum->syntax $X $X-start-pos $X-end-pos))]
+                   #`(list (atomic-datum->syntax $X $X-start-pos $X-end-pos #,(syntax-property primitive-pattern 'hide)))]
                   [(token val)
-                   #`(list (atomic-datum->syntax $X $X-start-pos $X-end-pos))]))))
+                   #`(list (atomic-datum->syntax $X $X-start-pos $X-end-pos #,(syntax-property primitive-pattern 'hide)))]))))
   
   (define whole-rule-loc
     (if (empty? translated-patterns)

@@ -1,4 +1,4 @@
-#lang racket/base
+#lang br
 
 
 (require rackunit
@@ -47,11 +47,11 @@
                                       1
                                       (pattern-lit (p 8) (p 15) "hello" #f)))))
 
-(check-equal? (grammar-parser (tokenize (open-input-string "expr : ['hello']")))
-              (list (rule (p 1) (p 17)
+(check-equal? (grammar-parser (tokenize (open-input-string "expr : [<'hello'>]")))
+              (list (rule (p 1) (p 19)
                           (lhs-id (p 1) (p 5) "expr" #f)
-                          (pattern-maybe (p 8) (p 17)
-                                     (pattern-lit (p 9) (p 16) "hello" #f)))))
+                          (pattern-maybe (p 8) (p 19)
+                                     (pattern-lit (p 9) (p 18) "hello" #t)))))
 
 (check-equal? (grammar-parser (tokenize (open-input-string "expr : COLON | BLAH")))
               (list (rule (p 1) (p 20)
@@ -70,12 +70,12 @@
                                                      (list (pattern-token (p 23) (p 26) "BAZ" #f)
                                                            (pattern-id (p 27) (p 31) "expr" #f))))))))
 
-(check-equal? (grammar-parser (tokenize (open-input-string "expr : one two three")))
-              (list (rule (p 1) (p 21)
+(check-equal? (grammar-parser (tokenize (open-input-string "expr : one two <three>")))
+              (list (rule (p 1) (p 23)
                           (lhs-id (p 1) (p 5) "expr" #f)
-                          (pattern-seq (p 8) (p 21) (list (pattern-id (p 8) (p 11) "one" #f)
+                          (pattern-seq (p 8) (p 23) (list (pattern-id (p 8) (p 11) "one" #f)
                                               (pattern-id (p 12) (p 15) "two" #f)
-                                              (pattern-id (p 16) (p 21) "three" #f))))))
+                                              (pattern-id (p 16) (p 23) "three" #t))))))
 
 
 (check-equal? (grammar-parser (tokenize (open-input-string "expr : (one two three)")))

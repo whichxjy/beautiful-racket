@@ -1,4 +1,4 @@
-#lang racket/base
+#lang br
 
 (require "rule-structs.rkt"
          parser-tools/lex
