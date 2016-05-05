@@ -1,4 +1,4 @@
-#lang racket/base
+#lang br
 (require br/ragg/rules/stx-types
          (for-syntax racket/base))
 
@@ -139,7 +139,7 @@
 
 ;; Returns true if the pattern looks primitive
 (define (primitive-pattern? a-pat)
-  (syntax-case a-pat (id lit token choice elide repeat maybe seq elide)
+  (syntax-case a-pat (id lit token choice repeat maybe seq)
     [(id val)
      #t]
     [(lit val)
@@ -153,8 +153,6 @@
     [(maybe sub-pat)
      #f]
     [(seq sub-pat ...)
-     (andmap primitive-pattern? (syntax->list #'(sub-pat ...)))]
-    [(elide sub-pat ...)
      (andmap primitive-pattern? (syntax->list #'(sub-pat ...)))]))
 
 
@@ -163,7 +161,7 @@
 ;; and tokens.
 (define (linearize-primitive-pattern a-pat)
   (define (traverse a-pat acc)
-    (syntax-case a-pat (id inferred-id lit token seq elide)
+    (syntax-case a-pat (id inferred-id lit token seq)
       [(id val)
        (cons a-pat acc)]
       [(inferred-id val reason)
@@ -173,8 +171,6 @@
       [(token val)
        (cons a-pat acc)]
       [(seq vals ...)
-       (foldl traverse acc (syntax->list #'(vals ...)))]
-      [(elide vals ...)
        (foldl traverse acc (syntax->list #'(vals ...)))]))
   (reverse (traverse a-pat '())))
 
