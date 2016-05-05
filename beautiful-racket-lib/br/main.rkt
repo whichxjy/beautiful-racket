@@ -1,11 +1,11 @@
 #lang racket/base
 (require racket/provide racket/list racket/string racket/format racket/match racket/port
          br/define br/syntax br/datum br/debug br/conditional
-         (for-syntax racket/base racket/syntax br/syntax br/define))
+         (for-syntax racket/base racket/syntax br/syntax br/debug br/define))
 (provide (except-out (all-from-out racket/base) define)
          (all-from-out racket/list racket/string racket/format racket/match racket/port
                        br/syntax br/datum br/debug br/conditional)
-         (for-syntax (all-from-out racket/base racket/syntax br/syntax))
+         (for-syntax (all-from-out racket/base racket/syntax br/syntax br/debug))
          (for-syntax caller-stx shared-syntax) ; from br/define
          (filtered-out
           (λ (name)
