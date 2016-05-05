@@ -1,4 +1,4 @@
-#lang racket/base
+#lang br
 (require parser-tools/yacc
          parser-tools/lex
          racket/list
@@ -34,8 +34,7 @@
          [struct-out pattern-choice]
          [struct-out pattern-repeat]
          [struct-out pattern-maybe]
-         [struct-out pattern-seq]
-         [struct-out pattern-elide])
+         [struct-out pattern-seq])
 
 (define-tokens tokens (LPAREN
                        RPAREN
@@ -49,7 +48,7 @@
                        ID
                        LIT
                        EOF))
-(require sugar/debug)
+
 ;; grammar-parser: (-> token) -> (listof rule)
 (define grammar-parser
   (parser
@@ -83,7 +82,8 @@
                               (string-length trimmed))
                            (position-line $1-start-pos)
                            (position-col $1-start-pos))
-                      trimmed)
+                      trimmed
+                      #f)
               $2))]]
     
     [pattern
@@ -129,16 +129,19 @@
      [(LIT)
       (pattern-lit (position->pos $1-start-pos)
                    (position->pos $1-end-pos)
-                   (substring $1 1 (sub1 (string-length $1))))]
+                   (substring $1 1 (sub1 (string-length $1)))
+                   #f)]
      
      [(ID)
       (if (token-id? $1)
           (pattern-token (position->pos $1-start-pos)
                          (position->pos $1-end-pos)
-                         $1)
+                         $1
+                         #f)
           (pattern-id (position->pos $1-start-pos)
                       (position->pos $1-end-pos)
-                      $1))]
+                      $1
+                      #f))]
      
      [(LBRACKET pattern RBRACKET)
       (pattern-maybe (position->pos $1-start-pos)
@@ -149,7 +152,8 @@
       (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $3-end-pos))]
      
      [(LANGLE pattern RANGLE)
-      (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $3-end-pos))]])
+      ;; angles indicate hiding. set hide value to #t
+      (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $3-end-pos) #t)]])
    
    
    (error (lambda (tok-ok? tok-name tok-value start-pos end-pos)
@@ -158,14 +162,14 @@
 
 ;; relocate-pattern: pattern -> pattern
 ;; Rewrites the pattern's start and end pos accordingly.
-(define (relocate-pattern a-pat start-pos end-pos)
+(define (relocate-pattern a-pat start-pos end-pos [hide? #f])
   (match a-pat
-    [(pattern-id _ _ v)
-     (pattern-id start-pos end-pos v)]
-    [(pattern-token _ _ v)
-     (pattern-token start-pos end-pos v)]
-    [(pattern-lit _ _ v)
-     (pattern-lit start-pos end-pos v)]
+    [(pattern-id _ _ v h)
+     (pattern-id start-pos end-pos v (or hide? h))]
+    [(pattern-token _ _ v h)
+     (pattern-token start-pos end-pos v (or hide? h))]
+    [(pattern-lit _ _ v h)
+     (pattern-lit start-pos end-pos v (or hide? h))]
     [(pattern-choice _ _ vs)
      (pattern-choice start-pos end-pos vs)]
     [(pattern-repeat _ _ m v)
@@ -174,8 +178,6 @@
      (pattern-maybe start-pos end-pos v)]
     [(pattern-seq _ _ vs)
      (pattern-seq start-pos end-pos vs)]
-    [(pattern-elide _ _ vs)
-     (pattern-elide start-pos end-pos vs)]
     [else
      (error 'relocate-pattern "Internal error when relocating ~s\n" a-pat)]))
 

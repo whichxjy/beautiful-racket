@@ -14,4 +14,3 @@
 (define (repeat stx) (raise-syntax-error #f "Used out of context of rules" stx))
 (define (maybe stx) (raise-syntax-error #f "Used out of context of rules" stx))
 (define (seq stx) (raise-syntax-error #f "Used out of context of rules" stx))
-(define (elide stx) (raise-syntax-error #f "Used out of context of rules" stx))

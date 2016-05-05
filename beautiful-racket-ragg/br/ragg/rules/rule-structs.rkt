@@ -12,7 +12,7 @@
 (struct rule (start end lhs pattern)
         #:transparent)
 
-(struct lhs-id (start end val)
+(struct lhs-id (start end val hide)
         #:transparent)
 
 
@@ -20,16 +20,16 @@
 (struct pattern (start end)
         #:transparent)
 
-(struct pattern-id pattern (val)
+(struct pattern-id pattern (val hide)
         #:transparent)
 
 
 ;; Token structure to be defined by the user
-(struct pattern-token pattern (val)
+(struct pattern-token pattern (val hide)
         #:transparent)
 
 ;; Token structure defined as the literal string to be matched.
-(struct pattern-lit pattern (val)
+(struct pattern-lit pattern (val hide)
         #:transparent)
 
 (struct pattern-choice pattern (vals)
@@ -43,8 +43,5 @@
         #:transparent)
 
 (struct pattern-seq pattern (vals)
-        #:transparent)
-
-(struct pattern-elide pattern (vals)
         #:transparent)
 

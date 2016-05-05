@@ -57,22 +57,30 @@
                       (pos-offset (pattern-start a-pattern)))
                    #f))
   (define source-location (list source line column position span))
-  (datum->syntax #f
-                 (match a-pattern
-                   [(struct pattern-id (start end val))
-                    `(id ,(datum->syntax #f (string->symbol val) source-location))]
-                   [(struct pattern-lit (start end val))
-                    `(lit ,(datum->syntax #f val source-location))]
-                   [(struct pattern-token (start end val))
-                    `(token ,(datum->syntax #f (string->symbol val) source-location))]
-                   [(struct pattern-choice (start end vals))
-                    `(choice ,@(map recur vals))]
-                   [(struct pattern-repeat (start end min val))
-                    `(repeat ,min ,(recur val))]
-                   [(struct pattern-maybe (start end val))
-                    `(maybe ,(recur val))]
-                   [(struct pattern-seq (start end vals))
-                    `(seq ,@(map recur vals))]
-                   [(struct pattern-elide (start end vals))
-                    `(elide ,@(map recur vals))])
-                 source-location))
+  (match a-pattern
+    [(struct pattern-id (start end val hide))
+     (syntax-property
+      (datum->syntax #f
+                     `(id ,(datum->syntax #f (string->symbol val) source-location))
+                     source-location)
+      'hide hide)]
+    [(struct pattern-lit (start end val hide))
+     (syntax-property
+      (datum->syntax #f
+                     `(lit ,(datum->syntax #f val source-location))
+                     source-location)
+      'hide hide)]
+    [(struct pattern-token (start end val hide))
+     (syntax-property
+      (datum->syntax #f
+                     `(token ,(datum->syntax #f (string->symbol val) source-location))
+                     source-location)
+      'hide hide)]
+    [(struct pattern-choice (start end vals))
+     (datum->syntax #f`(choice ,@(map recur vals)) source-location)]
+    [(struct pattern-repeat (start end min val))
+     (datum->syntax #f`(repeat ,min ,(recur val)) source-location)]
+    [(struct pattern-maybe (start end val))
+     (datum->syntax #f`(maybe ,(recur val)) source-location)]
+    [(struct pattern-seq (start end vals))
+     (datum->syntax #f`(seq ,@(map recur vals)) source-location)]))
