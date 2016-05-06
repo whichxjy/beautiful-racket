@@ -17,6 +17,7 @@
          token-PIPE
          token-REPEAT
          token-RULE_HEAD
+         token-RULE_HEAD_HIDDEN
          token-ID
          token-LIT
          token-EOF
@@ -45,6 +46,7 @@
                        PIPE
                        REPEAT
                        RULE_HEAD
+                       RULE_HEAD_HIDDEN
                        ID
                        LIT
                        EOF))
@@ -84,7 +86,23 @@
                            (position-col $1-start-pos))
                       trimmed
                       #f)
-              $2))]]
+              $2))]
+     
+     ;; angles indicate hiding. set hide value to #t
+     [(RULE_HEAD_HIDDEN pattern)
+      (begin
+        (begin 
+        (define trimmed (cadr (regexp-match #px"<(\\w+)>\\s*:$" $1)))
+        (rule (position->pos $1-start-pos)
+              (position->pos $2-end-pos)
+              (lhs-id (position->pos $1-start-pos)
+                      (pos (+ (position-offset $1-start-pos)
+                              (string-length trimmed))
+                           (position-line $1-start-pos)
+                           (position-col $1-start-pos))
+                      trimmed
+                      #t)
+              $2)))]]
     
     [pattern
      [(implicit-pattern-sequence PIPE pattern)
