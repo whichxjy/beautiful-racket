@@ -1,5 +1,5 @@
-#lang br
-(require "json-elider.rkt"
+#lang racket/base
+(require brag/examples/baby-json-hider
          brag/support
          rackunit)
 

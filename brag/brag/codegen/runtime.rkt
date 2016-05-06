@@ -163,15 +163,15 @@ This would be the place to check a syntax property for hiding.
 ;; Creates an stx out of the rule name and its components.
 ;; The location information of the rule spans that of its components.
 (define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] #:splice? [splice #f] . componentss)
-  (let ([componentss (append-map (λ(cs)
+  (let ([spliced-componentss (append-map (λ(cs)
                                    (if (and (pair? cs) (syntax-property (car cs) 'splice))
-                                            (list (cdr (syntax->list (car cs))))
+                                            (list (cdr (syntax->list (car cs)))) ; pop off the rule name and splice its components into this rule
                                             (list cs))) componentss)])
     (syntax-property
      (datum->syntax #f 
                     (cons
                      (datum->syntax #f rule-name/false srcloc stx-with-original?-property)
-                     (apply append componentss))
+                     (apply append spliced-componentss))
                     srcloc
                     stx-with-original?-property)
      'splice splice)))

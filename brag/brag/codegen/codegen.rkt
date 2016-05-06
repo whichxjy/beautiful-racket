@@ -247,7 +247,8 @@
         (with-syntax ([$1-start-pos (datum->syntax (first translated-patterns) '$1-start-pos)]
                       [$n-end-pos (format-id (last translated-patterns) "$~a-end-pos" (length translated-patterns))])
           #`(positions->srcloc $1-start-pos $n-end-pos))))
-  
+
+  ;; move 'splice property into function because name is datum-ized
   (with-syntax ([(translated-pattern ...) translated-patterns]
                 [(translated-action ...) translated-actions])
     #`[(translated-pattern ...)
