@@ -150,15 +150,12 @@ This would be the place to check a syntax property for hiding.
 (define stx-with-original?-property
   (read-syntax #f (open-input-string "meaningless-string")))
 
-(define elided (gensym))
 
 ;; atomic-datum->syntax: datum position position
 ;; Helper that does the ugly work in wrapping a datum into a syntax
 ;; with source location.
-(define (atomic-datum->syntax d start-pos end-pos [hide? #f])
-  (if hide?
-      elided
-      (datum->syntax #f d (positions->srcloc start-pos end-pos) stx-with-original?-property)))
+(define (atomic-datum->syntax d start-pos end-pos)
+  (datum->syntax #f d (positions->srcloc start-pos end-pos) stx-with-original?-property))
 
 
 
@@ -166,10 +163,9 @@ This would be the place to check a syntax property for hiding.
 ;; Creates an stx out of the rule name and its components.
 ;; The location information of the rule spans that of its components.
 (define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] . components)
-  (define flattened-elided-components (filter-not (λ(c) (eq? c elided)) (apply append components)))
   (datum->syntax #f 
                  (cons
-                        (datum->syntax #f rule-name/false srcloc stx-with-original?-property)
-                        flattened-elided-components)
+                  (datum->syntax #f rule-name/false srcloc stx-with-original?-property)
+                  (apply append components))
                  srcloc
                  stx-with-original?-property))

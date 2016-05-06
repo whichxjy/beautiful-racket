@@ -10,10 +10,10 @@
                ":"
                (token 'STRING "'hello world'")
                "}")))
- '(json (object (kvpair (json (string "'hello world'"))))))
+ '(json (object (kvpair "message" (json (string "'hello world'"))))))
 
 
-(check-equal? 
+#;(check-equal? 
  (syntax->datum
   (parse "[[[{}]],[],[[{}]]]"))
  '(json (array #\[ (json (array #\[ (json (array #\[ (json (object)) #\])) #\])) #\, (json (array #\[ #\])) #\, (json (array #\[ (json (array #\[ (json (object )) #\])) #\])) #\])))
