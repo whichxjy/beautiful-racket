@@ -165,7 +165,9 @@ This would be the place to check a syntax property for hiding.
 (define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] #:splice? [splice #f] . componentss)
   (let ([spliced-componentss (append-map (λ(cs)
                                    (if (and (pair? cs) (syntax-property (car cs) 'splice))
-                                            (list (cdr (syntax->list (car cs)))) ; pop off the rule name and splice its components into this rule
+                                            (list (list (syntax-case (car cs) ()
+                                                    [(rule-name c ...)
+                                                     #'(c ...)])))
                                             (list cs))) componentss)])
     (syntax-property
      (datum->syntax #f 
