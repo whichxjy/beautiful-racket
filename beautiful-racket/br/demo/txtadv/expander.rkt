@@ -35,7 +35,7 @@
   #'(module-begin _section ...))
 
 (provide verb-section)
-(define-inverting #'(verb-section _heading _verb-item ...)
+(define-inverting #'(verb-section _verb-item ...)
   (inject-syntax ([#'in-verbs (shared-syntax 'in-verbs)])
                  #'(define-verbs in-verbs
                      _verb-item ...)))
@@ -47,14 +47,11 @@
 
 (provide verb-name)
 (define-cases #'verb-name
-  ;; cases with literals go first, so they're not caught by wildcards
-  [#'(_ "," _id) #'(_id #f)]
-  [#'(_ "," _id _underscore) #'(_id #t)]
   [#'(_ _id) #'(_id #f)]
   [#'(_ _id _underscore) #'(_id #t)])
 
 (provide everywhere-section)
-(define-inverting #'(everywhere-section _heading [_name _desc] ...)
+(define-inverting #'(everywhere-section [_name _desc] ...)
   #'(define-everywhere everywhere-actions
       ([_name _desc] ...)))
 
@@ -63,7 +60,7 @@
   #'(_id _desc))
 
 (provide things-section)
-(define-inverting #'(things-section _heading _thing ...)
+(define-inverting #'(things-section _thing ...)
   #'(begin _thing ...))
 
 (provide thing-item)
@@ -71,7 +68,7 @@
   #'(define-thing _thingname [_actionname _actiondesc] ...))
 
 (provide places-section)
-(define-inverting #'(places-section _heading _placeitem ...)
+(define-inverting #'(places-section _placeitem ...)
   #'(begin _placeitem ...))
 
 (provide place-item)
@@ -82,18 +79,17 @@
 (define #'(place-descrip _desc) #'_desc)
 
 (provide place-items)
-(define-inverting #'(place-items "[" _id ... "]") #'(_id ...))
+(define-inverting #'(place-items _id ...) #'(_id ...))
 
 (provide place-name)
 (define-cases #'place-name
-  [#'(_ "," _id) #'_id]
   [#'(_ _id) #'_id])
 
 
 (provide s-exp)
 (define-cases-inverting #'s-exp
-  [#'(_ "(" _sx ... ")") #'(_sx ...)]
-  [#'(_ _sx) #'_sx])
+  [#'(_ _sx) #'_sx]
+  [#'(_ _sx ... ) #'(_sx ...)])
 
 
 ;; todo: consolidate the game-starters.
@@ -107,7 +103,7 @@
                               everywhere-actions)))
 
 (provide start-section)
-(define #'(start-section _heading _where)
+(define #'(start-section _where)
   (inject-syntax ([#'in-verbs (shared-syntax 'in-verbs)])
                  #'(init-game _where
                               in-verbs
