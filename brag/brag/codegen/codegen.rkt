@@ -38,25 +38,9 @@
        
        ;; We flatten the rules so we can use the yacc-style ruleset that parser-tools
        ;; supports.
-       
-       #|
-       MB: `rules` still carries 'hide syntax property
-       |#
-       #;(report rules)
-       
-       
-       #|
-       MB: `flattened-rules` still carries 'hide syntax property
-       |#
        (define flattened-rules (flatten-rules rules))
-       #;(report flattened-rules)
        
        (define generated-rule-codes (map flat-rule->yacc-rule flattened-rules))
-       
-       #|
-       MB: `generated-rule-codes` loses the 'hide syntax property (but lhs-ids carry 'splice)
-       |#
-       #;(report generated-rule-codes)
        
        ;; The first rule, by default, is the start rule.
        (define rule-ids (for/list ([a-rule (in-list rules)])
@@ -179,8 +163,6 @@
 ;;     stx :== (name (U tokens rule-stx) ...)
 ;;
 (define (flat-rule->yacc-rule a-flat-rule)
-  ;; lhs-ids still carry 'splice property on #'name field
-  #;(report a-flat-rule)
   (syntax-case a-flat-rule ()
     [(rule-type origin name clauses ...)
      (begin
