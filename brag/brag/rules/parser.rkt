@@ -91,7 +91,7 @@
      ;; angles indicate splicing. set splice value to #t
      [(RULE_HEAD_HIDDEN pattern)
       (begin
-        (define trimmed (regexp-match #px"<(.+)>\\s*:$" $1))
+        (define trimmed (cadr (regexp-match #px"<(.+)>\\s*:$" $1)))
         (rule (position->pos $1-start-pos)
               (position->pos $2-end-pos)
               (lhs-id (position->pos $1-start-pos)
