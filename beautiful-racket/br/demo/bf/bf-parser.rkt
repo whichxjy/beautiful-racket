@@ -1,4 +1,4 @@
-#lang br/ragg
+#lang brag
 bf-program : (op | loop)*
 op : ">" | "<" | "+" | "-" | "." | ","
 loop : "[" (op | loop)* "]"

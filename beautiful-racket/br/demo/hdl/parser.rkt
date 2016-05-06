@@ -1,4 +1,4 @@
-#lang br/ragg
+#lang brag
 
 ;; rule of thumb: use [optional] bits judiciously as they multiply the cases needed for a production rule
 ;; rule of thumb: for a set of related IDs, put each into the same grammar entity

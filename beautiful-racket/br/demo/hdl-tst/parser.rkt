@@ -1,4 +1,4 @@
-#lang br/ragg
+#lang brag
 
 tst-program : header-expr test-expr*
 

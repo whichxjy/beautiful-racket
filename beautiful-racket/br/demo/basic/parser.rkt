@@ -1,4 +1,4 @@
-#lang br/ragg
+#lang brag
 
 ;; recursive rules destucture easily in the expander
 program : [CR]* [line [CR line]*] [CR]*
