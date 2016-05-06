@@ -31,6 +31,9 @@
          (do-place)))))
 
 
+;; ==============================================================
+;; Process parse trees from the reader:
+
 (provide txtadv-program)
 (define #'txtadv-program #'module-begin)
 
