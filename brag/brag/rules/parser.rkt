@@ -1,4 +1,4 @@
-#lang br
+#lang racket/base
 (require parser-tools/yacc
          parser-tools/lex
          racket/list
@@ -88,7 +88,7 @@
                       #f)
               $2))]
      
-     ;; angles indicate hiding. set hide value to #t
+     ;; angles indicate splicing. set splice value to #t
      [(RULE_HEAD_HIDDEN pattern)
       (begin
         (begin 
