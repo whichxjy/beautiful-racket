@@ -12,7 +12,7 @@
 (struct rule (start end lhs pattern)
         #:transparent)
 
-(struct lhs-id (start end val hide)
+(struct lhs-id (start end val splice)
         #:transparent)
 
 

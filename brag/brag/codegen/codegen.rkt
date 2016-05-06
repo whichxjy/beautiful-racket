@@ -54,7 +54,7 @@
        (define generated-rule-codes (map flat-rule->yacc-rule flattened-rules))
        
        #|
-       MB: `generated-rule-codes` loses the 'hide syntax property (but not for lhs-ids)
+       MB: `generated-rule-codes` loses the 'hide syntax property (but lhs-ids carry 'splice)
        |#
        #;(report generated-rule-codes)
        
@@ -179,7 +179,7 @@
 ;;     stx :== (name (U tokens rule-stx) ...)
 ;;
 (define (flat-rule->yacc-rule a-flat-rule)
-  ;; lhs-ids still carry 'hide property on #'name field
+  ;; lhs-ids still carry 'splice property on #'name field
   #;(report a-flat-rule)
   (syntax-case a-flat-rule ()
     [(rule-type origin name clauses ...)
@@ -253,7 +253,7 @@
     #`[(translated-pattern ...)
        (rule-components->syntax '#,rule-name/false translated-action ...
                                 #:srcloc #,whole-rule-loc
-                                #:splice? #,(syntax-property rule-name/false 'hide))]))
+                                #:splice? #,(syntax-property rule-name/false 'splice))]))
 
 
 
