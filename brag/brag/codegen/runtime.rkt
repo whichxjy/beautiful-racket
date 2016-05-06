@@ -158,14 +158,20 @@ This would be the place to check a syntax property for hiding.
   (datum->syntax #f d (positions->srcloc start-pos end-pos) stx-with-original?-property))
 
 
-
+(define splice-signal '@)
 ;; rule-components->syntax: (U symbol false) (listof stx) ... #:srcloc (U #f (list src line column offset span)) -> stx
 ;; Creates an stx out of the rule name and its components.
 ;; The location information of the rule spans that of its components.
-(define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] . components)
-  (datum->syntax #f 
-                 (cons
-                  (datum->syntax #f rule-name/false srcloc stx-with-original?-property)
-                  (apply append components))
-                 srcloc
-                 stx-with-original?-property))
+(define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] #:splice? [splice #f] . componentss)
+  (let ([componentss (append-map (λ(cs)
+                                   (if (and (pair? cs) (syntax-property (car cs) 'splice))
+                                            (list (cdr (syntax->list (car cs))))
+                                            (list cs))) componentss)])
+    (syntax-property
+     (datum->syntax #f 
+                    (cons
+                     (datum->syntax #f rule-name/false srcloc stx-with-original?-property)
+                     (apply append componentss))
+                    srcloc
+                    stx-with-original?-property)
+     'splice splice)))

@@ -21,17 +21,19 @@
 
 (define (rule->stx source a-rule)
   (define id-stx
-    (datum->syntax #f
-                   (string->symbol (lhs-id-val (rule-lhs a-rule)))
-                   (list source
-                         (pos-line (lhs-id-start (rule-lhs a-rule)))
-                         (pos-col (lhs-id-start (rule-lhs a-rule)))
-                         (pos-offset (lhs-id-start (rule-lhs a-rule)))
-                         (if (and (number? (pos-offset (lhs-id-start (rule-lhs a-rule))))
-                                  (number? (pos-offset (lhs-id-end (rule-lhs a-rule)))))
-                             (- (pos-offset (lhs-id-end (rule-lhs a-rule)))
-                                (pos-offset (lhs-id-start (rule-lhs a-rule))))
-                             #f))))
+    (syntax-property
+     (datum->syntax #f
+                    (string->symbol (lhs-id-val (rule-lhs a-rule)))
+                    (list source
+                          (pos-line (lhs-id-start (rule-lhs a-rule)))
+                          (pos-col (lhs-id-start (rule-lhs a-rule)))
+                          (pos-offset (lhs-id-start (rule-lhs a-rule)))
+                          (if (and (number? (pos-offset (lhs-id-start (rule-lhs a-rule))))
+                                   (number? (pos-offset (lhs-id-end (rule-lhs a-rule)))))
+                              (- (pos-offset (lhs-id-end (rule-lhs a-rule)))
+                                 (pos-offset (lhs-id-start (rule-lhs a-rule))))
+                              #f)))
+     'hide (lhs-id-hide (rule-lhs a-rule))))
   (define pattern-stx (pattern->stx source (rule-pattern a-rule)))
   (define line (pos-line (rule-start a-rule)))
   (define column (pos-col (rule-start a-rule)))
