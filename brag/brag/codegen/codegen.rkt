@@ -28,7 +28,7 @@
        (define rules (syntax->list #'(r ...)))
        
        (when (empty? rules)
-         (raise-syntax-error 'ragg
+         (raise-syntax-error 'brag
                              (format "The grammar does not appear to have any rules")
                              stx))
        

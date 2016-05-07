@@ -27,7 +27,7 @@
 ;; defines what the uppercased tokens mean.  For example, you can
 ;; use the parser-tools/lex lexer tools:
 ;;
-;; (require ragg/support
+;; (require brag/support
 ;;          parser-tools/lex
 ;;          parser-tools/lex-sre)
 ;;
