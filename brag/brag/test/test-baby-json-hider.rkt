@@ -1,5 +1,5 @@
-#lang br
-(require "json-elider.rkt"
+#lang racket/base
+(require brag/examples/baby-json-hider
          brag/support
          rackunit)
 
@@ -10,7 +10,7 @@
                ":"
                (token 'STRING "'hello world'")
                "}")))
- '(json (object (kvpair (json (string "'hello world'"))))))
+ '(json (object (":"))))
 
 
 (check-equal? 

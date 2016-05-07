@@ -1,4 +1,4 @@
-#lang br
+#lang racket/base
 
 (require (for-template racket/base)
          racket/list
@@ -38,25 +38,9 @@
        
        ;; We flatten the rules so we can use the yacc-style ruleset that parser-tools
        ;; supports.
-       
-       #|
-       MB: `rules` still carries 'hide syntax property
-       |#
-       #;(report flattened-rules)
-
-
-       #|
-       MB: `flattened-rules` still carries 'hide syntax property
-       |#
        (define flattened-rules (flatten-rules rules))
-       #;(report flattened-rules)
        
        (define generated-rule-codes (map flat-rule->yacc-rule flattened-rules))
-
-       #|
-       MB: `generated-rule-codes` loses the 'hide syntax property
-       |#
-       #;(report generated-rule-codes)
        
        ;; The first rule, by default, is the start rule.
        (define rule-ids (for/list ([a-rule (in-list rules)])
@@ -179,7 +163,6 @@
 ;;     stx :== (name (U tokens rule-stx) ...)
 ;;
 (define (flat-rule->yacc-rule a-flat-rule)
-  #;(report a-flat-rule)
   (syntax-case a-flat-rule ()
     [(rule-type origin name clauses ...)
      (begin
@@ -216,29 +199,29 @@
     (for/list ([translated-pattern (in-list translated-patterns)]
                [primitive-pattern (syntax->list a-clause)]
                [pos (in-naturals 1)])
-              (with-syntax ([$X 
-                             (format-id translated-pattern "$~a" pos)]
-                            [$X-start-pos 
-                             (format-id translated-pattern "$~a-start-pos" pos)]
-                            [$X-end-pos
-                             (format-id translated-pattern "$~a-end-pos" pos)])
-                (syntax-case primitive-pattern (id lit token inferred-id)
-                  
-                  ;; When a rule usage is inferred, the value of $X is a syntax object
-                  ;; whose head is the name of the inferred rule . We strip that out,
-                  ;; leaving the residue to be absorbed.
-                  [(inferred-id val reason)
-                   #'(syntax-case $X ()
-                       [(inferred-rule-name . rest)
-                        (syntax->list #'rest)])]
-                  [(id val)
-                   #'(list $X)]
-                  ;; move the 'hide syntax property into the translated-action
-                  ;; because syntax gets datum-ized
-                  [(lit val)
-                   #`(list (atomic-datum->syntax $X $X-start-pos $X-end-pos #,(syntax-property primitive-pattern 'hide)))]
-                  [(token val)
-                   #`(list (atomic-datum->syntax $X $X-start-pos $X-end-pos #,(syntax-property primitive-pattern 'hide)))]))))
+              (if (syntax-property primitive-pattern 'hide)
+                  #'null
+                  (with-syntax ([$X 
+                                 (format-id translated-pattern "$~a" pos)]
+                                [$X-start-pos 
+                                 (format-id translated-pattern "$~a-start-pos" pos)]
+                                [$X-end-pos
+                                 (format-id translated-pattern "$~a-end-pos" pos)])
+                    (syntax-case primitive-pattern (id lit token inferred-id)
+                      
+                      ;; When a rule usage is inferred, the value of $X is a syntax object
+                      ;; whose head is the name of the inferred rule . We strip that out,
+                      ;; leaving the residue to be absorbed.
+                      [(inferred-id val reason)
+                       #'(syntax-case $X ()
+                           [(inferred-rule-name . rest)
+                            (syntax->list #'rest)])]
+                      [(id val)
+                       #'(list $X)]
+                      [(lit val)
+                       #'(list (atomic-datum->syntax $X $X-start-pos $X-end-pos))]
+                      [(token val)
+                       #'(list (atomic-datum->syntax $X $X-start-pos $X-end-pos))])))))
   
   (define whole-rule-loc
     (if (empty? translated-patterns)
@@ -246,12 +229,14 @@
         (with-syntax ([$1-start-pos (datum->syntax (first translated-patterns) '$1-start-pos)]
                       [$n-end-pos (format-id (last translated-patterns) "$~a-end-pos" (length translated-patterns))])
           #`(positions->srcloc $1-start-pos $n-end-pos))))
-  
+
+  ;; move 'splice property into function because name is datum-ized
   (with-syntax ([(translated-pattern ...) translated-patterns]
                 [(translated-action ...) translated-actions])
     #`[(translated-pattern ...)
        (rule-components->syntax '#,rule-name/false translated-action ...
-                                #:srcloc #,whole-rule-loc)]))
+                                #:srcloc #,whole-rule-loc
+                                #:splice? #,(syntax-property rule-name/false 'splice))]))
 
 
 

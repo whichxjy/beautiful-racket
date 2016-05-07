@@ -1,8 +1,7 @@
 #lang brag
 
 ;; Simple baby example of JSON structure
-json: number
-    | string
+json: number | string
     | array
     | object
 
@@ -14,4 +13,4 @@ array: "[" [json ("," json)*] "]"
 
 object: <"{"> [kvpair ("," kvpair)*] <"}">
 
-kvpair: <ID> <":"> json
+<kvpair>: <ID> ":" <json>

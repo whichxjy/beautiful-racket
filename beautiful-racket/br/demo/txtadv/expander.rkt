@@ -30,70 +30,38 @@
        (parameterize ([cmd-line-mode? #t])
          (do-place)))))
 
+
+;; ==============================================================
+;; Process parse trees from the reader:
+
 (provide txtadv-program)
-(define #'(txtadv-program _section ...)
-  #'(module-begin _section ...))
+(define #'txtadv-program #'module-begin)
 
 (provide verb-section)
-(define-inverting #'(verb-section _heading _verb-item ...)
+(define #'(verb-section
+           ((_name0 . _transitive0?)
+            (_name . _transitive?) ... _desc) ...)
   (inject-syntax ([#'in-verbs (shared-syntax 'in-verbs)])
                  #'(define-verbs in-verbs
-                     _verb-item ...)))
-
-
-(provide verb-item)
-(define-inverting #'(verb-item (_name0 _transitive0?) (_name _transitive?) ... _desc)
-  #`[_name0 #,@(if (syntax->datum #'_transitive0?) #'(_) #'()) (= _name ...) _desc])
-
-(provide verb-name)
-(define-cases #'verb-name
-  ;; cases with literals go first, so they're not caught by wildcards
-  [#'(_ "," _id) #'(_id #f)]
-  [#'(_ "," _id _underscore) #'(_id #t)]
-  [#'(_ _id) #'(_id #f)]
-  [#'(_ _id _underscore) #'(_id #t)])
+                     [_name0 #,@(if (syntax->datum #'_transitive0?) #'(_) #'()) (= _name ...) _desc] ...)))
 
 (provide everywhere-section)
-(define-inverting #'(everywhere-section _heading [_name _desc] ...)
+(define #'(everywhere-section [_id _desc] ...)
   #'(define-everywhere everywhere-actions
-      ([_name _desc] ...)))
-
-(provide id-desc)
-(define-inverting #'(id-desc _id _desc)
-  #'(_id _desc))
+      ([_id _desc] ...)))
 
 (provide things-section)
-(define-inverting #'(things-section _heading _thing ...)
-  #'(begin _thing ...))
-
-(provide thing-item)
-(define-inverting #'(thing-item _thingname (_actionname _actiondesc) ...)
-  #'(define-thing _thingname [_actionname _actiondesc] ...))
+(define #'(things-section (_thingname (_actionname _actiondesc) ...) ...)
+  #'(begin (define-thing _thingname [_actionname _actiondesc] ...) ...))
 
 (provide places-section)
-(define-inverting #'(places-section _heading _placeitem ...)
-  #'(begin _placeitem ...))
-
-(provide place-item)
-(define-inverting #'(place-item _place-id _place-desc [_place-item ...] [_actionname _actiondesc] ...)
-  #'(define-place _place-id _place-desc [_place-item ...] ([_actionname _actiondesc] ...)))
-
-(provide place-descrip)
-(define #'(place-descrip _desc) #'_desc)
-
-(provide place-items)
-(define-inverting #'(place-items "[" _id ... "]") #'(_id ...))
-
-(provide place-name)
-(define-cases #'place-name
-  [#'(_ "," _id) #'_id]
-  [#'(_ _id) #'_id])
-
+(define #'(places-section (_place-id _place-desc [_place-item ...] [_actionname _actiondesc] ...) ...)
+  #'(begin (define-place _place-id _place-desc [_place-item ...] ([_actionname _actiondesc] ...)) ...))
 
 (provide s-exp)
 (define-cases-inverting #'s-exp
-  [#'(_ "(" _sx ... ")") #'(_sx ...)]
-  [#'(_ _sx) #'_sx])
+  [#'(_ _sx) #'_sx]
+  [#'(_ _sx ... ) #'(_sx ...)])
 
 
 ;; todo: consolidate the game-starters.
@@ -107,7 +75,7 @@
                               everywhere-actions)))
 
 (provide start-section)
-(define #'(start-section _heading _where)
+(define #'(start-section _where)
   (inject-syntax ([#'in-verbs (shared-syntax 'in-verbs)])
                  #'(init-game _where
                               in-verbs

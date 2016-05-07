@@ -22,9 +22,6 @@
       (:+ id-char)))
 
 
-
-
-
 (define lex/1
   (lexer-src-pos
    [(:: "'"
@@ -64,6 +61,8 @@
     (token-EOF lexeme)]
    [(:: id (:* whitespace) ":")
     (token-RULE_HEAD lexeme)]
+   [(:: "<" id ">" (:* whitespace) ":")
+    (token-RULE_HEAD_HIDDEN lexeme)]
    [id
     (token-ID lexeme)]
    

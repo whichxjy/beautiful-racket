@@ -1,4 +1,4 @@
-#lang br
+#lang racket/base
 (require brag/rules/stx-types
          (for-syntax racket/base))
 

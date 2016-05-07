@@ -1,4 +1,4 @@
-#lang br
+#lang racket/base
 
 (require racket/match 
          racket/list
@@ -150,26 +150,30 @@ This would be the place to check a syntax property for hiding.
 (define stx-with-original?-property
   (read-syntax #f (open-input-string "meaningless-string")))
 
-(define elided (gensym))
 
 ;; atomic-datum->syntax: datum position position
 ;; Helper that does the ugly work in wrapping a datum into a syntax
 ;; with source location.
-(define (atomic-datum->syntax d start-pos end-pos [hide? #f])
-  (if hide?
-      elided
-      (datum->syntax #f d (positions->srcloc start-pos end-pos) stx-with-original?-property)))
+(define (atomic-datum->syntax d start-pos end-pos)
+  (datum->syntax #f d (positions->srcloc start-pos end-pos) stx-with-original?-property))
 
 
-
+(define splice-signal '@)
 ;; rule-components->syntax: (U symbol false) (listof stx) ... #:srcloc (U #f (list src line column offset span)) -> stx
 ;; Creates an stx out of the rule name and its components.
 ;; The location information of the rule spans that of its components.
-(define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] . components)
-  (define flattened-elided-components (filter-not (λ(c) (eq? c elided)) (apply append components)))
-  (datum->syntax #f 
-                 (cons
-                        (datum->syntax #f rule-name/false srcloc stx-with-original?-property)
-                        flattened-elided-components)
-                 srcloc
-                 stx-with-original?-property))
+(define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] #:splice? [splice #f] . componentss)
+  (let ([spliced-componentss (append-map (λ(cs)
+                                   (if (and (pair? cs) (syntax-property (car cs) 'splice))
+                                            (list (list (syntax-case (car cs) ()
+                                                    [(rule-name c ...)
+                                                     #'(c ...)])))
+                                            (list cs))) componentss)])
+    (syntax-property
+     (datum->syntax #f 
+                    (cons
+                     (datum->syntax #f rule-name/false srcloc stx-with-original?-property)
+                     (apply append spliced-componentss))
+                    srcloc
+                    stx-with-original?-property)
+     'splice splice)))
