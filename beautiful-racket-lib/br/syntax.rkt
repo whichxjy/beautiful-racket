@@ -145,4 +145,7 @@
 (define-syntax (with-scopes stx)
   (syntax-case stx (syntax)
     [(_ (scope-id) (syntax expr))
-     #'(scope-id expr)]))
+     (with-syntax ([add-scope-id (format-id #'scope-id "add-~a" #'scope-id)])
+       #'(add-scope-id expr))]))
+
+
