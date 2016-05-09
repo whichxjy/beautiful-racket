@@ -1,5 +1,6 @@
 #lang racket/base
-(require (for-syntax racket/base syntax/parse racket/syntax) syntax/strip-context racket/function)
+(require (for-syntax racket/base syntax/parse racket/syntax syntax/strip-context)
+         syntax/strip-context racket/function)
 (provide (all-defined-out) (all-from-out syntax/strip-context))
 
 
@@ -60,6 +61,10 @@
 (define (->syntax x)
   (if (syntax? x) x (datum->syntax #f x)))
 
+(define first car)
+(define second cadr)
+(define third caddr)
+
 (define-syntax (define-scope stx)
   (syntax-case stx ()
     [(_ id)
@@ -71,9 +76,8 @@
                    [remove-id (format-id #'id "remove-~a" #'id)]
                    [id? (format-id #'id "~a?" #'id)]
                    [id* (format-id #'id "~a*" #'id)]
-                   [(scope-id-sis ...) (map (λ(scope-id) (format-id scope-id "~a-sis" scope-id)) (syntax->list #'scope-ids))])
+                   [(scope-id-sis ...) (map (λ(sid) (format-id sid "~a-sis" sid)) (syntax->list #'scope-ids))])
        #'(begin
-           (local-require sugar/debug)
            (define id-sis
              (let ([sis-in (list scope-id-sis ...)])
                (if (pair? sis-in)
@@ -83,9 +87,9 @@
                       (list (procedure-rename (curryr si 'add) 'add-id)
                             (procedure-rename (curryr si 'flip) 'flip-id)
                             (procedure-rename (curryr si 'remove) 'remove-id)))))))
-           (define add-id (λ(x) ((apply compose1 (map car id-sis)) (->syntax x))))
-           (define flip-id (λ(x) ((apply compose1 (map cadr id-sis)) (->syntax x))))
-           (define remove-id (λ(x) ((apply compose1 (map caddr id-sis)) (->syntax x))))
+           (define add-id (λ(x) ((apply compose1 (map first id-sis)) (->syntax x))))
+           (define flip-id (λ(x) ((apply compose1 (map second id-sis)) (->syntax x))))
+           (define remove-id (λ(x) ((apply compose1 (map third id-sis)) (->syntax x))))
            (define (id x) (add-id (datum->syntax #f (syntax-e (->syntax x)))))
            (define (id* x) (replace-context (add-id (datum->syntax #f '_)) (->syntax x)))
            (define (id? x)
@@ -100,6 +104,7 @@
   (bound-identifier=? (datum->syntax stxl '_) (datum->syntax stxr '_)))
 
 
+(module+ test
 (require rackunit)
 (define-scope red)
 
@@ -137,11 +142,10 @@
 (define-scope purple (red blue))
 
 (check-true (purple? (add-purple stx)))
-(check-true (scopes-equal? (purple stx) (add-blue (red stx))))
+(check-true (scopes-equal? (purple (green stx)) (add-blue (remove-green (add-red (add-green (add-blue stx))))))))
 
 
-(define-syntax (define-with-scopes stx)
-  (syntax-case stx ()
-    [(_ id (scope-id) val)
-     #'(define-syntax id (λ(stx) (scope-id (syntax val))))]))
-
+(define-syntax (with-scopes stx)
+  (syntax-case stx (syntax)
+    [(_ (scope-id) (syntax expr))
+     #'(scope-id expr)]))
