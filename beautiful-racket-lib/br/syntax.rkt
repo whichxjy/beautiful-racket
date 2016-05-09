@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base syntax/parse racket/syntax) syntax/strip-context)
+(require (for-syntax racket/base syntax/parse racket/syntax) syntax/strip-context racket/function)
 (provide (all-defined-out) (all-from-out syntax/strip-context))
 
 
@@ -25,10 +25,25 @@
 
 (define-syntax (map-syntax stx)
   (syntax-case stx ()
-    [(_ <proc> <arg> ...)
-     #'(map <proc> (if (and (syntax? <arg>) (list? (syntax-e <arg>)))
-                       (syntax->list <arg>)
-                       <arg>) ...)]))
+    [(_ _proc _args)
+     #'(let ([args _args])
+         (datum->syntax args
+                        (if (and (syntax? args) (list? (syntax-e args)))
+                            (for/list ([arg (in-list (syntax->list args))])
+                                      (datum->syntax arg (_proc (syntax->datum arg))))
+                            (error 'not-syntax-list))))]))
+
+(define-syntax (filter-syntax stx)
+  (syntax-case stx ()
+    [(_ _proc _args)
+     #'(let ([args _args])
+         (datum->syntax args
+                        (if (and (syntax? args) (list? (syntax-e args)))
+                            (for*/list ([arg (in-list (syntax->list args))]
+                                        [result (in-value (_proc (syntax->datum arg)))]
+                                        #:when result)
+                                       arg)
+                            (error 'not-syntax-list))))]))
 
 
 #;(define-syntax syntax-variable (make-rename-transformer #'format-id))
@@ -48,24 +63,34 @@
 (define-syntax (define-scope stx)
   (syntax-case stx ()
     [(_ id)
-     #'(define-scope id #f)]
-    [(_ id sis)
-     (with-syntax ([id-si (format-id #'id "~a-si" #'id)]
+     #'(define-scope id ())]
+    [(_ id scope-ids)
+     (with-syntax ([id-sis (format-id #'id "~a-sis" #'id)]
                    [add-id (format-id #'id "add-~a" #'id)]
                    [flip-id (format-id #'id "flip-~a" #'id)]
                    [remove-id (format-id #'id "remove-~a" #'id)]
                    [id? (format-id #'id "~a?" #'id)]
-                   [id* (format-id #'id "~a*" #'id)])
+                   [id* (format-id #'id "~a*" #'id)]
+                   [(scope-id-sis ...) (map (λ(scope-id) (format-id scope-id "~a-sis" scope-id)) (syntax->list #'scope-ids))])
        #'(begin
-           (define id-si (or sis (make-syntax-introducer 'use-site)))
-           (define add-id (λ(x) (id-si (->syntax x) 'add)))
-           (define flip-id (λ(x) (id-si (->syntax x) 'flip)))
-           (define remove-id (λ(x) (id-si (->syntax x) 'remove)))
+           (local-require sugar/debug)
+           (define id-sis
+             (let ([sis-in (list scope-id-sis ...)])
+               (if (pair? sis-in)
+                   (apply append sis-in)
+                   (list
+                    (let ([si (make-syntax-introducer 'use-site)])
+                      (list (procedure-rename (curryr si 'add) 'add-id)
+                            (procedure-rename (curryr si 'flip) 'flip-id)
+                            (procedure-rename (curryr si 'remove) 'remove-id)))))))
+           (define add-id (λ(x) ((apply compose1 (map car id-sis)) (->syntax x))))
+           (define flip-id (λ(x) ((apply compose1 (map cadr id-sis)) (->syntax x))))
+           (define remove-id (λ(x) ((apply compose1 (map caddr id-sis)) (->syntax x))))
            (define (id x) (add-id (datum->syntax #f (syntax-e (->syntax x)))))
-           (define (id* x) (replace-context (id-si (datum->syntax #f '_)) (->syntax x)))
+           (define (id* x) (replace-context (add-id (datum->syntax #f '_)) (->syntax x)))
            (define (id? x)
              (and
-              (member (car (context (id-si (datum->syntax #f '_))))
+              (member (car (context (add-id (datum->syntax #f '_))))
                       (context (->syntax x)))
               #t))))]))
 
@@ -75,44 +100,45 @@
   (bound-identifier=? (datum->syntax stxl '_) (datum->syntax stxr '_)))
 
 
-(module+ test
-  (require rackunit)
-  (define-scope red)
-  
-  (define stx (datum->syntax #f 'x))
-  (define red-stx (add-red stx))
-  (define double-red-stx (add-red (add-red stx)))
-  
-  (check-false (red? stx))
-  (check-true (red? red-stx))
-  (check-true (red? double-red-stx))
-  (check-false (scopes-equal? stx red-stx))
-  (check-true (scopes-equal? red-stx double-red-stx))
-  (check-false (scopes-equal? red-stx (remove-red double-red-stx)))
-  
-  
-  (define-scope blue) ; scope addition is commutative
-  (define blue-stx (blue stx))
-  (check-true (scopes-equal? (add-blue red-stx) (add-red blue-stx)))
-  (check-true (scopes-equal? (remove-red (add-blue red-stx)) (remove-red (add-red blue-stx))))
-  
-  
-  (define-scope green) ; replace scopes at outer layer
-  (check-true (scopes-equal? (green red-stx) (green blue-stx)))
-  
-  ;; replace scopes everywhere
-  (check-true (scopes-equal? (car (syntax->list (green* #`(#,blue-stx #,red-stx))))
-                             (car (syntax->list (green* #`(#,red-stx #,blue-stx))))))
-  
-  ;; todo: test flipping
-  
-  ;; todo: scope composition
-  #;(define-scope purple (red blue))
-  
-  #;(check-true (purple? (add-purple stx)))
-  #;(scopes-equal? (purple stx) (blue (red stx)))
-  
-  )
+(require rackunit)
+(define-scope red)
+
+(define stx (datum->syntax #f 'x))
+
+(define red-stx (add-red stx))
+(define double-red-stx (add-red (add-red stx)))
+
+
+(check-false (red? stx))
+(check-true (red? red-stx))
+(check-true (red? double-red-stx))
+(check-false (scopes-equal? stx red-stx))
+(check-true (scopes-equal? red-stx double-red-stx))
+(check-false (scopes-equal? red-stx (remove-red double-red-stx)))
+
+
+(define-scope blue) ; scope addition is commutative
+(define blue-stx (blue stx))
+(check-true (scopes-equal? (add-blue red-stx) (add-red blue-stx)))
+(check-true (scopes-equal? (remove-red (add-blue red-stx)) (remove-red (add-red blue-stx))))
+
+
+(define-scope green) ; replace scopes at outer layer
+(check-true (scopes-equal? (green red-stx) (green blue-stx)))
+
+
+;; replace scopes everywhere
+(check-true (scopes-equal? (car (syntax->list (green* #`(#,blue-stx #,red-stx))))
+                           (car (syntax->list (green* #`(#,red-stx #,blue-stx))))))
+
+;; todo: test flipping
+
+
+(define-scope purple (red blue))
+
+(check-true (purple? (add-purple stx)))
+(check-true (scopes-equal? (purple stx) (add-blue (red stx))))
+
 
 (define-syntax (define-with-scopes stx)
   (syntax-case stx ()
