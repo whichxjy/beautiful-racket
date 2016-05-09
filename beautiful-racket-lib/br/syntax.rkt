@@ -61,9 +61,6 @@
 (define (->syntax x)
   (if (syntax? x) x (datum->syntax #f x)))
 
-(define first car)
-(define second cadr)
-(define third caddr)
 
 (define-syntax (define-scope stx)
   (syntax-case stx ()
@@ -87,9 +84,9 @@
                       (list (procedure-rename (curryr si 'add) 'add-id)
                             (procedure-rename (curryr si 'flip) 'flip-id)
                             (procedure-rename (curryr si 'remove) 'remove-id)))))))
-           (define add-id (λ(x) ((apply compose1 (map first id-sis)) (->syntax x))))
-           (define flip-id (λ(x) ((apply compose1 (map second id-sis)) (->syntax x))))
-           (define remove-id (λ(x) ((apply compose1 (map third id-sis)) (->syntax x))))
+           (define add-id (λ(x) ((apply compose1 (map car id-sis)) (->syntax x))))
+           (define flip-id (λ(x) ((apply compose1 (map cadr id-sis)) (->syntax x))))
+           (define remove-id (λ(x) ((apply compose1 (map caddr id-sis)) (->syntax x))))
            (define (id x) (add-id (datum->syntax #f (syntax-e (->syntax x)))))
            (define (id* x) (replace-context (add-id (datum->syntax #f '_)) (->syntax x)))
            (define (id? x)
