@@ -2,13 +2,22 @@
 
 txtadv-program : verb-section everywhere-section things-section places-section start-section
 
+;; hide on right side: remove element
+;; useful for: getting rid of literals
+;; splice on right side: lift element
+;; useful for: selective splicing
+;; hide on left side: remove name, leave container
+;; useful for: grouping args, avoiding "alternation" pattern
+;; splice on left side: lift everywhere
+;; useful for: flattening recursive structures
+
 verb-section : /"===VERBS===" verb-item+
 
-/verb-item :  verb next-verb* s-exp
+/verb-item :  verb-list s-exp
+
+@verb-list : verb [/"," verb-list]
 
 /verb : ID ["_"]
-
-@next-verb : [/","] verb
 
 everywhere-section : /"===EVERYWHERE===" id-desc+
 
@@ -20,11 +29,9 @@ places-section : /"===PLACES===" place-item+
 
 /place-item : DASHED-NAME STRING place-items id-desc+
 
-/place-items : /"[" [place next-place*] /"]"
+/place-items : /"[" [place-list] /"]"
 
-@place : ID
-
-@next-place: /"," place
+@place-list : ID [/"," place-list]
 
 start-section : /"===START===" ID
 
