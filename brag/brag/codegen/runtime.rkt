@@ -158,17 +158,19 @@ This would be the place to check a syntax property for hiding.
   (datum->syntax #f d (positions->srcloc start-pos end-pos) stx-with-original?-property))
 
 
-(define splice-signal '@)
 ;; rule-components->syntax: (U symbol false) (listof stx) ... #:srcloc (U #f (list src line column offset span)) -> stx
 ;; Creates an stx out of the rule name and its components.
 ;; The location information of the rule spans that of its components.
-(define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] #:splice? [splice #f] . componentss)
+(define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] #:hide-or-splice? [hide-or-splice #f] . componentss)
   (let ([spliced-componentss (append-map (λ(cs)
-                                   (if (and (pair? cs) (syntax-property (car cs) 'splice))
-                                            (list (list (syntax-case (car cs) ()
-                                                    [(rule-name c ...)
-                                                     #'(c ...)])))
-                                            (list cs))) componentss)])
+                                           (cond
+                                             [(and (pair? cs) (equal? (syntax-property (car cs) 'hide-or-splice) "hide"))
+                                              (list (list (syntax-case (car cs) ()
+                                                            [(rule-name c ...)
+                                                             #'(c ...)])))]
+                                             [(and (pair? cs) (equal? (syntax-property (car cs) 'hide-or-splice) "splice"))
+                                              (list (cdr (syntax->list (car cs))))]
+                                             [else (list cs)])) componentss)])
     (syntax-property
      (datum->syntax #f 
                     (cons
@@ -176,4 +178,4 @@ This would be the place to check a syntax property for hiding.
                      (apply append spliced-componentss))
                     srcloc
                     stx-with-original?-property)
-     'splice splice)))
+     'hide-or-splice hide-or-splice)))

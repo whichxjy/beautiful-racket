@@ -18,6 +18,7 @@
          token-REPEAT
          token-RULE_HEAD
          token-RULE_HEAD_HIDDEN
+         token-RULE_HEAD_SPLICED
          token-ID
          token-LIT
          token-EOF
@@ -47,6 +48,7 @@
                        REPEAT
                        RULE_HEAD
                        RULE_HEAD_HIDDEN
+                       RULE_HEAD_SPLICED
                        ID
                        LIT
                        EOF))
@@ -88,7 +90,7 @@
                       #f)
               $2))]
      
-     ;; bang indicates hiding. set hide value to #t
+     ;; bang indicates hiding. set hide value to "hide"
      [(RULE_HEAD_HIDDEN pattern)
       (begin
         (define trimmed (cadr (regexp-match #px"!(\\S+)\\s*:$" $1)))
@@ -100,7 +102,22 @@
                            (position-line $1-start-pos)
                            (position-col $1-start-pos))
                       trimmed
-                      #t)
+                      "hide") ; symbols won't work for these signals
+              $2))]
+     
+     ;; atsign indicates splicing. set hide value to "splice"
+     [(RULE_HEAD_SPLICED pattern)
+      (begin
+        (define trimmed (cadr (regexp-match #px"@(\\S+)\\s*:$" $1)))
+        (rule (position->pos $1-start-pos)
+              (position->pos $2-end-pos)
+              (lhs-id (position->pos $1-start-pos)
+                      (pos (+ (position-offset $1-start-pos)
+                              (string-length trimmed))
+                           (position-line $1-start-pos)
+                           (position-col $1-start-pos))
+                      trimmed
+                      "splice") 
               $2))]]
     
     [pattern

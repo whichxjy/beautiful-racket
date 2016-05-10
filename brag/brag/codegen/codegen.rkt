@@ -230,13 +230,13 @@
                       [$n-end-pos (format-id (last translated-patterns) "$~a-end-pos" (length translated-patterns))])
           #`(positions->srcloc $1-start-pos $n-end-pos))))
 
-  ;; move 'splice property into function because name is datum-ized
+  ;; move 'hide-or-splice property into function because name is datum-ized
   (with-syntax ([(translated-pattern ...) translated-patterns]
                 [(translated-action ...) translated-actions])
     #`[(translated-pattern ...)
        (rule-components->syntax '#,rule-name/false translated-action ...
                                 #:srcloc #,whole-rule-loc
-                                #:splice? #,(syntax-property rule-name/false 'splice))]))
+                                #:hide-or-splice? #,(syntax-property rule-name/false 'hide-or-splice))]))
 
 
 

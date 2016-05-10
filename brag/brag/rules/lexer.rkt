@@ -63,6 +63,8 @@
     (token-RULE_HEAD lexeme)]
    [(:: "!" id (:* whitespace) ":")
     (token-RULE_HEAD_HIDDEN lexeme)]
+   [(:: "@" id (:* whitespace) ":")
+    (token-RULE_HEAD_SPLICED lexeme)]
    [id
     (token-ID lexeme)]
    

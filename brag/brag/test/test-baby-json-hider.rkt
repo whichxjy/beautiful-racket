@@ -10,7 +10,7 @@
                ":"
                (token 'STRING "'hello world'")
                "}")))
- '(json (object (":"))))
+ '(json (object ":")))
 
 
 (check-equal? 
