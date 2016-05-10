@@ -25,7 +25,7 @@
                           (lhs-id (p 1) (p 5) "expr" #f)
                           (pattern-token (p 8) (p 13) "COLON" #f))))
 
-(check-equal? (grammar-parser (tokenize (open-input-string "!expr : COLON")))
+(check-equal? (grammar-parser (tokenize (open-input-string "/expr : COLON")))
               (list (rule (p 1) (p 14)
                           (lhs-id (p 1) (p 6) "expr" ''hide)
                           (pattern-token (p 9) (p 14) "COLON" #f))))
@@ -35,7 +35,7 @@
                           (lhs-id (p 1) (p 6) "expr" ''splice)
                           (pattern-token (p 9) (p 14) "COLON" #f))))
 
-(check-equal? (grammar-parser (tokenize (open-input-string "expr : !COLON COLON")))
+(check-equal? (grammar-parser (tokenize (open-input-string "expr : /COLON COLON")))
               (list (rule (p 1) (p 20)
                           (lhs-id (p 1) (p 5) "expr" #f)
                           (pattern-seq (p 8) (p 20)
@@ -43,7 +43,7 @@
                                     (pattern-token (p 8) (p 14) "COLON" 'hide)
                                     (pattern-token (p 15) (p 20) "COLON" #f))))))
 
-(check-equal? (grammar-parser (tokenize (open-input-string "expr : !thing COLON")))
+(check-equal? (grammar-parser (tokenize (open-input-string "expr : /thing COLON")))
               (list (rule (p 1) (p 20)
                           (lhs-id (p 1) (p 5) "expr" #f)
                           (pattern-seq (p 8) (p 20)
@@ -73,7 +73,7 @@
                                       1
                                       (pattern-lit (p 8) (p 15) "hello" #f)))))
 
-(check-equal? (grammar-parser (tokenize (open-input-string "expr : [!'hello']")))
+(check-equal? (grammar-parser (tokenize (open-input-string "expr : [/'hello']")))
               (list (rule (p 1) (p 18)
                           (lhs-id (p 1) (p 5) "expr" #f)
                           (pattern-maybe (p 8) (p 18)
@@ -96,7 +96,7 @@
                                                      (list (pattern-token (p 23) (p 26) "BAZ" #f)
                                                            (pattern-id (p 27) (p 31) "expr" #f))))))))
 
-(check-equal? (grammar-parser (tokenize (open-input-string "expr : one two !three")))
+(check-equal? (grammar-parser (tokenize (open-input-string "expr : one two /three")))
               (list (rule (p 1) (p 22)
                           (lhs-id (p 1) (p 5) "expr" #f)
                           (pattern-seq (p 8) (p 22) (list (pattern-id (p 8) (p 11) "one" #f)

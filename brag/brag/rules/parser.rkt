@@ -7,11 +7,13 @@
 
 ;; A parser for grammars.
 
-(provide tokens
+(provide hide-char
+         splice-char
+         tokens
          token-LPAREN
          token-RPAREN
-         token-BANG ; for hider
-         token-ATSIGN ; for splicer
+         token-HIDE ; for hider
+         token-SPLICE ; for splicer
          token-LBRACKET
          token-RBRACKET
          token-PIPE
@@ -42,8 +44,8 @@
                        RPAREN
                        LBRACKET
                        RBRACKET
-                       BANG
-                       ATSIGN
+                       HIDE
+                       SPLICE
                        PIPE
                        REPEAT
                        RULE_HEAD
@@ -52,6 +54,9 @@
                        ID
                        LIT
                        EOF))
+
+(define hide-char #\/)
+(define splice-char #\@)
 
 ;; grammar-parser: (-> token) -> (listof rule)
 (define grammar-parser
@@ -92,7 +97,7 @@
      
      [(RULE_HEAD_HIDDEN pattern) ; bang indicates hiding
       (begin
-        (define trimmed (cadr (regexp-match #px"!(\\S+)\\s*:$" $1)))
+        (define trimmed (cadr (regexp-match (pregexp (format "~a(\\S+)\\s*:$" hide-char)) $1)))
         (rule (position->pos $1-start-pos)
               (position->pos $2-end-pos)
               (lhs-id (position->pos $1-start-pos)
@@ -107,7 +112,7 @@
      
      [(RULE_HEAD_SPLICED pattern) ;atsign indicates splicinh
       (begin
-        (define trimmed (cadr (regexp-match #px"@(\\S+)\\s*:$" $1)))
+        (define trimmed (cadr (regexp-match (pregexp (format "~a(\\S+)\\s*:$" splice-char)) $1)))
         (rule (position->pos $1-start-pos)
               (position->pos $2-end-pos)
               (lhs-id (position->pos $1-start-pos)
@@ -185,13 +190,12 @@
      [(LPAREN pattern RPAREN)
       (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $3-end-pos))]
      
-     [(BANG atomic-pattern)
-      ;; bang indicates hiding. set hide value to hide
+     [(HIDE atomic-pattern)
       (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $2-end-pos) 'hide)]
 
-     [(ATSIGN ID)
-      ;; atsign indicates splicing. set hide value to splice
-      ;; only works for nonterminals on the right side (meaningless with terminals)
+     [(SPLICE ID)
+      ;; only works for nonterminals on the right side
+      ;; (meaningless with terminals)
       (if (token-id? $2)
           (error 'brag "Can't use splice operator with terminal")
           (pattern-id (position->pos $1-start-pos)

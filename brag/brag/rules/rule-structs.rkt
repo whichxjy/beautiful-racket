@@ -20,7 +20,6 @@
 (struct pattern-id pattern (val hide)
         #:transparent)
 
-
 ;; Token structure to be defined by the user
 (struct pattern-token pattern (val hide)
         #:transparent)

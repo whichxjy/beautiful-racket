@@ -162,21 +162,25 @@ This would be the place to check a syntax property for hiding.
 ;; Creates an stx out of the rule name and its components.
 ;; The location information of the rule spans that of its components.
 (define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] #:hide-or-splice? [hide-or-splice #f] . componentss)
-  (let ([spliced-componentss (append-map (λ(cs)
-                                           (cond
-                                             [(and (pair? cs) (eq? (syntax-property (car cs) 'hide-or-splice) 'hide))
-                                              (list (list (syntax-case (car cs) ()
-                                                            [(rule-name c ...)
-                                                             #'(c ...)])))]
-                                             [(and (pair? cs) (or (eq? (syntax-property (car cs) 'hide-or-splice) 'splice)
-                                                                  (syntax-property (car cs) 'splice-rh-id)))
-                                              (list (cdr (syntax->list (car cs))))]
-                                             [else (list cs)])) componentss)])
-    (syntax-property
-     (datum->syntax #f 
-                    (cons
-                     (datum->syntax #f rule-name/false srcloc stx-with-original?-property)
-                     (apply append spliced-componentss))
-                    srcloc
-                    stx-with-original?-property)
-     'hide-or-splice hide-or-splice))) ; not 'hide-or-splice-lhs-id, because it is now a component in a different rule
+  (define (remove-rule-name cs) (cdr (syntax->list cs)))
+  (define spliced-componentss
+    (apply append
+           (for/list ([css (in-list componentss)])
+                     (list
+                      (cond
+                        [(and (pair? css) (eq? (syntax-property (car css) 'hide-or-splice) 'hide))
+                         (list (remove-rule-name (car css)))] ; hidden version still contained in sublist
+                        [(and (pair? css) (or (eq? (syntax-property (car css) 'hide-or-splice) 'splice)
+                                              (syntax-property (car css) 'splice-rh-id)))
+                         (remove-rule-name (car css))] ; spliced version is "unlisted"
+                        [else css])))))
+  (syntax-property
+   (datum->syntax #f 
+                  (cons
+                   (datum->syntax #f rule-name/false srcloc stx-with-original?-property)
+                   (apply append spliced-componentss))
+                  srcloc
+                  stx-with-original?-property)
+   ;; not 'hide-or-splice-lhs-id, because it is now a component in a different rule
+   ;; actual splicing happens when the parent rule is processed (with procedure above)
+   'hide-or-splice hide-or-splice)) 

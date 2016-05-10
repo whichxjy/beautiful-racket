@@ -13,11 +13,7 @@
  '(json ":"))
 
 
-#;(check-equal? 
+(check-equal? 
  (syntax->datum
   (parse "[[[{}]],[],[[{}]]]"))
- '(json (array #\[ (json (array #\[ (json (array #\[ (json (object)) #\])) #\])) #\, (json (array #\[ #\])) #\, (json (array #\[ (json (array #\[ (json (object )) #\])) #\])) #\])))
-
- 
-               
-               
+ '(json (array #\[ (json (array #\[ (json (array #\[ (json) #\])) #\])) #\, (json (array #\[ #\])) #\, (json (array #\[ (json (array #\[ (json) #\])) #\])) #\])))

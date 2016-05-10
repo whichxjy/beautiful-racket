@@ -217,7 +217,11 @@
                            [(inferred-rule-name . rest)
                             (syntax->list #'rest)])]
                       [(id val)
-                        #`(list (syntax-property $X 'splice-rh-id #,(and (syntax-property primitive-pattern 'hide) #t)))] ; at this point, this syntax-property is either #f or "splice"
+                       ;; at this point, the 'hide property is either #f or "splice"
+                       ;; ('hide value is handled at the top of this conditional
+                       ;; we need to use boolean because a symbol is treated as an identifier.
+                       ;; also we'll separate it into its own property for clarity and test for it in "runtime.rkt"
+                        #`(list (syntax-property $X 'splice-rh-id #,(and (syntax-property primitive-pattern 'hide) #t)))]
                       [(lit val)
                        #'(list (atomic-datum->syntax $X $X-start-pos $X-end-pos))]
                       [(token val)

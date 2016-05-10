@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax racket/base "parser.rkt"))
 (require parser-tools/lex
          (prefix-in : parser-tools/lex-sre)
          "parser.rkt"
@@ -9,12 +10,15 @@
 ;; A newline can be any one of the following.
 (define-lex-abbrev NL (:or "\r\n" "\r" "\n"))
 
-;; Slightly modified from the read.rkt example in parser-tools, treating
-;; +, :, and * as reserved, non-identifier characters.
+;; chars used for quantifiers & parse-tree filtering
+(define-for-syntax quantifiers "+:*")
+(define-lex-trans reserved-chars
+  (λ(stx) #`(char-set #,(format "~a~a~a" quantifiers hide-char splice-char))))
+
 (define-lex-abbrevs
    [letter (:or (:/ "a" "z") (:/ #\A #\Z))]
    [digit (:/ #\0 #\9)]
-   [id-char (:or letter digit (char-set "-.$%&/=?^_~<>"))]
+   [id-char (:or letter digit (:& (char-set "+:*@!-.$%&/=?^_~<>") (char-complement (reserved-chars))))]
  )
 
 (define-lex-abbrev id
@@ -40,10 +44,10 @@
     (token-RPAREN lexeme)]
    ["]"
     (token-RBRACKET lexeme)]
-   ["!"
-    (token-BANG lexeme)]
+   ["/"
+    (token-HIDE lexeme)]
    ["@"
-    (token-ATSIGN lexeme)]
+    (token-SPLICE lexeme)]
    ["|"
     (token-PIPE lexeme)]
    [(:or "+" "*")
@@ -61,7 +65,7 @@
     (token-EOF lexeme)]
    [(:: id (:* whitespace) ":")
     (token-RULE_HEAD lexeme)]
-   [(:: "!" id (:* whitespace) ":")
+   [(:: "/" id (:* whitespace) ":")
     (token-RULE_HEAD_HIDDEN lexeme)]
    [(:: "@" id (:* whitespace) ":")
     (token-RULE_HEAD_SPLICED lexeme)]

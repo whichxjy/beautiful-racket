@@ -11,6 +11,6 @@ string: STRING
 
 array: "[" [json ("," json)*] "]"
 
-object: !"{" [kvpair ("," kvpair)*] !"}"
+object: /"{" [kvpair ("," kvpair)*] /"}"
 
-@kvpair : !ID ":" !json
+@kvpair : /ID ":" /json
