@@ -90,34 +90,34 @@
                       #f)
               $2))]
      
-     ;; bang indicates hiding. set hide value to "hide"
-     [(RULE_HEAD_HIDDEN pattern)
+     [(RULE_HEAD_HIDDEN pattern) ; bang indicates hiding
       (begin
         (define trimmed (cadr (regexp-match #px"!(\\S+)\\s*:$" $1)))
         (rule (position->pos $1-start-pos)
               (position->pos $2-end-pos)
               (lhs-id (position->pos $1-start-pos)
                       (pos (+ (position-offset $1-start-pos)
-                              (string-length trimmed))
+                              (string-length trimmed)
+                              (string-length "!"))
                            (position-line $1-start-pos)
                            (position-col $1-start-pos))
                       trimmed
-                      ''hide) ; symbols won't work for these signals
+                      ''hide) ; symbol needs to be double quoted in this case
               $2))]
      
-     ;; atsign indicates splicing. set hide value to "splice"
-     [(RULE_HEAD_SPLICED pattern)
+     [(RULE_HEAD_SPLICED pattern) ;atsign indicates splicinh
       (begin
         (define trimmed (cadr (regexp-match #px"@(\\S+)\\s*:$" $1)))
         (rule (position->pos $1-start-pos)
               (position->pos $2-end-pos)
               (lhs-id (position->pos $1-start-pos)
                       (pos (+ (position-offset $1-start-pos)
-                              (string-length trimmed))
+                              (string-length trimmed)
+                              (string-length "@"))
                            (position-line $1-start-pos)
                            (position-col $1-start-pos))
                       trimmed
-                      ''splice) 
+                      ''splice) ; symbol needs to be double quoted in this case 
               $2))]]
     
     [pattern
@@ -194,7 +194,7 @@
       ;; only works for nonterminals on the right side (meaningless with terminals)
       (if (token-id? $2)
           (error 'brag "Can't use splice operator with terminal")
-          (pattern-id (position->pos $2-start-pos)
+          (pattern-id (position->pos $1-start-pos)
                       (position->pos $2-end-pos)
                       $2
                       'splice))]])
