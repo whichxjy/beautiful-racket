@@ -199,7 +199,7 @@
     (for/list ([translated-pattern (in-list translated-patterns)]
                [primitive-pattern (syntax->list a-clause)]
                [pos (in-naturals 1)])
-              (if (syntax-property primitive-pattern 'hide)
+              (if (eq? (syntax-property primitive-pattern 'hide) 'hide)
                   #'null
                   (with-syntax ([$X 
                                  (format-id translated-pattern "$~a" pos)]
@@ -217,7 +217,7 @@
                            [(inferred-rule-name . rest)
                             (syntax->list #'rest)])]
                       [(id val)
-                       #'(list $X)]
+                        #`(list (syntax-property $X 'splice-rh-id #,(and (syntax-property primitive-pattern 'hide) #t)))] ; at this point, this syntax-property is either #f or "splice"
                       [(lit val)
                        #'(list (atomic-datum->syntax $X $X-start-pos $X-end-pos))]
                       [(token val)
@@ -230,13 +230,13 @@
                       [$n-end-pos (format-id (last translated-patterns) "$~a-end-pos" (length translated-patterns))])
           #`(positions->srcloc $1-start-pos $n-end-pos))))
 
-  ;; move 'hide-or-splice property into function because name is datum-ized
+  ;; move 'hide-or-splice-lhs-id property into function because name is datum-ized
   (with-syntax ([(translated-pattern ...) translated-patterns]
                 [(translated-action ...) translated-actions])
     #`[(translated-pattern ...)
        (rule-components->syntax '#,rule-name/false translated-action ...
                                 #:srcloc #,whole-rule-loc
-                                #:hide-or-splice? #,(syntax-property rule-name/false 'hide-or-splice))]))
+                                #:hide-or-splice? #,(syntax-property rule-name/false 'hide-or-splice-lhs-id))]))
 
 
 

@@ -33,7 +33,7 @@
                               (- (pos-offset (lhs-id-end (rule-lhs a-rule)))
                                  (pos-offset (lhs-id-start (rule-lhs a-rule))))
                               #f)))
-     'hide-or-splice (lhs-id-splice (rule-lhs a-rule))))
+     'hide-or-splice-lhs-id (lhs-id-splice (rule-lhs a-rule))))
   (define pattern-stx (pattern->stx source (rule-pattern a-rule)))
   (define line (pos-line (rule-start a-rule)))
   (define column (pos-col (rule-start a-rule)))

@@ -102,7 +102,7 @@
                            (position-line $1-start-pos)
                            (position-col $1-start-pos))
                       trimmed
-                      "hide") ; symbols won't work for these signals
+                      ''hide) ; symbols won't work for these signals
               $2))]
      
      ;; atsign indicates splicing. set hide value to "splice"
@@ -117,7 +117,7 @@
                            (position-line $1-start-pos)
                            (position-col $1-start-pos))
                       trimmed
-                      "splice") 
+                      ''splice) 
               $2))]]
     
     [pattern
@@ -186,13 +186,22 @@
       (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $3-end-pos))]
      
      [(BANG atomic-pattern)
-      ;; bang indicates hiding. set hide value to #t
-      (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $2-end-pos) #t)]])
+      ;; bang indicates hiding. set hide value to hide
+      (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $2-end-pos) 'hide)]
+
+     [(ATSIGN ID)
+      ;; atsign indicates splicing. set hide value to splice
+      ;; only works for nonterminals on the right side (meaningless with terminals)
+      (if (token-id? $2)
+          (error 'brag "Can't use splice operator with terminal")
+          (pattern-id (position->pos $2-start-pos)
+                      (position->pos $2-end-pos)
+                      $2
+                      'splice))]])
    
    
    (error (lambda (tok-ok? tok-name tok-value start-pos end-pos)
             ((current-parser-error-handler) tok-ok? tok-name tok-value (position->pos start-pos) (position->pos end-pos))))))
-
 
 ;; relocate-pattern: pattern -> pattern
 ;; Rewrites the pattern's start and end pos accordingly.

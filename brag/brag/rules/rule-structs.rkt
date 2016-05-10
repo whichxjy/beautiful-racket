@@ -7,14 +7,11 @@
 (struct pos (offset line col)
         #:transparent)
 
-
-
 (struct rule (start end lhs pattern)
         #:transparent)
 
 (struct lhs-id (start end val splice)
         #:transparent)
-
 
 ;; A pattern can be one of the following:
 (struct pattern (start end)

@@ -10,10 +10,10 @@
                ":"
                (token 'STRING "'hello world'")
                "}")))
- '(json (object ":")))
+ '(json ":"))
 
 
-(check-equal? 
+#;(check-equal? 
  (syntax->datum
   (parse "[[[{}]],[],[[{}]]]"))
  '(json (array #\[ (json (array #\[ (json (array #\[ (json (object)) #\])) #\])) #\, (json (array #\[ #\])) #\, (json (array #\[ (json (array #\[ (json (object )) #\])) #\])) #\])))

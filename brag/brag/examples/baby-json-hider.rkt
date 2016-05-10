@@ -3,7 +3,7 @@
 ;; Simple baby example of JSON structure
 json: number | string
     | array
-    | object
+    | @object
 
 number: NUMBER
 

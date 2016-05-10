@@ -164,11 +164,12 @@ This would be the place to check a syntax property for hiding.
 (define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] #:hide-or-splice? [hide-or-splice #f] . componentss)
   (let ([spliced-componentss (append-map (λ(cs)
                                            (cond
-                                             [(and (pair? cs) (equal? (syntax-property (car cs) 'hide-or-splice) "hide"))
+                                             [(and (pair? cs) (eq? (syntax-property (car cs) 'hide-or-splice) 'hide))
                                               (list (list (syntax-case (car cs) ()
                                                             [(rule-name c ...)
                                                              #'(c ...)])))]
-                                             [(and (pair? cs) (equal? (syntax-property (car cs) 'hide-or-splice) "splice"))
+                                             [(and (pair? cs) (or (eq? (syntax-property (car cs) 'hide-or-splice) 'splice)
+                                                                  (syntax-property (car cs) 'splice-rh-id)))
                                               (list (cdr (syntax->list (car cs))))]
                                              [else (list cs)])) componentss)])
     (syntax-property
@@ -178,4 +179,4 @@ This would be the place to check a syntax property for hiding.
                      (apply append spliced-componentss))
                     srcloc
                     stx-with-original?-property)
-     'hide-or-splice hide-or-splice)))
+     'hide-or-splice hide-or-splice))) ; not 'hide-or-splice-lhs-id, because it is now a component in a different rule
