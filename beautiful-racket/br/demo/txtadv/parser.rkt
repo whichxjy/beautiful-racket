@@ -4,9 +4,11 @@ txtadv-program : verb-section everywhere-section things-section places-section s
 
 verb-section : !"===VERBS===" verb-item+
 
-!verb-item : verb-name+ s-exp
+!verb-item :  verb next-verb* s-exp
 
-!verb-name : [!","] ID ["_"]
+!verb : ID ["_"]
+
+@next-verb : [!","] verb
 
 everywhere-section : !"===EVERYWHERE===" id-desc+
 
