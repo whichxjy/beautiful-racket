@@ -10,8 +10,8 @@
 (provide tokens
          token-LPAREN
          token-RPAREN
-         token-LANGLE ; for elider
-         token-RANGLE ; for elider
+         token-BANG ; for hider
+         token-ATSIGN ; for splicer
          token-LBRACKET
          token-RBRACKET
          token-PIPE
@@ -41,8 +41,8 @@
                        RPAREN
                        LBRACKET
                        RBRACKET
-                       LANGLE
-                       RANGLE
+                       BANG
+                       ATSIGN
                        PIPE
                        REPEAT
                        RULE_HEAD
@@ -88,10 +88,10 @@
                       #f)
               $2))]
      
-     ;; angles indicate splicing. set splice value to #t
+     ;; bang indicates hiding. set hide value to #t
      [(RULE_HEAD_HIDDEN pattern)
       (begin
-        (define trimmed (cadr (regexp-match #px"<(.+)>\\s*:$" $1)))
+        (define trimmed (cadr (regexp-match #px"!(\\S+)\\s*:$" $1)))
         (rule (position->pos $1-start-pos)
               (position->pos $2-end-pos)
               (lhs-id (position->pos $1-start-pos)
@@ -168,9 +168,9 @@
      [(LPAREN pattern RPAREN)
       (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $3-end-pos))]
      
-     [(LANGLE pattern RANGLE)
-      ;; angles indicate hiding. set hide value to #t
-      (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $3-end-pos) #t)]])
+     [(BANG atomic-pattern)
+      ;; bang indicates hiding. set hide value to #t
+      (relocate-pattern $2 (position->pos $1-start-pos) (position->pos $2-end-pos) #t)]])
    
    
    (error (lambda (tok-ok? tok-name tok-value start-pos end-pos)

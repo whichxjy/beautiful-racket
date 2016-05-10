@@ -14,7 +14,7 @@
 (define-lex-abbrevs
    [letter (:or (:/ "a" "z") (:/ #\A #\Z))]
    [digit (:/ #\0 #\9)]
-   [id-char (:or letter digit (char-set "-.!$%&/=?^_~@"))]
+   [id-char (:or letter digit (char-set "-.$%&/=?^_~<>"))]
  )
 
 (define-lex-abbrev id
@@ -36,14 +36,14 @@
     (token-LPAREN lexeme)]
    ["["
     (token-LBRACKET lexeme)]
-   ["<"
-    (token-LANGLE lexeme)]
    [")"
     (token-RPAREN lexeme)]
    ["]"
     (token-RBRACKET lexeme)]
-   [">"
-    (token-RANGLE lexeme)]
+   ["!"
+    (token-BANG lexeme)]
+   ["@"
+    (token-ATSIGN lexeme)]
    ["|"
     (token-PIPE lexeme)]
    [(:or "+" "*")
@@ -61,7 +61,7 @@
     (token-EOF lexeme)]
    [(:: id (:* whitespace) ":")
     (token-RULE_HEAD lexeme)]
-   [(:: "<" id ">" (:* whitespace) ":")
+   [(:: "!" id (:* whitespace) ":")
     (token-RULE_HEAD_HIDDEN lexeme)]
    [id
     (token-ID lexeme)]

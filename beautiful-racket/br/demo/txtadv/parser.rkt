@@ -2,26 +2,26 @@
 
 txtadv-program : verb-section everywhere-section things-section places-section start-section
 
-verb-section : <"===VERBS==="> verb-item+
+verb-section : !"===VERBS===" verb-item+
 
-<verb-item> : verb-name+ s-exp
+!verb-item : verb-name+ s-exp
 
-<verb-name> : [<",">] ID ["_"]
+!verb-name : [!","] ID ["_"]
 
-everywhere-section : <"===EVERYWHERE==="> id-desc+
+everywhere-section : !"===EVERYWHERE===" id-desc+
 
-things-section : <"===THINGS==="> thing-item+
+things-section : !"===THINGS===" thing-item+
 
-<thing-item> : DASHED-NAME id-desc+
+!thing-item : DASHED-NAME id-desc+
 
-places-section : <"===PLACES==="> place-item+
+places-section : !"===PLACES===" place-item+
 
-<place-item> : DASHED-NAME STRING place-items id-desc+
+!place-item : DASHED-NAME STRING place-items id-desc+
 
-<place-items> : <"["> ([<",">] ID)* <"]">
+!place-items : !"[" ([!","] ID)* !"]"
 
-start-section : <"===START==="> ID
+start-section : !"===START===" ID
 
-<id-desc> : ID s-exp
+!id-desc : ID s-exp
 
-s-exp : ID | STRING | <"("> s-exp* <")">
+s-exp : ID | STRING | !"(" s-exp* !")"
