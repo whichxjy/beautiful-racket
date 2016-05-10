@@ -20,7 +20,6 @@
  "get key"
  "You now have the key.\n")
 
-
 (check-cmd?
  "n"
  "You're standing in a meadow. There is a house to the north.\n")

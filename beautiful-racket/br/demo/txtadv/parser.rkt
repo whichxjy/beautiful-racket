@@ -20,10 +20,16 @@ places-section : !"===PLACES===" place-item+
 
 !place-item : DASHED-NAME STRING place-items id-desc+
 
-!place-items : !"[" ([!","] ID)* !"]"
+!place-items : !"[" [place next-place*] !"]"
+
+@place : ID
+
+@next-place: !"," place
 
 start-section : !"===START===" ID
 
 !id-desc : ID s-exp
 
-s-exp : ID | STRING | !"(" s-exp* !")"
+@s-exp : ID | STRING | nested-s-exp
+
+!nested-s-exp : !"(" s-exp* !")"

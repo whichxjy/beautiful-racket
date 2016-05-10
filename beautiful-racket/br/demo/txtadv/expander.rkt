@@ -58,11 +58,6 @@
 (define #'(places-section (_place-id _place-desc [_place-item ...] [_actionname _actiondesc] ...) ...)
   #'(begin (define-place _place-id _place-desc [_place-item ...] ([_actionname _actiondesc] ...)) ...))
 
-(provide s-exp)
-(define-cases-inverting #'s-exp
-  [#'(_ _sx) #'_sx]
-  [#'(_ _sx ... ) #'(_sx ...)])
-
 
 ;; todo: consolidate the game-starters.
 ;; `start-game-at` works with s-exp language,
