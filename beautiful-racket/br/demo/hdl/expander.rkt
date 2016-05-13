@@ -1,10 +1,10 @@
 #lang br
 (provide #%top-interaction #%module-begin #%app #%datum (all-defined-out))
 
-(define-inverting #'(chip-program "CHIP" _chipname "{"
-                                  (_input-pin ...)
-                                  (_output-pin ...)
-                                  _part-spec "}")
+(define #'(chip-program _chipname
+                                  (pin-spec _input-pin ...)
+                                  (pin-spec _output-pin ...)
+                                  (part-spec (part _partname (_pin _val) ... (_lastpin _pinout)) ...))
   #'(begin
       (define+provide _chipname
         (procedure-rename
@@ -12,25 +12,9 @@
           (λ (kws kw-args . rest)
             (define kw-pairs (map cons kws kw-args))
             (let ([_input-pin (cdr (assq (string->keyword (format "~a" '_input-pin)) kw-pairs))] ...)
-              _part-spec
+              (define _pinout (call-part _partname [_pin _val] ...)) ...
               (values _output-pin ...)))) '_chipname))))
 
-(define-inverting #'(pin-spec _label _pin ... ";")
-  #'(_pin ...))
-
-(define-cases #'pin
-  [#'(_ _pin ",") #'_pin]
-  [#'(_ _pin) #'_pin])
-
-(define #'(part-spec "PARTS:" _part ...)
-  #'(begin _part ...))
-
-(define-inverting #'(part _partname "(" (_pin _val) ... (_lastpin _pinout) ")" ";")
-  #'(define _pinout (call-part _partname [_pin _val] ...)))
-
-(define-cases #'pin-val-pair
-  [#'(_ _pin "=" _val ",") #'(_pin _val)]
-  [#'(_ _pin "=" _val) #'(_pin _val)])
 
 (define #'(call-part _partname [_pin _val] ...)
   (inject-syntax ([#'part-path (findf file-exists? (list (format "~a.hdl" (syntax->datum #'_partname)) (format "~a.hdl.rkt" (syntax->datum #'_partname))))]
