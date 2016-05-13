@@ -2,22 +2,20 @@
 
 tst-program : header-expr test-expr*
 
-header-expr : load-expr table-expr ";"
+header-expr : load-expr table-expr /";"
 
-load-expr : "load" filename ","
+@load-expr : /"load" ID /","
 
-filename : ID
+/table-expr : /"output-list" columns
 
-table-expr : "output-list" column-id+
+@columns :  ID [/"," columns]
 
-column-id :  ID [","]
+test-expr : step-expr+ /";"
 
-test-expr : step-expr+ ";"
+@step-expr : (set-expr | @eval-expr | output-expr) [/","]
 
-step-expr : (set-expr | eval-expr | output-expr) [","]
+/set-expr : /"set" ID VAL
 
-set-expr : "set" ID VAL
+eval-expr : /"eval"
 
-eval-expr : "eval"
-
-output-expr : "output"
+output-expr : /"output"

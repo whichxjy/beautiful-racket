@@ -33,7 +33,7 @@
   [#'(_ _pin "=" _val) #'(_pin _val)])
 
 (define #'(call-part _partname [_pin _val] ...)
-  (inject-syntax ([#'part-path (format "~a.hdl" (syntax->datum #'_partname))]
+  (inject-syntax ([#'part-path (findf file-exists? (list (format "~a.hdl" (syntax->datum #'_partname)) (format "~a.hdl.rkt" (syntax->datum #'_partname))))]
                   [#'(kw ...) (map (λ(pi) (string->keyword (format "~a" (syntax->datum pi)))) (syntax->list #'(_pin ...)))])
                  #'(let ()
                      (local-require (rename-in part-path [_partname local-name]))
