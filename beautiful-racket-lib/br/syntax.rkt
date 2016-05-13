@@ -80,7 +80,7 @@
                (if (pair? sis-in)
                    (apply append sis-in)
                    (list
-                    (let ([si (make-syntax-introducer 'use-site)])
+                    (let ([si (make-syntax-introducer)])
                       (list (procedure-rename (curryr si 'add) 'add-id)
                             (procedure-rename (curryr si 'flip) 'flip-id)
                             (procedure-rename (curryr si 'remove) 'remove-id)))))))
