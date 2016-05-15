@@ -4,18 +4,19 @@
 (introduce-scope blue)
 (introduce-scope red)
 
-#;(introduce-scope purple (red blue))
-
-
 (define #'(double-x)
   (with-blue-identifiers (x)
-                         #'(+ x x)))
+                         #'(set! x (+ x x))))
+
+(define #'(display-x)
+  (with-blue-identifiers (x)
+                         #'(displayln x)))
 
 
-(define:blue x 50)
-x:blue
+(blue:define x 42)
 
-(define:red x 42)
-x:red
+blue:x
 
 (double-x)
+
+(display-x)
