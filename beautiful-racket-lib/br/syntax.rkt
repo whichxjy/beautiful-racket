@@ -67,9 +67,9 @@
           [else (raise-argument-error 'syntax-find "not given syntax or datum as second argument" stx-or-datum)]))
   (let/ec exit
     (let loop ([so stx])
-        (cond
-          [(eq? (syntax->datum so) datum) (exit so)]
-          [(syntax->list so) => (curry map loop)]))))
+      (cond
+        [(eq? (syntax->datum so) datum) (exit so)]
+        [(syntax->list so) => (curry map loop)]))))
 
 
 (define (->syntax x)
@@ -85,7 +85,8 @@
                    [add-id (format-id #'id "add-~a" #'id)]
                    [flip-id (format-id #'id "flip-~a" #'id)]
                    [id-binding-form (format-id #'id "~a-binding-form" #'id)]
-                   [with-id-syntax (format-id #'id "with-~a-syntax" #'id)]
+                   [define-id (format-id #'id "define-~a" #'id)]
+                   [with-id-identifiers (format-id #'id "with-~a-identifiers" #'id)]
                    [let-id-syntax (format-id #'id "let-~a-syntax" #'id)]
                    [with-id-binding-form (format-id #'id "with-~a-binding-form" #'id)]
                    [remove-id (format-id #'id "remove-~a" #'id)]
@@ -113,10 +114,10 @@
               (member (car (context (add-id (datum->syntax #f '_))))
                       (context (->syntax x)))
               #t))
-           (define-syntax-rule (with-id-syntax ([pat val] (... ...)) . body)
-             (with-syntax ([pat (id* val)] (... ...)) . body))
-           (define-syntax-rule (with-id-binding-form ([pat val] (... ...)) . body)
-             (with-syntax ([pat (id-binding-form val)] (... ...)) . body))
+           (define-syntax-rule (with-id-identifiers (name (... ...)) . body)
+             (with-syntax ([name (id* 'name)] (... ...)) . body))
+           (define-syntax-rule (with-id-binding-form  (name (... ...)) . body)
+             (with-syntax ([name (id-binding-form 'name)] (... ...)) . body))
            (define-syntax-rule (let-id-syntax ([pat val] (... ...)) . body)
              (let-syntax ([pat (id* val)] (... ...)) . body))))]))
 

@@ -8,36 +8,54 @@
   (define-scope green (blue yellow))
   (define-scope purple (blue red)))
 
-(define #'(define-blue _id _val)
-  (with-blue-binding-form ([x '_id])
-    #'(define x _val)))
-
-#;(define-blue x (+ 42 42))
-
-(define #'(def-x)
-  (with-blue-binding-form ([x 'x])
-    #'(define x (+ 42 42))))
-
-(define #'(def-x-2)
-  (with-yellow-binding-form ([x 'x])
-    #'(define x (+ 42))))
-
-(define #'(print-x)
-  (with-yellow-syntax ([x 'x])
-                      #'(println (+ x x))))
-
-(define #'(print-x-2)
-  (with-purple-syntax ([x 'x])
-                      #'(println (+ x x x))))
+(define #'(def-blue-x)
+  (with-blue-binding-form (x)
+                          #'(define x (+ 42 42))))
 
 
-(scopes (syntax-find (expand-once #'(def-x)) 'x))
-(def-x)
-(def-x-2)
+(define #'(print-blue-x)
+  (with-purple-identifiers (x)
+                           #'x))
+
+
+(define #'(define-blue _id _expr)
+  (with-syntax ([_id (blue-binding-form #'_id)])
+    #'(define _id _expr)))
+
+
+
+(define #'(print-blue-y)
+  (with-blue-identifiers (y)
+                         #'y))
+
+(scopes (syntax-find (expand-once #'(def-blue-x)) 'x))
+(def-blue-x)
+(scopes (syntax-find (expand-once #'(print-blue-x)) 'x))
+(print-blue-x)
+(let ()
+  (scopes (syntax-find (expand-once #'(print-blue-x)) 'x))
+  #;(print-blue-x)) ;; error why?
+
+(define-blue y (+ 42 42))
+(print-blue-y)
+
+#|
+(define #'(def-y)
+  (with-yellow-binding-form (y)
+                            #'(define y (+ 42))))
+
+
+
+
+#;(scopes (syntax-find (expand-once #'(def-x)) 'x))
+#;(def-x)
+(def-y)
 (scopes (syntax-find (expand-once #'(print-x)) 'x))
 (print-x)
-(scopes (syntax-find (expand-once #'(print-x-2)) 'x))
-(print-x-2)
+(scopes (syntax-find (expand-once #'(print-y)) 'y))
+(print-y)
 
 #;(let-syntax ([x (λ(stx) (syntax-case stx () [_ #'42]))])
-  (* x 4))
+    (* x 4))
+
+|#
