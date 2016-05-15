@@ -18,4 +18,4 @@
 (define-blue x (+ 42 42))
 (define y 50)
 
-(+ (blue x) y)
+#;(+ (blue x) y)
