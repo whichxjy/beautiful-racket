@@ -1,4 +1,5 @@
 #lang br
+(require (for-syntax br/syntax))
 (provide #%top-interaction #%module-begin #%datum (rename-out [my-top #%top]) #%app
          (all-defined-out))
 
@@ -10,25 +11,27 @@
 
 (define #'(tst-program _arg ...) #'(begin _arg ...))
 
+(begin-for-syntax
+  (define-scope blue))
 
 (define #'(header-expr _filename (_colid ... _outid))
   (with-syntax* ([filename-string (symbol->string (syntax->datum #'_filename))]
-                 [procname (string->symbol (cadr (regexp-match #rx"^(.*)\\.hdl$"(symbol->string (syntax->datum #'_filename)))))]
-                 [output (syntax-local-introduce (datum->syntax #f 'output))])
-    #'(begin
-        (provide (all-defined-out))
-        (define procname
-          (dynamic-require (findf file-exists?
-                                  (list filename-string (format "~a.rkt" filename-string))) 'procname))
-        (display-header '_colid ... '_outid)
-        (define _colid (make-parameter 0)) ...
-        (define (_outid)
-          (keyword-apply procname
-                         (map (compose1 string->keyword symbol->string) (list '_colid ...))
-                         (list (_colid) ...) null))
-        
-        (define (output)
-          (display-values (_colid) ... (_outid))))))
+                 [procname (string->symbol (cadr (regexp-match #rx"^(.*)\\.hdl$"(symbol->string (syntax->datum #'_filename)))))])
+    (with-blue-binding-form (output)
+                            #'(begin
+                                (provide (all-defined-out))
+                                (define procname
+                                  (dynamic-require (findf file-exists?
+                                                          (list filename-string (format "~a.rkt" filename-string))) 'procname))
+                                (display-header '_colid ... '_outid)
+                                (define _colid (make-parameter 0)) ...
+                                (define (_outid)
+                                  (keyword-apply procname
+                                                 (map (compose1 string->keyword symbol->string) (list '_colid ...))
+                                                 (list (_colid) ...) null))
+                                
+                                (define (output)
+                                  (display-values (_colid) ... (_outid)))))))
 
 (define #'(display-header _sym ...)
   #'(begin
@@ -47,5 +50,5 @@
 (define #'eval-expr #'void)
 
 (define #'(output-expr)
-  (inject-syntax ([#'output 'output])
-                 #'(output)))
+  (with-blue-identifiers (output)
+                        #'(output)))

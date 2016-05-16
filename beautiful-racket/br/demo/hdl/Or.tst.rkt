@@ -1,8 +1,8 @@
-#lang br/demo/hdl/tst
+#lang br/demo/hdl-tst
 
-/* nand */
+/* or */
 
-load Nand.hdl,
+load Or.hdl,
 output-list a, b, out;
 set a 0, set b 0,
 eval, output;
