@@ -28,11 +28,18 @@
   (syntax-case stx ()
     [(_ _proc _args)
      #'(let ([args _args])
-         (datum->syntax args
-                        (if (and (syntax? args) (list? (syntax-e args)))
-                            (for/list ([arg (in-list (syntax->list args))])
-                                      (datum->syntax arg (_proc (syntax->datum arg))))
-                            (error 'not-syntax-list))))]))
+         (unless (and (syntax? args) (list? (syntax-e args)))
+           (raise-argument-error 'map-syntax "not a syntax list"))
+         (for/list ([arg (in-list (syntax->list args))])
+                   (_proc arg)))]))
+
+(define-syntax (partition-syntax stx)
+  (syntax-case stx ()
+    [(_ _proc _args)
+     #'(let ([args _args])
+         (unless (and (syntax? args) (list? (syntax-e args)))
+           (raise-argument-error 'map-syntax "not a syntax list"))
+         (partition _proc (syntax->list args)))]))
 
 (define-syntax (filter-syntax stx)
   (syntax-case stx ()

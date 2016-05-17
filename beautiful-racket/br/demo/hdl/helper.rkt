@@ -6,7 +6,7 @@
 
 (define (make-input)
   (impersonate-procedure 
-   (let ([val #f])
+   (let ([val 0])
      (λ ([arg #f])
        (if arg
            (set! val arg)

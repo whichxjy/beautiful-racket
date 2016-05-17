@@ -1,10 +1,14 @@
 #lang brag
 
-chip-program : /"CHIP" chipname /"{" pin-spec pin-spec part-spec /"}"
+chip-program : /"CHIP" chipname /"{" in-spec out-spec part-spec /"}"
 
 @chipname : ID
 
-pin-spec : (/"IN" | /"OUT") pin [/"," pin]* /";"
+in-spec : pin-spec
+
+out-spec : pin-spec
+
+@pin-spec : (/"IN" | /"OUT") pin [/"," pin]* /";"
 
 @pin : ID
 

@@ -1,24 +1,44 @@
 #lang br
+(require "helper.rkt" (for-syntax racket/base racket/syntax "helper.rkt" racket/list racket/require-transform))
 (provide #%top-interaction #%module-begin #%app #%datum (all-defined-out))
 
+
 (define #'(chip-program _chipname
-                                  (pin-spec _input-pin ...)
-                                  (pin-spec _output-pin ...)
-                                  (part-spec (part _partname (_pin _val) ... (_lastpin _pinout)) ...))
-  #'(begin
-      (define+provide _chipname
-        (procedure-rename
-         (make-keyword-procedure
-          (λ (kws kw-args . rest)
-            (define kw-pairs (map cons kws kw-args))
-            (let ([_input-pin (cdr (assq (string->keyword (format "~a" '_input-pin)) kw-pairs))] ...)
-              (define _pinout (call-part _partname [_pin _val] ...)) ...
-              (values _output-pin ...)))) '_chipname))))
+                        (in-spec _input-pin ...)
+                        (out-spec _output-pin ...)
+                        (part-spec (part _partname (_pin _val) ... ) ...))
+  (with-syntax ([chip-prefix (format-id #'_chipname "~a-" #'_chipname)])
+    #'(begin
+        (provide (prefix-out chip-prefix (combine-out _input-pin ... _output-pin ...))) 
+        (define _input-pin (make-input)) ...
+        (handle-part _partname (_pin _val) ...) ...)))
 
 
-(define #'(call-part _partname [_pin _val] ...)
-  (inject-syntax ([#'part-path (findf file-exists? (list (format "~a.hdl" (syntax->datum #'_partname)) (format "~a.hdl.rkt" (syntax->datum #'_partname))))]
-                  [#'(kw ...) (map (λ(pi) (string->keyword (format "~a" (syntax->datum pi)))) (syntax->list #'(_pin ...)))])
-                 #'(let ()
-                     (local-require (rename-in part-path [_partname local-name]))
-                     (keyword-apply local-name '(kw ...) (list _val ...) null))))
+(define #'(handle-part _prefix [_suffix _arg] ...)
+  (with-syntax ([(prefix-suffix ...) (map (λ(s) (format-id s "~a-~a" #'_prefix s)) (syntax->list #'(_suffix ...)))]
+                [chip-module-path (datum->syntax #'_prefix (format "~a.hdl.rkt" (syntax->datum #'_prefix)))])
+    #'(begin
+        (require (import-chip chip-module-path) (for-syntax (import-chip chip-module-path)))
+        (handle-wires [prefix-suffix _arg] ...))))
+
+
+(define-syntax import-chip
+  (make-require-transformer
+   (λ (stx)
+     (syntax-case stx ()
+       [(_ module-path)
+        (expand-import #'module-path)]))))
+
+
+(define #'(handle-wires _wirearg-pair ...)
+  (let-values ([(in-wire-stxs out-wire-stxs)
+                (partition (λ(wirearg-pair-stx)
+                             (define wire-stx (car (syntax->list wirearg-pair-stx)))
+                             (input-wire? (syntax-local-eval wire-stx)))
+                           (syntax->list #'(_wirearg-pair ...)))])
+    (with-syntax ([([in-wire in-arg] ...) in-wire-stxs]
+                  [([out-wire out-arg] ...) out-wire-stxs])
+      #'(begin
+          (define (out-arg)
+            (in-wire (in-arg)) ...
+            (out-wire)) ...))))
