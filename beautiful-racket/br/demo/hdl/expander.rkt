@@ -1,17 +1,31 @@
 #lang br
 (require "helper.rkt" (for-syntax racket/base racket/syntax "helper.rkt" racket/list racket/require-transform))
-(provide #%top-interaction #%module-begin #%app #%datum (all-defined-out))
+(provide #%top-interaction (rename-out [mb #%module-begin]) #%app #%datum (all-defined-out))
 
+(define #'(mb _arg ...)
+  #'(#%module-begin
+     _arg ...))
 
 (define #'(chip-program _chipname
-                        (in-spec (_input-pin _inlen ...) ...)
-                        (out-spec (_output-pin _outlen ...) ...)
-                        (part-spec (part _partname ((_pin _pinwhich ...) (_val _valwhich ...)) ... ) ...))
+                        (in-spec (_input-pin _input-width ...) ...)
+                        (out-spec (_output-pin _output-width ...) ...)
+                        . args)
   (with-syntax ([chip-prefix (format-id #'_chipname "~a-" #'_chipname)])
-    #'(begin
-        (provide (prefix-out chip-prefix (combine-out _input-pin ... _output-pin ...))) 
-        (define _input-pin (make-input _inlen ...)) ...
-        (handle-part _partname (_pin (or #f _pinwhich ...) (_val (or #f _valwhich ...))) ...) ...)))
+    #''(begin
+         (provide (prefix-out chip-prefix (combine-out _input-pin ... _output-pin ...))) 
+         (define _input-pin (make-bus '_input-pin _input-width ...)) ...
+         . args)))
+
+#;(define #'(chip-program _chipname
+                          (in-spec (_input-pin _input-width ...) ...)
+                          (out-spec (_output-pin _output-width ...) ...)
+                          (part-spec (part _partname ((_pin _pinwhich ...) (_val _valwhich ...)) ... ) ...))
+    (with-syntax ([chip-prefix (format-id #'_chipname "~a-" #'_chipname)])
+      #''(begin
+           (provide (prefix-out chip-prefix (combine-out _input-pin ... _output-pin ...))) 
+           (define _input-pin (make-bus _input-width ...)) ...
+           #;(define _output-pin (make-bus _output-width ...)) #;...
+           (handle-part _partname (_pin (or #f _pinwhich ...) (_val (or #f _valwhich ...))) ...) ...)))
 
 
 (define #'(handle-part _prefix [_suffix _which _arg] ...)

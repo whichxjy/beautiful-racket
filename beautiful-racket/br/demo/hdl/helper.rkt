@@ -1,51 +1,47 @@
 #lang racket/base
+(require racket/match racket/list)
 (provide (all-defined-out))
+
+(define (bus-range start [finish start])
+  (range start (add1 finish)))
 
 (define-values (input-wire input-wire? input-wire-get)
   (make-impersonator-property 'input-wire))
 
-(define (make-input [max-length 16])
+(define (make-bus bus-name [width 1])
   (impersonate-procedure 
-   (let ([max-length max-length]
-         [val 0])
-     (case-lambda
-       [() val]
-       [(bit)
-        (when (and bit (>= bit max-length))
-          (raise-argument-error 'make-input (format "bit index too large for bit length ~a" max-length) bit))
-        (if (bitwise-bit-set? val (or bit 0)) 1 0)]
-       [(bit arg)
-        (when (and bit (>= bit max-length))
-          (raise-argument-error 'make-input (format "bit index too large for bit length ~a" max-length) bit))
-        (when (and arg (> arg (expt 2 max-length)))
-          (raise-argument-error 'make-input (format "value too large for bit length ~a" max-length) arg))
-        (cond
-          [(and bit arg) (set! val (bitwise-ior val (expt 2 bit)))]
-          [else (set! val arg)])])) ;; aka (and arg (not bit))
+   (procedure-rename
+    (let ([bus-width width]
+          [bus-val 0])
+      (define (do-arg-check arg)
+        (when (and arg (> arg (expt 2 bus-width)))
+          (raise-argument-error bus-name (format "value that fits into bus width ~a (= under ~a)" bus-width (expt 2 bus-width)) arg)))
+      (case-lambda
+        [() bus-val]
+        [(arg)
+         (do-arg-check arg)
+         (set! bus-val arg)]
+        [(bus-bits arg)
+         (unless (and (< (first bus-bits) bus-width) (< (last bus-bits) bus-width))
+           (raise-argument-error bus-name (format "bus bit spec less than bus width ~a" bus-width) bus-bits))
+         (do-arg-check arg)
+         (set! bus-val arg)])) bus-name)
    #f input-wire #t))
 
 (module+ test
   (require rackunit)
-  (define in-wire (make-input))
+  (define in-wire (make-bus 'in-wire))
   (define other (λ () (+ 2 2)))
   (check-true (input-wire? in-wire))
   (check-false (input-wire? other))
   
-  (define x (make-input 4))
+  (define x (make-bus 'x 4))
   (check-equal? (x) 0)
-  (x #f 12)
+  (x 12)
   (check-equal? (x) 12)
-  (x #f 0)
+  (x 0)
   (check-equal? (x) 0)
-  (x 3 1)
-  (check-equal? (x) 8)
-  (x 2 1)
+  (x 12)
   (check-equal? (x) 12)
-  (check-equal? (x 3) 1)
-  (check-equal? (x 2) 1)
-  (check-equal? (x 1) 0)
-  (check-equal? (x 0) 0)
-  
-  (check-exn exn:fail? (λ () (x #f 32)))
-  (check-exn exn:fail? (λ () (x 22 1)))
+  (check-exn exn:fail? (λ () (x 32)))
   )

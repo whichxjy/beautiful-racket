@@ -18,6 +18,11 @@ part : partname /"(" pin-val-pair [/"," pin-val-pair]* /")" /";"
 
 @partname : ID
 
-/pin-val-pair : pin /"=" pin-val
+/pin-val-pair : ID  [/"[" bus-range /"]"] /"=" pin-val
 
-/pin-val : ID  [/"[" NUMBER /"]"]
+bus-range : NUMBER [/"." /"." NUMBER]
+
+@pin-val : ID
+         | BINARY-NUMBER
+         | TRUE
+         | FALSE

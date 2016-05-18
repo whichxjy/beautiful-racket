@@ -2,8 +2,8 @@
 (provide (prefix-out Nand- (all-defined-out)))
 (require "helper.rkt")
 
-(define a (make-input))
-(define b (make-input))
+(define a (make-bus))
+(define b (make-bus))
 
 
 (define (out . etc)
