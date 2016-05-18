@@ -10,7 +10,7 @@ CHIP Not {
 }
 |#
 
-(chip-program Not
+#;(chip-program Not
               (in-spec in)
               (out-spec out)
               (part-spec (part Nand (a in) (b in) (out out))))

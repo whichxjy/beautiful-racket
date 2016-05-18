@@ -6,7 +6,7 @@
 (define b (make-input))
 
 
-(define (out)
+(define (out . etc)
   (if (< (+ (a) (b)) 2)
       1
       0))

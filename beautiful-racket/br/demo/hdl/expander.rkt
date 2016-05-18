@@ -4,22 +4,22 @@
 
 
 (define #'(chip-program _chipname
-                        (in-spec _input-pin ...)
-                        (out-spec _output-pin ...)
-                        (part-spec (part _partname (_pin _val) ... ) ...))
+                        (in-spec (_input-pin _inlen ...) ...)
+                        (out-spec (_output-pin _outlen ...) ...)
+                        (part-spec (part _partname ((_pin _pinwhich ...) (_val _valwhich ...)) ... ) ...))
   (with-syntax ([chip-prefix (format-id #'_chipname "~a-" #'_chipname)])
     #'(begin
         (provide (prefix-out chip-prefix (combine-out _input-pin ... _output-pin ...))) 
-        (define _input-pin (make-input)) ...
-        (handle-part _partname (_pin _val) ...) ...)))
+        (define _input-pin (make-input _inlen ...)) ...
+        (handle-part _partname (_pin (or #f _pinwhich ...) (_val (or #f _valwhich ...))) ...) ...)))
 
 
-(define #'(handle-part _prefix [_suffix _arg] ...)
+(define #'(handle-part _prefix [_suffix _which _arg] ...)
   (with-syntax ([(prefix-suffix ...) (map (λ(s) (format-id s "~a-~a" #'_prefix s)) (syntax->list #'(_suffix ...)))]
                 [chip-module-path (datum->syntax #'_prefix (format "~a.hdl.rkt" (syntax->datum #'_prefix)))])
     #'(begin
         (require (import-chip chip-module-path) (for-syntax (import-chip chip-module-path)))
-        (handle-wires [prefix-suffix _arg] ...))))
+        (handle-wires [prefix-suffix _which _arg] ...))))
 
 
 (define-syntax import-chip
@@ -36,9 +36,9 @@
                              (define wire-stx (car (syntax->list wirearg-pair-stx)))
                              (input-wire? (syntax-local-eval wire-stx)))
                            (syntax->list #'(_wirearg-pair ...)))])
-    (with-syntax ([([in-wire in-arg] ...) in-wire-stxs]
-                  [([out-wire out-arg] ...) out-wire-stxs])
+    (with-syntax ([([in-wire . in-args] ...) in-wire-stxs]
+                  [([out-wire which (out-arg . args)] ...) out-wire-stxs])
       #'(begin
           (define (out-arg)
-            (in-wire (in-arg)) ...
-            (out-wire)) ...))))
+            (in-wire . in-args) ...
+            (out-wire which)) ...))))
