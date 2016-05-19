@@ -10,19 +10,22 @@
                         (in-spec (_input-pin _input-width ...) ...)
                         (out-spec (_output-pin _output-width ...) ...)
                         _part ...)
-  (with-syntax ([chip-prefix (format-id #'_chipname "~a-" #'_chipname)])
+  (with-syntax* ([chip-prefix (format-id #'_chipname "~a-" #'_chipname)]
+                [(prefixed-output-pin ...) (map (λ(op) (format-id op "~a~a" #'chip-prefix op)) (syntax->list #'(_output-pin ...)))])
     #'(begin
-         (provide (prefix-out chip-prefix (combine-out _input-pin ... _output-pin ...))) 
-         (define-input-bus _input-pin _input-width ...) ...
-         _part ...)))
+        (provide (prefix-out chip-prefix (combine-out _input-pin ... ))) 
+        (define-input-bus _input-pin _input-width ...) ...
+        _part ...
+        (provide prefixed-output-pin ...)
+        (define-output-bus prefixed-output-pin (λ () (_output-pin)) _output-width ...) ...)))
 
 
-(define #'(part _prefix [_suffix _arg ...] ...)
+(define #'(part _prefix [_suffix . _args] ...)
   (with-syntax ([(prefix-suffix ...) (map (λ(s) (format-id s "~a-~a" #'_prefix s)) (syntax->list #'(_suffix ...)))]
                 [chip-module-path (datum->syntax #'_prefix (format "~a.hdl.rkt" (syntax->datum #'_prefix)))])
     #'(begin
         (require (import-chip chip-module-path) (for-syntax (import-chip chip-module-path)))
-        (handle-wires [prefix-suffix _arg ...] ...))))
+        (handle-wires [prefix-suffix . _args] ...))))
 
 
 (define-syntax import-chip
@@ -44,5 +47,5 @@
       #'(begin
           (define-output-bus out-bus
             (λ ()
-            (in-wire . in-args) ...
-            (out-wire out-arg ...))) ...))))
+              (in-wire . in-args) ...
+              (out-wire out-arg ...))) ...))))
