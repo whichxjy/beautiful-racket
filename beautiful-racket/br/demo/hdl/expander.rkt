@@ -16,16 +16,6 @@
          (define-input-bus _input-pin _input-width ...) ...
          _part ...)))
 
-#;(define #'(chip-program _chipname
-                          (in-spec (_input-pin _input-width ...) ...)
-                          (out-spec (_output-pin _output-width ...) ...)
-                          (part-spec (part _partname ((_pin _pinwhich ...) (_val _valwhich ...)) ... ) ...))
-    (with-syntax ([chip-prefix (format-id #'_chipname "~a-" #'_chipname)])
-      #'(begin
-           (provide (prefix-out chip-prefix (combine-out _input-pin ... _output-pin ...))) 
-           (define _input-pin (make-bus _input-width ...)) ...
-           (handle-part _partname (_pin (or #f _pinwhich ...) (_val (or #f _valwhich ...))) ...) ...)))
-
 
 (define #'(part _prefix [_suffix _arg ...] ...)
   (with-syntax ([(prefix-suffix ...) (map (λ(s) (format-id s "~a-~a" #'_prefix s)) (syntax->list #'(_suffix ...)))]
