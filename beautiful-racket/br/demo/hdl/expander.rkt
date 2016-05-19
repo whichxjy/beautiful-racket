@@ -17,7 +17,7 @@
         (define-input-bus _input-pin _input-width ...) ...
         _part ...
         (provide prefixed-output-pin ...)
-        (define-output-bus prefixed-output-pin (λ () (_output-pin)) _output-width ...) ...)))
+        (define-output-bus prefixed-output-pin _output-pin _output-width ...) ...)))
 
 
 (define #'(part _prefix [_suffix . _args] ...)

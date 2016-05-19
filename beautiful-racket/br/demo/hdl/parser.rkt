@@ -20,7 +20,7 @@ part : partname /"(" pin-val-pair [/"," pin-val-pair]* /")" /";"
 
 /pin-val-pair : ID  [/"[" bus-range /"]"] /"=" pin-val
 
-@bus-range : NUMBER [/"." /"." NUMBER]
+@bus-range : (NUMBER | BINARY-NUMBER) [/"." /"." (NUMBER | BINARY-NUMBER)]
 
 @pin-val : ID
          | BINARY-NUMBER

@@ -14,9 +14,11 @@
  */
 
 CHIP DMux4Way {
+    // todo: how should sel subscripting work?
     IN in, sel[2];
-    OUT out;
+    OUT a, b, c, d;
 
     PARTS:
-    Not(in=sel[0], out=out);
+    DMux(in=in, sel[0]=sel, a=a, b=b);
+    DMux(in=in, sel[1]=sel, a=c, b=d); 
 }
