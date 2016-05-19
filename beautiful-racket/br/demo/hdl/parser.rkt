@@ -12,7 +12,7 @@ out-spec : pin-spec
 
 /pin : ID  [/"[" NUMBER /"]"]
 
-part-spec : /"PARTS:" part+
+@part-spec : /"PARTS:" part+
 
 part : partname /"(" pin-val-pair [/"," pin-val-pair]* /")" /";"
 
@@ -20,7 +20,7 @@ part : partname /"(" pin-val-pair [/"," pin-val-pair]* /")" /";"
 
 /pin-val-pair : ID  [/"[" bus-range /"]"] /"=" pin-val
 
-bus-range : NUMBER [/"." /"." NUMBER]
+@bus-range : NUMBER [/"." /"." NUMBER]
 
 @pin-val : ID
          | BINARY-NUMBER
