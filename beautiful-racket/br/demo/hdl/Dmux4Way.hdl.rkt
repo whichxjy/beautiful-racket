@@ -19,8 +19,8 @@ CHIP DMux4Way {
     OUT a, b, c, d;
 
     PARTS:
-    DMux(in=in, sel[0]=sel, a=a, b=b);
-    DMux(in=in, sel[1]=sel, a=c, b=d);
+    DMux(in=in, sel=sel[0], a=a, b=b);
+    DMux(in=in, sel=sel[1], a=c, b=d);
     /*
     // the right answer: note that subscripting on right always means "read this bit";
     // subscripting on left means "write this bit"

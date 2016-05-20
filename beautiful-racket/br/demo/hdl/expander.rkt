@@ -1,10 +1,7 @@
 #lang br
 (require "helper.rkt" (for-syntax racket/base racket/syntax "helper.rkt" racket/list racket/require-transform))
-(provide #%top-interaction (rename-out [mb #%module-begin]) #%app #%datum and or (all-defined-out))
+(provide #%top-interaction #%module-begin #%app #%datum and or (all-defined-out))
 
-(define #'(mb _arg ...)
-  #'(#%module-begin
-     _arg ...))
 
 (define #'(chip-program _chipname
                         (in-spec (_input-pin _input-width ...) ...)
