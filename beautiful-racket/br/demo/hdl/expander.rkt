@@ -8,9 +8,10 @@
                         (out-spec (_output-pin _output-width ...) ...)
                         _part ...)
   (with-syntax* ([chip-prefix (format-id #'_chipname "~a-" #'_chipname)]
-                [(prefixed-output-pin ...) (map (λ(op) (format-id op "~a~a" #'chip-prefix op)) (syntax->list #'(_output-pin ...)))])
+                 [(in-pin-write ...) (map (λ(iw) (format-id iw "~a-write" iw)) (syntax->list #'(_input-pin ...)))]
+                 [(prefixed-output-pin ...) (map (λ(op) (format-id op "~a~a" #'chip-prefix op)) (syntax->list #'(_output-pin ...)))])
     #'(begin
-        (provide (prefix-out chip-prefix (combine-out _input-pin ... ))) 
+        (provide (prefix-out chip-prefix (combine-out _input-pin ... in-pin-write ...))) 
         (define-input-bus _input-pin _input-width ...) ...
         _part ...
         (provide prefixed-output-pin ...)
@@ -39,10 +40,11 @@
                              (define wire-stx (car (syntax->list wirearg-pair-stx)))
                              (input-bus? (syntax-local-eval wire-stx)))
                            (syntax->list #'(_wirearg-pair ...)))])
-    (with-syntax ([([in-wire . in-args] ...) in-wire-stxs]
-                  [([out-wire out-arg ... out-bus] ...) out-wire-stxs])
+    (with-syntax* ([([in-wire in-arg ...] ...) in-wire-stxs]
+                   [(in-wire-write ...) (map (λ(iw) (format-id iw "~a-write" iw)) (syntax->list #'(in-wire ...)))]
+                   [([out-wire out-arg ... out-bus] ...) out-wire-stxs])
       #'(begin
           (define-output-bus out-bus
             (λ ()
-              (in-wire . in-args) ...
+              (in-wire-write (in-arg ...)) ...
               (out-wire out-arg ...))) ...))))

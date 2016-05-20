@@ -11,6 +11,7 @@ CHIP Not {
 |#
 
 (chip-program Not
-              (in-spec (in 8) (a))
-              (out-spec (out 8))
+              (in-spec (in))
+              (out-spec (out))
               (part Nand (a in) (b in) (out out)))
+

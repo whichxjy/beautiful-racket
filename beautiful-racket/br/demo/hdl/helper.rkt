@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax racket/base racket/syntax) racket/splicing)
 (require racket/match racket/list)
 (provide (all-defined-out))
 
@@ -32,8 +33,6 @@
 (define (bus-range start [finish start])
   (range start (add1 finish)))
 
-(define-values (input-bus input-bus? input-bus-get)
-  (make-impersonator-property 'input-bus))
 
 (define (integer->bitvals int width)
   (reverse (for/list ([i (in-range width)])
@@ -52,143 +51,34 @@
     (raise-argument-error bus-name
                           (format "~a-bit value (0 to ~a inclusive)" width (sub1 (expt 2 width))) val)))
 
-(require sugar/debug)
-(define (make-input-bus bus-name [width 1])
-  (impersonate-procedure
-   (procedure-rename
-    (let ([bus-width width]
-          [bus-val 0])
-      (unless (<= bus-width max-bus-width)
-        (raise-argument-error bus-name (format "bus width <= max width ~a" max-bus-width) bus-width))
-      
-      (define func
-        (case-lambda
-          [() bus-val]
-          [(new-val-in)
-           (define new-val (cond
-                             [(boolean? new-val-in)
-                              (if new-val-in (sub1 (expt 2 bus-width)) 0)]
-                             [(or (input-bus? new-val-in) (output-bus? new-val-in)) (new-val-in)]
-                             [else new-val-in]))
-           (check-val-against-width new-val bus-width)
-           (set! bus-val new-val)]
-          [(bit new-val) (func bit bit new-val)]
-          [(first-bit last-bit new-val-in)
-           (define bit-range-width (add1 (- last-bit first-bit)))
-           (define new-val (cond
-                             [(boolean? new-val-in)
-                              (if new-val-in (sub1 (expt 2 bit-range-width)) 0)]
-                             [(or (input-bus? new-val-in) (output-bus? new-val-in)) (new-val-in)]
-                             [else new-val-in]))
-           (unless (<= first-bit last-bit)
-             (raise-argument-error bus-name (format "last bit greater than or equal to first bit ~a" first-bit) last-bit))
-           (check-bit-against-width bus-name first-bit bus-width)
-           (check-bit-against-width bus-name last-bit bus-width)
-           (check-val-against-width new-val bit-range-width)
-           (for ([bit (in-range first-bit (add1 last-bit))]
-                 [new-bit-val (in-list (integer->bitvals new-val bit-range-width))])
-                (set! bus-val ((if (= 1 new-bit-val) bitwise-bit-set bitwise-bit-unset) bus-val bit)))]))
-      func)
-    bus-name)
-   #f input-bus #t))
 
-
-(require (for-syntax racket/base racket/syntax))
-(define-syntax (define-input-bus stx)
-  (syntax-case stx ()
-    [(macro-name id)
-     #'(macro-name id void default-bus-width)]
-    [(macro-name id width)
-     #'(macro-name id void width)]
-    [(macro-name id thunk width)
-     (with-syntax ([id-write (format-id #'id "~a-write" #'id)])
-       #'(begin
-           (define-output-bus id thunk width)
-          ))]))
-
-#;(module+ test
-    (define-input-bus in-bus)
-    (define other (λ () (+ 2 2)))
-    (check-true (input-bus? in-bus))
-    (check-false (input-bus? other))
-    
-    (define-input-bus ib 4)
-    (check-exn exn:fail? (λ () (define-input-bus ib 17) ib)) ; exceeds 16-bit width
-    (check-equal? (ib-read) 0)
-    (ib-write 11) ; set whole value
-    (check-exn exn:fail? (λ () (ib-write #b11111))) ; overflow
-    (ib-write 2 1) ; set bit
-    (check-equal? (ib) #b1111)  
-    (ib-write 0 #b0) ; set bit
-    (ib-write 1 #b0) ; set bit
-    (ib-write 2 #b0) ; set bit
-    (check-equal? (ib-read) #b1000)
-    (check-exn exn:fail? (λ () (ib-write 5 1 #b0))) ; last index smaller than first
-    (check-exn exn:fail? (λ () (ib-write 1 300 #b0))) ; overlarge bit index
-    (check-exn exn:fail? (λ () (ib-write 300 500 #b0))) ; overlarge bit index
-    (check-exn exn:fail? (λ () (ib-write 1 #b11111))) ; overflow value
-    (ib-write 0)
-    (ib-write 1 2 #b11) 
-    (check-equal? (ib-read) #b0110)
-    (ib-write 3 3 #b1)
-    (ib-write 0 0 #b1)
-    (check-equal? (ib-read) #b1111)
-    (check-exn exn:fail? (λ () (ib-write 0 300 #b0))) ; overlarge bit index
-    (check-exn exn:fail? (λ () (ib-write 1 1 #b11111))) ; overflow value
-    (ib-write 0)
-    (ib-write 1 2 #t) ; using #t to fill certain bits
-    (check-equal? (ib-read) #b0110)
-    (ib-write 2 2 #f) ; using #f to fill certain bits
-    (check-equal? (ib-read) #b0010)
-    (ib-write 0)
-    (ib-write #t) ; using #t to fill all bits
-    (check-equal? (ib-read) #b1111)
-    (ib-write #f) ; using #f to fill all bits
-    (check-equal? (ib-read) #b0000)
-    (define-input-bus ib2 4)
-    (check-exn exn:fail? (λ () (ib2-write 16))) ; overflow value
-    (ib2-write #b1100)
-    (ib-write (ib2-read)) ; using bus as input value
-    (check-equal? (ib-read) (ib2))
-    )
-
-
-(define-values (output-bus output-bus? output-bus-get)
-  (make-impersonator-property 'output-bus))
-
-(define (make-read-bus bus-name thunk bus-width)
-  (unless (<= bus-width max-bus-width)
-    (raise-argument-error bus-name (format "bus width <= max width ~a" max-bus-width) bus-width))
-  (impersonate-procedure (procedure-rename thunk bus-name) #f output-bus #t))
-
-(define (make-bus-reader reader-name id-val thunk width)
+(define (make-bus-reader reader-name width)
   (define bus-reader-func
     (case-lambda
-      [() (bus-reader-func 0 (sub1 width))]
-      [(bit) (bus-reader-func bit bit)]
-      [(first-bit last-bit)
+      [(id-thunk-val) (bus-reader-func id-thunk-val 0 (sub1 width))]
+      [(id-thunk-val bit) (bus-reader-func id-thunk-val bit bit)]
+      [(id-thunk-val first-bit last-bit)
        (unless (<= first-bit last-bit)
          (raise-argument-error reader-name (format "last bit greater than or equal to first bit ~a" first-bit) last-bit))
        (check-bit-against-width reader-name first-bit width)
        (check-bit-against-width reader-name last-bit width)
-       (set! id-val (thunk))
-       (bitwise-bit-field id-val first-bit (add1 last-bit))]))
-  bus-reader-func)
+       (bitwise-bit-field id-thunk-val first-bit (add1 last-bit))]))
+  (procedure-rename bus-reader-func reader-name))
 
-(define (make-bus-writer writer-name id width)
+(define (make-bus-writer writer-name width)
   (define bus-writer-func
     (case-lambda
-      [() (raise-argument-error writer-name "new value" empty)]
-      [(new-val-in)
+      [(id-thunk-val) (raise-argument-error writer-name "new value" empty)]
+      [(id-thunk-val new-val-in)
        (define new-val (cond
                          [(boolean? new-val-in)
                           (if new-val-in (sub1 (expt 2 width)) 0)]
                          [(or (input-bus? new-val-in) (output-bus? new-val-in)) (new-val-in)]
                          [else new-val-in]))
-       (check-val-against-width 'id new-val width)
-       (set! id new-val)]
-      [(bit new-val) (bus-writer-func bit bit new-val)]
-      [(first-bit last-bit new-val-in)
+       (check-val-against-width writer-name new-val width)
+       new-val]
+      [(id-thunk-val bit new-val) (bus-writer-func id-thunk-val bit bit new-val)]
+      [(id-thunk-val first-bit last-bit new-val-in)
        (define bit-range-width (add1 (- last-bit first-bit)))
        (define new-val (cond
                          [(boolean? new-val-in)
@@ -199,39 +89,167 @@
          (raise-argument-error writer-name (format "last bit greater than or equal to first bit ~a" first-bit) last-bit))
        (check-bit-against-width writer-name first-bit width)
        (check-bit-against-width writer-name last-bit width)
-       (check-val-against-width new-val bit-range-width)
-       (for ([bit (in-range first-bit (add1 last-bit))]
-             [new-bit-val (in-list (integer->bitvals new-val bit-range-width))])
-            (set! id ((if (= 1 new-bit-val) bitwise-bit-set bitwise-bit-unset) id bit)))]))
+       (check-val-against-width writer-name new-val bit-range-width)
+       (define last-val
+         (for/fold ([val id-thunk-val])
+                   ([bit (in-range first-bit (add1 last-bit))]
+                    [new-bit-val (in-list (integer->bitvals new-val bit-range-width))])
+           ((if (= 1 new-bit-val) bitwise-bit-set bitwise-bit-unset) val bit)))
+       last-val]))
   bus-writer-func)
 
-(define-syntax (define-output-bus stx)
+
+#|
+
+base bus:
++ can read all, or bits
++ every read invokes a thunk
+|#
+
+
+(define-values (bus bus? bus-get)
+  (make-impersonator-property 'bus))
+
+(define-syntax (define-base-bus stx)
   (syntax-case stx ()
     [(macro-name id thunk)
      #'(macro-name id thunk default-bus-width)]
-    [(macro-name id thunk width)
-     (with-syntax ([id-val (format-id #'id "~a-val" #'id)]
-                   [id-read (format-id #'id "~a-read" #'id)]
-                   [id-write (format-id #'id "~a-write" #'id)])
-       #'(begin
-           (define id-val 0)
-           (define id-read (make-bus-reader 'id-read id-val thunk width))
-           (define id (make-read-bus 'id id-read width))
-           (define id-write (make-bus-writer 'id-write id width))))]))
+    [(macro-name id thunk bus-width-in)
+     (with-syntax ([id-thunk (format-id #'id "~a-val" #'id)])
+       #`(splicing-let ([id-thunk thunk]
+                        [bus-width bus-width-in])
+           (define id
+             (begin
+               (unless (<= bus-width max-bus-width)
+                 (raise-argument-error 'id (format "bus width <= max width ~a" max-bus-width) bus-width))
+               (impersonate-procedure
+                (let ([reader (make-bus-reader 'id bus-width)])
+                  (λ args (apply reader (id-thunk) args)))
+                #f #,(or (syntax-property stx 'impersonate) #'bus) #t)))
+           #,(when (syntax-property stx 'writer)
+               (with-syntax ([id-write (format-id #'id "~a-write" #'id)])
+                 #'(define id-write
+                     (let ([writer (make-bus-writer 'id-write bus-width)])
+                       (λ args
+                         (define result (apply writer (id-thunk) args))
+                         (set! id-thunk (λ () result)))))))))]))
 
 
 (module+ test
+  (define-base-bus bb (λ () #b0110) 4)
+  (check-true (bus? bb))
+  (check-false (input-bus? bb))
+  (check-false (output-bus? bb))
+  (check-exn exn:fail? (λ () (define-base-bus bb (λ () #b0110) 17) bb)) ; exceeds 16-bit width
+  (check-equal? (bb) #b0110)
+  (check-equal? (bb 0) #b0)
+  (check-equal? (bb 1) #b1)
+  (check-equal? (bb 2) #b1)
+  (check-equal? (bb 3) #b0)
+  (check-exn exn:fail? (λ () (bb 5))) ; exceeds bus width
+  (check-equal? (bb 0 1) #b10)
+  (check-equal? (bb 1 2) #b11)
+  (check-equal? (bb 2 3) #b01)
+  (check-exn exn:fail? (λ () (bb 3 2))) ; inverted bus spec
+  (check-exn exn:fail? (λ () (bb 5 10))) ; exceeds bus width
+  )
+
+
+#|
+output bus:
++ thunk is a runtime computation
++ cannot write
+|#
+
+(define-values (output-bus output-bus? output-bus-get)
+  (make-impersonator-property 'output-bus))
+
+(define-syntax (define-output-bus stx)
+  (syntax-case stx ()
+    [(_ . args)
+     (syntax-property #'(define-base-bus . args) 'impersonate #'output-bus)]))
+
+(module+ test
   (define-output-bus ob (λ () #b0110) 4)
-  (check-exn exn:fail? (λ () (define-output-bus ob (λ () #b0110) 17) ob)) ; exceeds 16-bit width
-  (check-equal? (ob-read) #b0110)
-  (check-equal? (ob-read 0) #b0)
-  (check-equal? (ob-read 1) #b1)
-  (check-equal? (ob-read 2) #b1)
-  (check-equal? (ob-read 3) #b0)
-  (check-exn exn:fail? (λ () (ob-read 5))) ; exceeds bus width
-  (check-equal? (ob-read 0 1) #b10)
-  (check-equal? (ob-read 1 2) #b11)
-  (check-equal? (ob-read 2 3) #b01)
-  (check-exn exn:fail? (λ () (ob-read 3 2))) ; inverted bus spec
-  (check-exn exn:fail? (λ () (ob-read 5 10))) ; exceeds bus width
+  (check-false (bus? ob))
+  (check-false (input-bus? ob))
+  (check-true (output-bus? ob))
+  (check-exn exn:fail? (λ () (define-base-bus ob (λ () #b0110) 17) ob)) ; exceeds 16-bit width
+  (check-equal? (ob) #b0110)
+  (check-equal? (ob 0) #b0)
+  (check-equal? (ob 1) #b1)
+  (check-equal? (ob 2) #b1)
+  (check-equal? (ob 3) #b0)
+  (check-exn exn:fail? (λ () (ob 5))) ; exceeds bus width
+  (check-equal? (ob 0 1) #b10)
+  (check-equal? (ob 1 2) #b11)
+  (check-equal? (ob 2 3) #b01)
+  (check-exn exn:fail? (λ () (ob 3 2))) ; inverted bus spec
+  (check-exn exn:fail? (λ () (ob 5 10))) ; exceeds bus width
+  )
+
+#|
+input bus:
++ thunk returns a constant
++ identifies itself as input bus
++ can write all, or bits
+|#
+
+(define-values (input-bus input-bus? input-bus-get)
+  (make-impersonator-property 'input-bus))
+
+(define-syntax (define-input-bus stx)
+  (syntax-case stx ()
+    [(macro-name id)
+     #'(macro-name id default-bus-width)]
+    [(macro-name id bus-width)
+     (syntax-property
+      (syntax-property
+       #'(define-base-bus id (λ () 0) bus-width)
+       'impersonate #'input-bus)
+      'writer #t)]))
+
+(module+ test
+  (define-input-bus ib 4)
+  (check-false (bus? ib))
+  (check-false (output-bus? ib))
+  (check-true (input-bus? ib))
+  (check-exn exn:fail? (λ () (define-input-bus ib 17) ib)) ; exceeds 16-bit width
+  (check-equal? (ib) 0)
+  (ib-write 11) ; set whole value
+  (check-equal? (ib) 11)
+  (check-exn exn:fail? (λ () (ib-write #b11111))) ; overflow
+  (ib-write 2 1) ; set bit
+  (check-equal? (ib) #b1111)  
+  (ib-write 0 #b0) ; set bit
+  (ib-write 1 #b0) ; set bit
+  (ib-write 2 #b0) ; set bit
+  (check-equal? (ib) #b1000)
+  (check-exn exn:fail? (λ () (ib-write 5 1 #b0))) ; last index smaller than first
+  (check-exn exn:fail? (λ () (ib-write 1 300 #b0))) ; overlarge bit index
+  (check-exn exn:fail? (λ () (ib-write 300 500 #b0))) ; overlarge bit index
+  (check-exn exn:fail? (λ () (ib-write 1 #b11111))) ; overflow value
+  (ib-write 0)
+  (ib-write 1 2 #b11) 
+  (check-equal? (ib) #b0110)
+  (ib-write 3 3 #b1)
+  (ib-write 0 0 #b1)
+  (check-equal? (ib) #b1111)
+  (check-exn exn:fail? (λ () (ib-write 0 300 #b0))) ; overlarge bit index
+  (check-exn exn:fail? (λ () (ib-write 1 1 #b11111))) ; overflow value
+  (ib-write 0)
+  (ib-write 1 2 #t) ; using #t to fill certain bits
+  (check-equal? (ib) #b0110)
+  (ib-write 2 2 #f) ; using #f to fill certain bits
+  (check-equal? (ib) #b0010)
+  (ib-write 0)
+  (ib-write #t) ; using #t to fill all bits
+  (check-equal? (ib) #b1111)
+  (ib-write #f) ; using #f to fill all bits
+  (check-equal? (ib) #b0000)
+  (define-input-bus ib2 4)
+  (check-exn exn:fail? (λ () (ib2-write 16))) ; overflow value
+  (ib2-write #b1100)
+  (ib-write (ib2)) ; using bus as input value
+  (check-equal? (ib) (ib2))
   )
