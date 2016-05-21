@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base syntax/parse racket/syntax syntax/strip-context)
-         syntax/strip-context racket/function racket/list)
+         syntax/strip-context racket/function racket/list racket/syntax)
 (provide (all-defined-out) (all-from-out syntax/strip-context))
 
 
@@ -33,29 +33,37 @@
          (for/list ([arg (in-list (syntax->list args))])
                    (_proc arg)))]))
 
-(define identity (λ(arg) arg))
-(define-syntax (partition-syntax-case stx)
-  (syntax-case stx ()
-    [(_ (_matchers ...) _stx-list)
-     #'(let* ([stx-list _stx-list]
-              [stxs (cond
-                      [(and (syntax? stx-list) (syntax->list stx-list)) => identity]
-                      [(and (list? stx-list) (andmap syntax? list)) stx-list]
-                      [else (raise-argument-error 'partition-syntax-case "syntaxed list or list of syntax objects" stx-list)])])
-         (partition (λ(stx-item) (syntax-case stx-item ()
-                                   _matchers ...)) stxs))]))
 
-(define-syntax (filter-syntax stx)
+(define identity (λ(arg) arg))
+(define-syntax (syntax-case-partition stx)
   (syntax-case stx ()
-    [(_ _proc _args)
-     #'(let ([args _args])
-         (datum->syntax args
-                        (if (and (syntax? args) (list? (syntax-e args)))
-                            (for*/list ([arg (in-list (syntax->list args))]
-                                        [result (in-value (_proc (syntax->datum arg)))]
-                                        #:when result)
-                                       arg)
-                            (error 'not-syntax-list))))]))
+    [(_ _stx-list literals . _matchers)
+     #'(partition (λ(stx-item)
+                    (with-handlers ([exn:fail:syntax? (λ (exn) #f)])
+                      (syntax-case stx-item literals
+                        . _matchers))) (if (syntax? _stx-list)
+                                             (syntax->list _stx-list)
+                                             _stx-list))]))
+
+(define-syntax (syntax-case-filter stx)
+  (syntax-case stx ()
+    [(_ _stx-list literals . _matchers)
+     #'(let-values ([(matches others) (syntax-case-partition _stx-list literals . _matchers)])
+         matches)]))
+
+
+(define-syntax (syntax-case-map stx)
+  (syntax-case stx ()
+    [(_ _stx-list literals . _matchers)
+     #'(map (λ(stx-item)
+              (syntax-case stx-item literals
+                . _matchers)) (if (syntax? _stx-list)
+                                    (syntax->list _stx-list)
+                                    _stx-list))]))
+
+
+(define-syntax-rule (reformat-id fmt id0 id ...)
+  (format-id id0 fmt id0 id ...))
 
 
 #;(define-syntax syntax-variable (make-rename-transformer #'format-id))

@@ -7,9 +7,11 @@
                         (in-spec (_input-pin _input-width ...) ...)
                         (out-spec (_output-pin _output-width ...) ...)
                         _part ...)
-  (with-syntax* ([chip-prefix (format-id #'_chipname "~a-" #'_chipname)]
-                 [(in-pin-write ...) (map (λ(iw) (format-id iw "~a-write" iw)) (syntax->list #'(_input-pin ...)))]
-                 [(prefixed-output-pin ...) (map (λ(op) (format-id op "~a~a" #'chip-prefix op)) (syntax->list #'(_output-pin ...)))])
+  (with-syntax* ([chip-prefix (reformat-id "~a-" #'_chipname)]
+                 [(in-pin-write ...) (syntax-case-map #'(_input-pin ...) ()
+                                                 [iw (reformat-id "~a-write" #'iw)])]
+                 [(prefixed-output-pin ...) (syntax-case-map #'(_output-pin ...) ()
+                                                        [op (format-id #'op "~a~a" #'chip-prefix #'op)])])
     #'(begin
         (provide (prefix-out chip-prefix (combine-out _input-pin ... in-pin-write ...))) 
         (define-input-bus _input-pin _input-width ...) ...
@@ -19,7 +21,8 @@
 
 
 (define #'(part _prefix ((_wire . _wireargs) _wirevalue) ...)
-  (with-syntax ([(prefixed-wire ...) (map (λ(s) (format-id s "~a-~a" #'_prefix s)) (syntax->list #'(_wire ...)))]
+  (with-syntax ([(prefixed-wire ...) (syntax-case-map #'(_wire ...) ()
+                                                 [s (format-id #'s "~a-~a" #'_prefix #'s)])]
                 [chip-module-path (datum->syntax #'_prefix (format "~a.hdl.rkt" (syntax->datum #'_prefix)))])
     #'(begin
         (require (import-chip chip-module-path) (for-syntax (import-chip chip-module-path)))
@@ -36,12 +39,12 @@
 
 (define #'(handle-wires _wire-assignments ...)
   (let-values ([(in-wire-stxs out-wire-stxs)
-                (partition-syntax-case
-                 ([((prefixed-wire . _wireargs) _)
-                   (syntax-local-eval (syntax-shift-phase-level #'(input-bus? prefixed-wire) 1))])
-                 #'(_wire-assignments ...))])
+                (syntax-case-partition #'(_wire-assignments ...) ()
+                                  [((prefixed-wire . _wireargs) _)
+                                   (syntax-local-eval (syntax-shift-phase-level #'(input-bus? prefixed-wire) 1))])])
     (with-syntax* ([(((in-wire in-arg ...) input-expr) ...) in-wire-stxs]
-                   [(in-wire-write ...) (map (λ(iw) (format-id iw "~a-write" iw)) (syntax->list #'(in-wire ...)))]
+                   [(in-wire-write ...) (syntax-case-map #'(in-wire ...) ()
+                                                    [iw (reformat-id "~a-write" #'iw)])]
                    [(((out-wire out-arg ...) (out-bus)) ...) out-wire-stxs])
       #'(begin
           (define-output-bus out-bus
