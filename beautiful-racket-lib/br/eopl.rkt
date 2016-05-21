@@ -61,18 +61,18 @@
 
 (define-syntax (cases stx)
   (syntax-case stx (else)
-    [(_ <base-type> <input-var>
-        [<subtype> (<positional-var> ...) <body> ...] ...
-        [else <else-body> ...])
-     (inject-syntax ([#'(<subtype?> ...) (map-syntax (λ(s) (format-datum '~a? s)) #'(<subtype> ...))])
+    [(_ _base-type _input-var
+        [_subtype (_positional-var ...) . _body] ...
+        [else . _else-body])
+     (inject-syntax ([#'(_subtype? ...) (suffix-ids #'(_subtype ...) "?")])
                     #'(cond
-                        [(<subtype?> <input-var>) (match-let ([(list <positional-var> ...) (struct->list <input-var>)])
-                                                    <body> ...)] ...
-                                                                 [else <else-body> ...]))]
-    [(_ <base-type> <input-var>
-        <subtype-case> ...)
-     #'(cases <base-type> <input-var>
-         <subtype-case> ...
+                        [(_subtype? _input-var) (match-let ([(list _positional-var ...) (struct->list _input-var)])
+                                                    . _body)] ...
+                                                                 [else . _else-body]))]
+    [(_ _base-type _input-var
+        _subtype-case ...)
+     #'(cases _base-type _input-var
+         _subtype-case ...
          [else (void)])]))
 
 
