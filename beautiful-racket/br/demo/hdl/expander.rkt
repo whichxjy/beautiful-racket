@@ -18,12 +18,12 @@
         (define-output-bus prefixed-output-pin _output-pin _output-width ...) ...)))
 
 
-(define #'(part _prefix [_suffix . _args] ...)
-  (with-syntax ([(prefix-suffix ...) (map (λ(s) (format-id s "~a-~a" #'_prefix s)) (syntax->list #'(_suffix ...)))]
+(define #'(part _prefix ((_wire . _wireargs) _wirevalue) ...)
+  (with-syntax ([(prefixed-wire ...) (map (λ(s) (format-id s "~a-~a" #'_prefix s)) (syntax->list #'(_wire ...)))]
                 [chip-module-path (datum->syntax #'_prefix (format "~a.hdl.rkt" (syntax->datum #'_prefix)))])
     #'(begin
         (require (import-chip chip-module-path) (for-syntax (import-chip chip-module-path)))
-        (handle-wires [prefix-suffix . _args] ...))))
+        (handle-wires ((prefixed-wire . _wireargs) _wirevalue) ...))))
 
 
 (define-syntax import-chip
@@ -34,17 +34,18 @@
         (expand-import #'module-path)]))))
 
 
-(define #'(handle-wires _wirearg-pair ...)
+(define #'(handle-wires _wire-assignments ...)
   (let-values ([(in-wire-stxs out-wire-stxs)
-                (partition (λ(wirearg-pair-stx)
-                             (define wire-stx (car (syntax->list wirearg-pair-stx)))
-                             (input-bus? (syntax-local-eval wire-stx)))
-                           (syntax->list #'(_wirearg-pair ...)))])
-    (with-syntax* ([([in-wire in-arg ...] ...) in-wire-stxs]
+                (partition (λ(wa)
+                             (syntax-case wa ()
+                               [((prefixed-wire . _wireargs) _)
+                                (input-bus? (syntax-local-eval #'prefixed-wire))]))
+                           (syntax->list #'(_wire-assignments ...)))])
+    (with-syntax* ([(((in-wire in-arg ...) input-expr) ...) in-wire-stxs]
                    [(in-wire-write ...) (map (λ(iw) (format-id iw "~a-write" iw)) (syntax->list #'(in-wire ...)))]
-                   [([out-wire out-arg ... out-bus] ...) out-wire-stxs])
+                   [(((out-wire out-arg ...) (out-bus)) ...) out-wire-stxs])
       #'(begin
           (define-output-bus out-bus
             (λ ()
-              (in-wire-write (in-arg ...)) ...
+              (in-wire-write in-arg ... input-expr) ...
               (out-wire out-arg ...))) ...))))

@@ -14,15 +14,15 @@ out-spec : pin-spec
 
 @part-spec : /"PARTS:" part+
 
-part : partname /"(" pin-val-pair [/"," pin-val-pair]* /")" /";"
+part : partname /"(" wire-assign [/"," wire-assign]* /")" /";"
 
 @partname : ID
 
-/pin-val-pair : pin-range /"=" pin-val
+/wire-assign : pin-range /"=" pin-val
+
+/pin-range : ID [/"[" bus-range /"]"]
 
 @bus-range : number [/"." /"." number]
-
-@pin-range : ID [/"[" bus-range /"]"]
 
 @pin-val : pin-range
          | BINARY-NUMBER

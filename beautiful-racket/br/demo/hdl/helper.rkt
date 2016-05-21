@@ -115,7 +115,8 @@ base bus:
     [(macro-name id thunk)
      #'(macro-name id thunk default-bus-width)]
     [(macro-name id thunk bus-width-in)
-     (with-syntax ([id-thunk (format-id #'id "~a-val" #'id)])
+     (with-syntax ([id-thunk (format-id #'id "~a-val" #'id)]
+                   [bus-type (or (syntax-property stx 'impersonate) #'bus)])
        #`(splicing-let ([id-thunk thunk]
                         [bus-width bus-width-in])
            (define id
@@ -124,8 +125,8 @@ base bus:
                  (raise-argument-error 'id (format "bus width <= max width ~a" max-bus-width) bus-width))
                (impersonate-procedure
                 (let ([reader (make-bus-reader 'id bus-width)])
-                  (λ args (apply reader (id-thunk) args)))
-                #f #,(or (syntax-property stx 'impersonate) #'bus) #t)))
+                  (procedure-rename (λ args (apply reader (id-thunk) args)) (string->symbol (format "~a, a bus of width ~a" 'id bus-width))))
+                #f bus-type #t)))
            #,(when (syntax-property stx 'writer)
                (with-syntax ([id-write (format-id #'id "~a-write" #'id)])
                  #'(define id-write
@@ -250,6 +251,7 @@ input bus:
   (define-input-bus ib2 4)
   (check-exn exn:fail? (λ () (ib2-write 16))) ; overflow value
   (ib2-write #b1100)
-  (ib-write (ib2)) ; using bus as input value
+  (ib-write ib2) ; using bus as input value
   (check-equal? (ib) (ib2))
   )
+  

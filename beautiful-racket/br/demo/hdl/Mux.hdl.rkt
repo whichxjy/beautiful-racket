@@ -12,7 +12,7 @@
  */
 
 CHIP Mux {
-    IN a, b, sel;
+    IN a, b[15], sel[8];
     OUT out;
 
     PARTS:
