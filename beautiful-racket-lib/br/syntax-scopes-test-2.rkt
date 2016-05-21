@@ -1,5 +1,5 @@
 #lang br
-(require (for-syntax br/syntax))
+(require (for-syntax br/scope))
 
 (begin-for-syntax
   (define-scope blue))

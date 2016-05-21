@@ -1,5 +1,5 @@
 #lang br
-(require (for-syntax br/syntax sugar/debug) br/syntax)
+(require (for-syntax br/syntax sugar/debug br/scope) br/syntax br/scope)
 
 (begin-for-syntax
   (define-scope blue)
