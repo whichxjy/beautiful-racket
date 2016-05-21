@@ -35,31 +35,26 @@
 
 
 (define identity (λ(arg) arg))
-(define-syntax (syntax-case-partition stx)
-  (syntax-case stx ()
-    [(_ _stx-list literals . _matchers)
-     #'(partition (λ(stx-item)
-                    (with-handlers ([exn:fail:syntax? (λ (exn) #f)])
-                      (syntax-case stx-item literals
-                        . _matchers))) (if (syntax? _stx-list)
-                                             (syntax->list _stx-list)
-                                             _stx-list))]))
-
-(define-syntax (syntax-case-filter stx)
-  (syntax-case stx ()
-    [(_ _stx-list literals . _matchers)
-     #'(let-values ([(matches others) (syntax-case-partition _stx-list literals . _matchers)])
-         matches)]))
+(define-syntax-rule (syntax-case-partition _stx-list _literals . _matchers)
+  (partition (λ(stx-item)
+               (with-handlers ([exn:fail:syntax? (λ (exn) #f)])
+                 (syntax-case stx-item _literals
+                   . _matchers))) (if (syntax? _stx-list)
+                                      (syntax->list _stx-list)
+                                      _stx-list)))
 
 
-(define-syntax (syntax-case-map stx)
-  (syntax-case stx ()
-    [(_ _stx-list literals . _matchers)
-     #'(map (λ(stx-item)
-              (syntax-case stx-item literals
-                . _matchers)) (if (syntax? _stx-list)
-                                    (syntax->list _stx-list)
-                                    _stx-list))]))
+(define-syntax-rule (syntax-case-filter _stx-list _literals . _matchers)
+  (let-values ([(matches others) (syntax-case-partition _stx-list _literals . _matchers)])
+    matches))
+
+
+(define-syntax-rule (syntax-case-map _stx-list _literals . _matchers)
+  (map (λ(stx-item)
+         (syntax-case stx-item _literals
+           . _matchers)) (if (syntax? _stx-list)
+                             (syntax->list _stx-list)
+                             _stx-list)))
 
 
 (define-syntax-rule (reformat-id fmt id0 id ...)
