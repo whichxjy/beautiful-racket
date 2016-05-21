@@ -1,5 +1,5 @@
 #lang br
-(require "helper.rkt" (for-syntax racket/base racket/syntax "helper.rkt" racket/list racket/require-transform))
+(require "helper.rkt" (for-syntax racket/base racket/syntax racket/require-transform br/syntax))
 (provide #%top-interaction #%module-begin #%app #%datum and or (all-defined-out))
 
 
@@ -36,11 +36,10 @@
 
 (define #'(handle-wires _wire-assignments ...)
   (let-values ([(in-wire-stxs out-wire-stxs)
-                (partition (λ(wa)
-                             (syntax-case wa ()
-                               [((prefixed-wire . _wireargs) _)
-                                (input-bus? (syntax-local-eval #'prefixed-wire))]))
-                           (syntax->list #'(_wire-assignments ...)))])
+                (partition-syntax-case
+                 ([((prefixed-wire . _wireargs) _)
+                   (syntax-local-eval (syntax-shift-phase-level #'(input-bus? prefixed-wire) 1))])
+                 #'(_wire-assignments ...))])
     (with-syntax* ([(((in-wire in-arg ...) input-expr) ...) in-wire-stxs]
                    [(in-wire-write ...) (map (λ(iw) (format-id iw "~a-write" iw)) (syntax->list #'(in-wire ...)))]
                    [(((out-wire out-arg ...) (out-bus)) ...) out-wire-stxs])

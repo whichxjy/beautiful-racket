@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base syntax/parse racket/syntax syntax/strip-context)
-         syntax/strip-context racket/function)
+         syntax/strip-context racket/function racket/list)
 (provide (all-defined-out) (all-from-out syntax/strip-context))
 
 
@@ -33,13 +33,17 @@
          (for/list ([arg (in-list (syntax->list args))])
                    (_proc arg)))]))
 
-(define-syntax (partition-syntax stx)
+(define identity (λ(arg) arg))
+(define-syntax (partition-syntax-case stx)
   (syntax-case stx ()
-    [(_ _proc _args)
-     #'(let ([args _args])
-         (unless (and (syntax? args) (list? (syntax-e args)))
-           (raise-argument-error 'map-syntax "not a syntax list"))
-         (partition _proc (syntax->list args)))]))
+    [(_ (_matchers ...) _stx-list)
+     #'(let* ([stx-list _stx-list]
+              [stxs (cond
+                      [(and (syntax? stx-list) (syntax->list stx-list)) => identity]
+                      [(and (list? stx-list) (andmap syntax? list)) stx-list]
+                      [else (raise-argument-error 'partition-syntax-case "syntaxed list or list of syntax objects" stx-list)])])
+         (partition (λ(stx-item) (syntax-case stx-item ()
+                                   _matchers ...)) stxs))]))
 
 (define-syntax (filter-syntax stx)
   (syntax-case stx ()
