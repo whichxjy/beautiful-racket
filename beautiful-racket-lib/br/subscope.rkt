@@ -1,4 +1,5 @@
 #lang br
+(require (for-syntax br/syntax))
 (provide (all-defined-out))
 
 (define #'(introduce-scope _color . _parents)
@@ -16,7 +17,7 @@
     (replace-context #'_color
                      #'(begin
                          (module module-name br
-                           (require (for-syntax br/datum br/scope))
+                           (require (for-syntax br/datum br/scope br/syntax))
                            (provide (for-syntax (all-defined-out)) (all-defined-out))
                            
                            (begin-for-syntax
