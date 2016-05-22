@@ -3,6 +3,8 @@
          syntax/strip-context racket/function racket/list racket/syntax)
 (provide (all-defined-out) (all-from-out syntax/strip-context))
 
+(module+ test
+  (require rackunit))
 
 (define-syntax (syntax-match stx)
   (syntax-case stx (syntax)
@@ -25,7 +27,7 @@
     [(_ () . body) #'(begin . body)]
     [(_ (stx-expr0 stx-expr ...) . body)
      #'(inject-syntax (stx-expr0)
-         (inject-syntax* (stx-expr ...) . body))]))
+                      (inject-syntax* (stx-expr ...) . body))]))
 
 (define-syntax syntax-let (make-rename-transformer #'inject-syntax))
 (define-syntax add-syntax (make-rename-transformer #'inject-syntax))
@@ -90,4 +92,23 @@
 (define-syntax-rule (suffix-ids _bases _suffix ...)
   (infix-ids "" _bases _suffix ...))
 
+(define-syntax (syntax-property* stx)
+  (syntax-case stx (quote)
+    [(_ stx-object 'prop0)
+     #'(syntax-property stx-object 'prop0)]
+    [(_ stx-object 'prop0 'prop ...)
+     #'(cons (syntax-property stx-object 'prop0) (let ([result (syntax-property* stx-object 'prop ...)])
+                                                   (if (pair? result)
+                                                       result
+                                                       (list result))))]
+    [(_ stx-object ['prop0 val0 . preserved0])
+     #'(syntax-property stx-object 'prop0 val0 . preserved0)]
+    [(_ stx-object ['prop0 val0 . preserved0] ['prop val . preserved] ...)
+     #'(syntax-property* (syntax-property stx-object 'prop0 val0 . preserved0) ['prop val . preserved] ...)]))
 
+(module+ test
+  (define x (syntax-property* #'foo ['bar #t] ['zam 'boni]))
+  (check-false (syntax-property* x 'foo))
+  (check-true (syntax-property* x 'bar))
+  (check-equal? (syntax-property* x 'foo 'bar 'zam) '(#f #t boni)))
+  
