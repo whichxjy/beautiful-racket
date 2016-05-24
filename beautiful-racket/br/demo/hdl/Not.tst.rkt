@@ -1,10 +1,14 @@
 #lang br/demo/hdl-tst
 
-/* Not */
-
 load Not.hdl,
-output-list in, out;
+output-file Not.out,
+compare-to Not.cmp,
+output-list in%B3.1.3 out%B3.1.3;
+
 set in 0,
-eval, output;
+eval,
+output;
+
 set in 1,
-eval, output;
+eval,
+output;

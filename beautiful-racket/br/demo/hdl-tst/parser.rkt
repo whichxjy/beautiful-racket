@@ -1,20 +1,22 @@
 #lang brag
 
-tst-program : header-expr test-expr*
+tst-program : load-expr output-file-expr compare-to-expr output-list-expr /";" test-expr*
 
-header-expr : load-expr table-expr /";"
+load-expr : /"load" ID /","
 
-@load-expr : /"load" ID /","
+output-file-expr : /"output-file" ID /","
 
-/table-expr : /"output-list" columns
+compare-to-expr : /"compare-to" ID /","
 
-@columns :  ID [/"," columns]
+output-list-expr : /"output-list" column [column]+
 
-test-expr : step-expr+ /";"
+/column :  ID FORMAT-STRING
 
-@step-expr : (set-expr | @eval-expr | output-expr) [/","]
+@test-expr : step-expr+ /";"
 
-/set-expr : /"set" ID VAL
+@step-expr : (set-expr | eval-expr | output-expr) [/","]
+
+set-expr : /"set" ID VAL
 
 eval-expr : /"eval"
 

@@ -17,6 +17,8 @@
   ;; one-arg form allows you to inject an existing syntax object using its current name
   (syntax-case stx (syntax)
     [(_ ([(syntax sid) sid-stx] ...) body ...)
+     #'(inject-syntax ([sid sid-stx] ...) body ...)]
+    [(_ ([sid sid-stx] ...) body ...)
      #'(with-syntax ([sid sid-stx] ...) body ...)]
     ;; todo: limit `sid` to be an identifier
     [(_ ([sid] ...) body ...)
@@ -29,9 +31,13 @@
      #'(inject-syntax (stx-expr0)
                       (inject-syntax* (stx-expr ...) . body))]))
 
+(define-syntax let-syntax-pattern (make-rename-transformer #'inject-syntax*))
+(define-syntax let*-syntax-pattern (make-rename-transformer #'inject-syntax*))
 (define-syntax syntax-let (make-rename-transformer #'inject-syntax))
 (define-syntax add-syntax (make-rename-transformer #'inject-syntax))
 
+(define-syntax-rule (test-macro mac-expr)
+  (syntax->datum (expand-once #'mac-expr)))
 
 (define (check-syntax-list-argument caller-name arg)
   (cond
@@ -73,14 +79,14 @@
       x))
 
 (define-syntax-rule (prefix-id _prefix ... _base)
-  (format-id _base "~a~a" (string-append (format "~a" (->unsyntax _prefix)) ...) _base))
+  (format-id _base "~a~a" (string-append (format "~a" (->unsyntax _prefix)) ...) (syntax-e _base)))
 
 (define-syntax-rule (prefix-ids _prefix ... _bases)
   (syntax-case-map _bases ()
                    [_base (prefix-id _prefix ... #'_base)]))
 
 (define-syntax-rule (infix-id _prefix _base _suffix ...)
-  (format-id _base "~a~a~a" (->unsyntax _prefix) _base (string-append (format "~a" (->unsyntax _suffix)) ...)))
+  (format-id _base "~a~a~a" (->unsyntax _prefix) (syntax-e _base) (string-append (format "~a" (->unsyntax _suffix)) ...)))
 
 (define-syntax-rule (infix-ids _prefix _bases _suffix ...)
   (syntax-case-map _bases ()

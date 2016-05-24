@@ -105,7 +105,7 @@ base bus:
   (make-impersonator-property 'bus))
 
 (define-cases #'define-base-bus
-  [#'(_macro-name _id _thunk) #'(_macro-name _id _thunk _default-bus-width)]
+  [#'(_macro-name _id _thunk) #'(_macro-name _id _thunk default-bus-width)]
   [#'(_macro-name _id _thunk _bus-width-in)
    (inject-syntax ([#'_id-thunk (suffix-id #'_id "-val")]
                    [#'_bus-type (or (syntax-property caller-stx 'impersonate) #'bus)])
@@ -117,7 +117,7 @@ base bus:
                             (raise-argument-error 'id (format "bus width <= max width ~a" max-bus-width) bus-width))
                           (impersonate-procedure
                            (let ([reader (make-bus-reader 'id bus-width)])
-                             (procedure-rename (λ args (apply reader (_id-thunk) args)) (string->symbol (format "~a, a bus of width ~a" 'id bus-width))))
+                             (procedure-rename (λ args (apply reader (_id-thunk) args)) (string->symbol (format "~a, a bus of width ~a" '_id bus-width))))
                            #f _bus-type #t)))
                       #,(when (syntax-property caller-stx 'writer)
                           (inject-syntax ([#'_id-write (suffix-id #'_id "-write")])

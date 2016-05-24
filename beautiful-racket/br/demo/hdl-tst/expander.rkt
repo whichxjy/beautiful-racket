@@ -1,54 +1,62 @@
 #lang br
-(require (for-syntax br/syntax))
-(provide #%top-interaction #%module-begin #%datum (rename-out [my-top #%top]) #%app
-         (all-defined-out))
+(require (for-syntax br/syntax br/scope))
+(provide #%top-interaction #%module-begin #%datum #;(rename-out [my-top #%top]) #%app
+         (all-defined-out) (all-from-out br))
 
-; #%app and #%datum have to be present to make #%top work
-(define #'(my-top . id)
-  #'(begin
-      (displayln (format "got unbound identifier: ~a" 'id))
-      (procedure-rename (λ xs (cons 'id xs)) (string->symbol (format "undefined:~a" 'id)))))
+(require br/demo/hdl-tst/hdlprint rackunit racket/file (for-syntax racket/string))
 
-(define #'(tst-program _arg ...) #'(begin _arg ...))
+(define-for-syntax chip-prefix #f)
 
-(begin-for-syntax
-  (define-scope blue))
+(define-macro (tst-program ARG ...)
+  (let-syntax-pattern ([compare (shared-syntax #'compare)]
+                       [of (shared-syntax #'of)])
+                      #'(begin ARG ... (close-output-port of) (compare) )))
 
-(define #'(header-expr _filename (_colid ... _outid))
-  (with-syntax* ([filename-string (symbol->string (syntax->datum #'_filename))]
-                 [procname (string->symbol (cadr (regexp-match #rx"^(.*)\\.hdl$"(symbol->string (syntax->datum #'_filename)))))])
-    (with-blue-binding-form (output)
-                            #'(begin
-                                (provide (all-defined-out))
-                                (define procname
-                                  (dynamic-require (findf file-exists?
-                                                          (list filename-string (format "~a.rkt" filename-string))) 'procname))
-                                (display-header '_colid ... '_outid)
-                                (define _colid (make-parameter 0)) ...
-                                (define (_outid)
-                                  (keyword-apply procname
-                                                 (map (compose1 string->keyword symbol->string) (list '_colid ...))
-                                                 (list (_colid) ...) null))
-                                
-                                (define (output)
-                                  (display-values (_colid) ... (_outid)))))))
+(define-macro (load-expr CHIPFILE-STRING)
+  (let ()
+    (set! chip-prefix (string-replace (syntax->datum #'CHIPFILE-STRING) ".hdl" ""))
+    (let-syntax-pattern ([CHIPFILE.RKT (format-string "~a.rkt" #'CHIPFILE-STRING)])
+                        #'(require CHIPFILE.RKT))))
 
-(define #'(display-header _sym ...)
-  #'(begin
-      (apply display-values (list _sym ...))
-      (apply display-dashes (list _sym ...))))
+(define-macro (output-file-expr OUTPUT-FILE-STRING)
+  (let-syntax-pattern ([ofname (shared-syntax #'ofname)]
+                       [of (shared-syntax #'of)])
+                      #'(begin
+                          (define ofname OUTPUT-FILE-STRING)
+                          (define of (open-output-file ofname #:mode 'text #:exists 'replace)))))
 
-(define (vals->text vals) (string-join (map ~a vals) " | "))
+(define-macro (compare-to-expr COMPARE-FILE-STRING)
+  (let-syntax-pattern ([compare (shared-syntax 'compare)]
+                       [ofname (shared-syntax 'ofname)])
+                      #'(define (compare)
+                          (check-equal? (file->lines ofname) (file->lines COMPARE-FILE-STRING)))))
 
-(define (display-values . vals) (displayln (vals->text vals)))
+(define-macro (output-list-expr (COL-NAME FORMAT-SPEC) ...)
+  (let-syntax-pattern ([(COL-ID ...) (prefix-ids "" #'(COL-NAME ...))]
+                       [(CHIP-COL-ID ...) (prefix-ids chip-prefix "-" #'(COL-NAME ...))]
+                       [output (shared-syntax 'output)]
+                       [of (shared-syntax 'of)]
+                       [eval-result (shared-syntax 'eval-result)]
+                       [eval-thunk (shared-syntax 'eval-thunk)])
+                      #'(begin
+                          (define (output COL-ID ...)
+                            (fprintf of (format "~a\n" (string-join (list (hdlprint COL-ID FORMAT-SPEC) ...) "|"
+                                                                    #:before-first "|"
+                                                                    #:after-last "|"))))
+                          (define eval-result #f)
+                          (define eval-thunk (λ () (list (CHIP-COL-ID) ...)))
+                          (output COL-NAME ...))))
 
-(define (display-dashes . vals)
-  (displayln (make-string (string-length (vals->text vals)) #\-)))
+(define-macro (set-expr IN-BUS IN-VAL)
+  (let-syntax-pattern ([CHIP-IN-BUS-ID-WRITE (prefix-id chip-prefix "-" (suffix-id #'IN-BUS "-write"))])
+                      #'(CHIP-IN-BUS-ID-WRITE IN-VAL)))
 
-(define #'test-expr #'begin)
+(define-macro (eval-expr)
+  (let-syntax-pattern ([eval-result (shared-syntax 'eval-result)]
+                       [eval-thunk (shared-syntax 'eval-thunk)])
+                      #'(set! eval-result (eval-thunk))))
 
-(define #'eval-expr #'void)
-
-(define #'(output-expr)
-  (with-blue-identifiers (output)
-                        #'(output)))
+(define-macro (output-expr)
+  (let-syntax-pattern ([output (shared-syntax 'output)]
+                       [eval-result (shared-syntax 'eval-result)])
+                      #'(apply output eval-result)))
