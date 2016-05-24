@@ -146,7 +146,7 @@
     
     ;; syntax
     [(_ (syntax (id . pat-args)) . body) ; (define #'(foo arg) #'(+ arg arg))
-     #'(br:define-cases (syntax id) [(syntax (_ . pat-args)) . body])]
+     #'(br:define-cases (syntax id) [(syntax (_ . pat-args)) (begin . body)])]
     
     [(_ sid:syntaxed-id sid2:syntaxed-id) ; (define #'f1 #'f2)
      #'(define-syntax sid.name (make-rename-transformer sid2))]
@@ -248,6 +248,11 @@
                       #'(datum->syntax caller-stx (if (syntax? form)
                                                       (syntax-e form)
                                                       form))]))]))))
+(provide (for-syntax let-shared-id))
+(begin-for-syntax
+  (define-syntax-rule (let-shared-id (id ...) . body)
+    (with-syntax ([id (shared-syntax 'id)] ...)
+      . body)))
 
 (define-syntax (br:define-cases-inverting stx)
   (syntax-case stx (syntax)
@@ -293,6 +298,14 @@
     [(_ pat . body)
      #'(br:define (syntax pat) . body)]))
 
+(define-syntax (br:define-macro-cases stx)
+  (syntax-case stx (syntax)
+    [(_ pat . body)
+     #'(br:define-cases (syntax pat) . body)]))
+
+
 (module+ test
   (br:define-macro (add _x) #'(+ _x _x))
-  (check-equal? (add 5) 10))
+  (check-equal? (add 5) 10)
+  (br:define-macro-cases add-again [#'(_ X) #'(+ X X)])
+  (check-equal? (add-again 5) 10))
