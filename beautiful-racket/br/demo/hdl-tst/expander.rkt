@@ -1,5 +1,5 @@
 #lang br
-(require (for-syntax br/syntax br/scope racket/string) rackunit racket/file)
+(require (for-syntax br/syntax racket/string) rackunit racket/file)
 (provide #%top-interaction #%module-begin #%datum #%app (all-defined-out))
 
 
@@ -43,13 +43,13 @@
 
 (define-macro (load-expr CHIPFILE-STRING)
   (set! chip-prefix (string-replace (syntax->datum #'CHIPFILE-STRING) ".hdl" ""))
-  (let-syntax-pattern
+  (with-pattern
    ([CHIPFILE.RKT (format-string "~a.rkt" #'CHIPFILE-STRING)])
    #'(require CHIPFILE.RKT)))
 
 
 (define-macro (output-file-expr OUTPUT-FILE-STRING)
-  (introduce-id
+  (with-shared-id
    (output-file output-filename)
    #'(begin
        (define output-filename OUTPUT-FILE-STRING)
@@ -60,18 +60,18 @@
 
 
 (define-macro (compare-to-expr COMPARE-FILE-STRING)
-  (introduce-id
+  (with-shared-id
    (compare-files)
    #'(define (compare-files)
        (check-equal? (file->lines output-filename) (file->lines COMPARE-FILE-STRING)))))
 
 
 (define-macro (output-list-expr (COL-NAME FORMAT-SPEC) ...)
-  (introduce-id
+  (with-shared-id
    (eval-result eval-chip output)
-   (let-syntax-pattern
-    ([(COL-ID ...) (suffix-ids #'(COL-NAME ...))]
-     [(CHIP-COL-ID ...) (prefix-ids chip-prefix "-" #'(COL-NAME ...))])
+   (with-pattern
+    ([(COL-ID ...) (suffix-id #'(COL-NAME ...))]
+     [(CHIP-COL-ID ...) (prefix-id chip-prefix "-" #'(COL-NAME ...))])
     #'(begin
         (define (output COL-ID ...)
           (print-line output-filename (map print-cell (list COL-ID ...) (list FORMAT-SPEC ...))))
@@ -81,7 +81,7 @@
 
 
 (define-macro (set-expr IN-BUS IN-VAL)
-  (let-syntax-pattern
+  (with-pattern
    ([CHIP-IN-BUS-ID-WRITE (prefix-id chip-prefix "-" (suffix-id #'IN-BUS "-write"))])
    #'(CHIP-IN-BUS-ID-WRITE IN-VAL)))
 

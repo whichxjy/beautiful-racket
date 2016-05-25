@@ -104,28 +104,30 @@ base bus:
 (define-values (bus bus? bus-get)
   (make-impersonator-property 'bus))
 
-(define-cases #'define-base-bus
-  [#'(_macro-name _id _thunk) #'(_macro-name _id _thunk default-bus-width)]
-  [#'(_macro-name _id _thunk _bus-width-in)
-   (inject-syntax ([#'_id-thunk (suffix-id #'_id "-val")]
-                   [#'_bus-type (or (syntax-property caller-stx 'impersonate) #'bus)])
-                  #`(splicing-let ([_id-thunk _thunk]
-                                   [bus-width _bus-width-in])
-                      (define _id
-                        (begin
-                          (unless (<= bus-width max-bus-width)
-                            (raise-argument-error 'id (format "bus width <= max width ~a" max-bus-width) bus-width))
-                          (impersonate-procedure
-                           (let ([reader (make-bus-reader 'id bus-width)])
-                             (procedure-rename (λ args (apply reader (_id-thunk) args)) (string->symbol (format "~a, a bus of width ~a" '_id bus-width))))
-                           #f _bus-type #t)))
-                      #,(when (syntax-property caller-stx 'writer)
-                          (inject-syntax ([#'_id-write (suffix-id #'_id "-write")])
-                                         #'(define _id-write
-                                             (let ([writer (make-bus-writer 'id-write bus-width)])
-                                               (λ args
-                                                 (define result (apply writer (_id-thunk) args))
-                                                 (set! _id-thunk (λ () result)))))))))])
+(define-macro-cases define-base-bus
+  [#'(_macro-name ID THUNK) #'(_macro-name ID THUNK default-bus-width)]
+  [#'(_macro-name ID THUNK _bus-width-in)
+   (with-pattern
+    ([_id-thunk (suffix-id #'ID "-val")]
+     [_bus-type (or (syntax-property caller-stx 'impersonate) #'bus)])
+    #`(splicing-let ([_id-thunk THUNK]
+                     [bus-width _bus-width-in])
+        (define ID
+          (begin
+            (unless (<= bus-width max-bus-width)
+              (raise-argument-error 'id (format "bus width <= max width ~a" max-bus-width) bus-width))
+            (impersonate-procedure
+             (let ([reader (make-bus-reader 'id bus-width)])
+               (procedure-rename (λ args (apply reader (_id-thunk) args)) (string->symbol (format "~a, a bus of width ~a" 'ID bus-width))))
+             #f _bus-type #t)))
+        #,(when (syntax-property caller-stx 'writer)
+            (with-pattern
+             ([_id-write (suffix-id #'ID "-write")])
+             #'(define _id-write
+                 (let ([writer (make-bus-writer 'id-write bus-width)])
+                   (λ args
+                     (define result (apply writer (_id-thunk) args))
+                     (set! _id-thunk (λ () result)))))))))])
 
 
 (module+ test
@@ -157,7 +159,7 @@ output bus:
 (define-values (output-bus output-bus? output-bus-get)
   (make-impersonator-property 'output-bus))
 
-(define #'(define-output-bus . _args)
+(define-macro (define-output-bus . _args)
   (syntax-property #'(define-base-bus . _args) 'impersonate #'output-bus))
 
 (module+ test
@@ -189,7 +191,7 @@ input bus:
 (define-values (input-bus input-bus? input-bus-get)
   (make-impersonator-property 'input-bus))
 
-(define-cases #'define-input-bus
+(define-macro-cases define-input-bus
   [#'(_macro-name _id)
    #'(_macro-name _id default-bus-width)]
   [#'(_macro-name _id _bus-width)

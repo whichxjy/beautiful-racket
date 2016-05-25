@@ -44,7 +44,7 @@
                    [remove-id (prefix-id "remove-" #'id)]
                    [id? (suffix-id #'id "?")]
                    [id* (suffix-id #'id "*")]
-                   [(scope-id-sis ...) (suffix-ids #'scope-ids "-sis")])
+                   [(scope-id-sis ...) (suffix-id #'scope-ids "-sis")])
        #'(begin
            (define id-sis
              (let ([sis-in (list scope-id-sis ...)])

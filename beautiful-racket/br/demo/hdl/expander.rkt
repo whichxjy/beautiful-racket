@@ -6,10 +6,10 @@
                             (in-spec (IN-BUS IN-WIDTH ...) ...)
                             (out-spec (OUT-BUS OUT-WIDTH ...) ...)
                             PART ...)
-  (let-syntax-pattern
+  (with-pattern
    ([CHIP-PREFIX (suffix-id #'CHIPNAME "-")]
-    [(IN-BUS-WRITE ...) (suffix-ids #'(IN-BUS ...) "-write")]
-    [(PREFIX-OUT-BUS ...) (prefix-ids #'CHIP-PREFIX #'(OUT-BUS ...))])
+    [(IN-BUS-WRITE ...) (suffix-id #'(IN-BUS ...) "-write")]
+    [(PREFIX-OUT-BUS ...) (prefix-id #'CHIP-PREFIX #'(OUT-BUS ...))])
    #'(begin
        (provide (prefix-out CHIP-PREFIX (combine-out IN-BUS ... IN-BUS-WRITE ...))) 
        (define-input-bus IN-BUS IN-WIDTH ...) ...
@@ -19,8 +19,8 @@
 
 
 (define-macro (part PARTNAME ((BUS-LEFT . BUS-LEFT-ARGS) BUS-RIGHT-EXPR) ...)
-  (let-syntax-pattern
-   ([(PARTNAME-BUS-LEFT ...) (prefix-ids #'PARTNAME "-" #'(BUS-LEFT ...))]
+  (with-pattern
+   ([(PARTNAME-BUS-LEFT ...) (prefix-id #'PARTNAME "-" #'(BUS-LEFT ...))]
     [CHIP-MODULE-PATH (format-string "~a.hdl.rkt" #'PARTNAME)])
    #'(begin
        (require (import-chip CHIP-MODULE-PATH) (for-syntax (import-chip CHIP-MODULE-PATH)))
@@ -41,9 +41,9 @@
         (syntax-case-partition #'(BUS-ASSIGNMENTS ...) ()
                                [((PREFIXED-WIRE . _) _)
                                 (syntax-local-eval (syntax-shift-phase-level #'(input-bus? PREFIXED-WIRE) 1))])])
-    (let-syntax-pattern
+    (with-pattern
      ([(((IN-BUS IN-BUS-ARG ...) IN-BUS-VALUE) ...) in-bus-assignments]
-      [(IN-BUS-WRITE ...) (suffix-ids #'(IN-BUS ...) "-write")]
+      [(IN-BUS-WRITE ...) (suffix-id #'(IN-BUS ...) "-write")]
       [((OUT-BUS-EXPR (NEW-OUT-BUS)) ...) out-bus-assignments])
      #'(begin
          (define-output-bus NEW-OUT-BUS

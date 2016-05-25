@@ -31,6 +31,7 @@
      #'(inject-syntax (stx-expr0)
                       (inject-syntax* (stx-expr ...) . body))]))
 
+(define-syntax with-pattern (make-rename-transformer #'inject-syntax*))
 (define-syntax let-syntax-pattern (make-rename-transformer #'inject-syntax*))
 (define-syntax let*-syntax-pattern (make-rename-transformer #'inject-syntax*))
 (define-syntax syntax-let (make-rename-transformer #'inject-syntax))
@@ -78,25 +79,33 @@
       (syntax->datum x)
       x))
 
-(define-syntax-rule (prefix-id _prefix ... _base)
-  (format-id _base "~a~a" (string-append (format "~a" (->unsyntax _prefix)) ...) (syntax-e _base)))
+(define-syntax-rule (prefix-id _prefix ... _base-or-bases)
+  (let* ([bob _base-or-bases]
+         [got-single? (and (not (list? bob)) (not (syntax->list bob)))]
+         [bases (if got-single?
+                    (list bob)
+                    bob)]
+         [result (syntax-case-map
+                  bases ()
+                  [base (format-id #'base "~a~a"
+                                   (string-append (format "~a" (->unsyntax _prefix)) ...)
+                                   (syntax-e #'base))])])
+    (if got-single? (car result) result)))
 
-(define-syntax-rule (prefix-ids _prefix ... _bases)
-  (syntax-case-map _bases ()
-                   [_base (prefix-id _prefix ... #'_base)]))
+(define-syntax-rule (infix-id _prefix _base-or-bases _suffix ...)
+  (let* ([bob _base-or-bases]
+         [got-single? (and (not (list? bob)) (not (syntax->list bob)))]
+         [bases (if got-single?
+                    (list bob)
+                    bob)]
+         [result (syntax-case-map
+                  bases ()
+                  [base (format-id #'base "~a~a~a" (->unsyntax _prefix) (syntax-e #'base)
+                                   (string-append (format "~a" (->unsyntax _suffix)) ...))])])
+    (if got-single? (car result) result)))
 
-(define-syntax-rule (infix-id _prefix _base _suffix ...)
-  (format-id _base "~a~a~a" (->unsyntax _prefix) (syntax-e _base) (string-append (format "~a" (->unsyntax _suffix)) ...)))
-
-(define-syntax-rule (infix-ids _prefix _bases _suffix ...)
-  (syntax-case-map _bases ()
-                   [_base (infix-id _prefix #'_base _suffix ...)]))
-
-(define-syntax-rule (suffix-id _base _suffix ...)
-  (infix-id "" _base _suffix ...))
-
-(define-syntax-rule (suffix-ids _bases _suffix ...)
-  (infix-ids "" _bases _suffix ...))
+(define-syntax-rule (suffix-id _base-or-bases _suffix ...)
+  (infix-id "" _base-or-bases _suffix ...))
 
 (define-syntax (syntax-property* stx)
   (syntax-case stx (quote)
@@ -121,4 +130,6 @@
 (define-syntax-rule (introduce-id (id ...) . body)
   (with-syntax ([id (syntax-local-introduce (datum->syntax #f 'id))] ...)
     . body))
-  
+
+(define-syntax with-shared-id (make-rename-transformer #'introduce-id))
+
