@@ -117,4 +117,8 @@
   (check-false (syntax-property* x 'foo))
   (check-true (syntax-property* x 'bar))
   (check-equal? (syntax-property* x 'foo 'bar 'zam) '(#f #t boni)))
+
+(define-syntax-rule (introduce-id (id ...) . body)
+  (with-syntax ([id (syntax-local-introduce (datum->syntax #f 'id))] ...)
+    . body))
   
