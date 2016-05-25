@@ -26,10 +26,9 @@ sum : product [("+" | "-") sum]
 
 product : value [("*" | "/") product]
 
-expr-list : expr ["," expr-list]*
-
-value : ID ["(" expr-list ")"]
-| "(" expr ")"
+@value : ID | id-expr
+| /"(" expr /")"
 | STRING
 | NUMBER
 
+/id-expr : ID [/"(" expr [/"," expr]* /")"]

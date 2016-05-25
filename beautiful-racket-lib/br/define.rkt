@@ -64,10 +64,12 @@
        (when (member 'else all-but-last-pat-datums)
          (raise-syntax-error 'define-cases "else case must be last" (syntax->datum #'top-id.name))))
      (with-syntax* ([((pat . result-exprs) ... else-result-exprs)
-                     (syntax-case #'patexprs (syntax else)
-                       [(((syntax pat) result-expr) ... (else . else-result-exprs))
+                     (syntax-parse #'patexprs
+                       #:literals (syntax else)
+                       ;; syntax notation on pattern is optional
+                       [(((~or (syntax pat) pat) result-expr) ... (else . else-result-exprs))
                         #'((pat result-expr) ... else-result-exprs)]
-                       [(((syntax pat) result-expr) ...)
+                       [(((~or (syntax pat) pat) result-expr) ...)
                         #'((pat result-expr) ... (list (raise-syntax-error 'define-cases (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'top-id.name))))])]
                     [LITERALS (generate-literals #'(pat ...))])
        #'(define-syntax top-id.name (λ (stx)
@@ -94,8 +96,8 @@
   (define foo-val 'got-foo-val)
   (define (foo-func) 'got-foo-func)
   (br:define-cases #'op
-                   [#'(_ "+") #''got-plus]
-                   [#'(_ _ARG) #''got-something-else]
+                   [(_ "+") #''got-plus]
+                   [(_ _ARG) #''got-something-else]
                    [#'(_) #'(foo-func)]
                    [#'_ #'foo-val])
   
@@ -295,17 +297,21 @@
 
 (define-syntax (br:define-macro stx)
   (syntax-case stx (syntax)
-    [(_ pat . body)
-     #'(br:define (syntax pat) . body)]))
+    [(_ (id . patargs) . body)
+     #'(br:define (syntax (id . patargs)) . body)]
+    [(_ id [pat . patbody] ...)
+     #'(br:define-cases (syntax id) [pat . patbody] ...)]))
 
 (define-syntax (br:define-macro-cases stx)
   (syntax-case stx (syntax)
-    [(_ pat . body)
-     #'(br:define-cases (syntax pat) . body)]))
+    [(_ id . body)
+     #'(br:define-cases (syntax id) . body)]))
 
 
 (module+ test
   (br:define-macro (add _x) #'(+ _x _x))
   (check-equal? (add 5) 10)
-  (br:define-macro-cases add-again [#'(_ X) #'(+ X X)])
-  (check-equal? (add-again 5) 10))
+  (br:define-macro-cases add-again [(_ X) #'(+ X X)])
+  (check-equal? (add-again 5) 10)
+  (br:define-macro add-3rd [(_ X) #'(+ X X)])
+  (check-equal? (add-3rd 5) 10))

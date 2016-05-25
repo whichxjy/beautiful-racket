@@ -64,7 +64,7 @@
     [(_ _base-type _input-var
         [_subtype (_positional-var ...) . _body] ...
         [else . _else-body])
-     (inject-syntax ([#'(_subtype? ...) (suffix-ids #'(_subtype ...) "?")])
+     (inject-syntax ([#'(_subtype? ...) (suffix-id #'(_subtype ...) "?")])
                     #'(cond
                         [(_subtype? _input-var) (match-let ([(list _positional-var ...) (struct->list _input-var)])
                                                     . _body)] ...
