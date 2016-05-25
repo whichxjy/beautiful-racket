@@ -297,10 +297,12 @@
 
 (define-syntax (br:define-macro stx)
   (syntax-case stx (syntax)
+    [(_ id #'other-id) ; (define-macro id #'other-id)
+     #'(br:define #'id #'other-id)]
     [(_ (id . patargs) . body)
-     #'(br:define (syntax (id . patargs)) . body)]
+     #'(br:define #'(id . patargs) . body)]
     [(_ id [pat . patbody] ...)
-     #'(br:define-cases (syntax id) [pat . patbody] ...)]))
+     #'(br:define-cases #'id [pat . patbody] ...)]))
 
 (define-syntax (br:define-macro-cases stx)
   (syntax-case stx (syntax)
@@ -314,4 +316,6 @@
   (br:define-macro-cases add-again [(_ X) #'(+ X X)])
   (check-equal? (add-again 5) 10)
   (br:define-macro add-3rd [(_ X) #'(+ X X)])
-  (check-equal? (add-3rd 5) 10))
+  (check-equal? (add-3rd 5) 10)
+  (br:define-macro add-4th #'add-3rd)
+  (check-equal? (add-4th 5) 10))

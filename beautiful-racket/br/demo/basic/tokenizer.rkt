@@ -15,9 +15,8 @@
     (define get-token
       (lexer
        [(eof) eof]
-       [(union #\tab #\space
+       [(union #\tab #\space #\newline
                (seq number " REM" (repetition 1 +inf.0 (char-complement #\newline)) #\newline)) (get-token input-port)]
-       [(seq #\newline (repetition 0 +inf.0 whitespace)) (token 'CR "cr")]
        [(union "PRINT" "FOR" "TO" "STEP" "IF" "GOTO"
                "INPUT" "LET" "NEXT"  "RETURN"
                "CLEAR" "LIST" "RUN" "END"

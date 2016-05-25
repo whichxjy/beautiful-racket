@@ -69,11 +69,8 @@
                   (current-return-stack (cons NUMBER (current-return-stack)))
                   (basic:GOTO WHERE)]
                  [else (current-return-stack (cdr (current-return-stack)))]))))]
-  [(_ NUMBER STATEMENT-LIST) #'(cons NUMBER (λ _ STATEMENT-LIST))])
+  [(_ NUMBER STATEMENT ...) #'(cons NUMBER (λ _ STATEMENT ...))])
 
-(define-macro statement-list
-  [(_ STATEMENT) #'(begin STATEMENT)]
-  [(_ STATEMENT ":" STATEMENT-LIST) #'(begin STATEMENT STATEMENT-LIST)])
 
 (define-macro statement
   [(statement ID "=" EXPR) #'(set! ID EXPR)]

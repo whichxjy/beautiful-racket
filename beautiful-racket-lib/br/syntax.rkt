@@ -132,4 +132,5 @@
     . body))
 
 (define-syntax with-shared-id (make-rename-transformer #'introduce-id))
+(define-syntax mark-as-shared-id (make-rename-transformer #'introduce-id))
 

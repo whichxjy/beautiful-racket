@@ -1,11 +1,8 @@
 #lang brag
 
-;; recursive rules destucture easily in the expander
-program : [CR]* [line [CR line]*] [CR]*
+program : line*
 
-line: NUMBER statement-list
-
-statement-list : statement [":" statement-list]
+line: NUMBER statement [":" statement]*
 
 statement : "END"
 | "GOSUB" NUMBER

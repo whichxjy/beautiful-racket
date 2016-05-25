@@ -49,7 +49,7 @@
 
 
 (define-macro (output-file-expr OUTPUT-FILE-STRING)
-  (with-shared-id
+  (mark-as-shared-id
    (output-file output-filename)
    #'(begin
        (define output-filename OUTPUT-FILE-STRING)
@@ -60,14 +60,14 @@
 
 
 (define-macro (compare-to-expr COMPARE-FILE-STRING)
-  (with-shared-id
+  (mark-as-shared-id
    (compare-files)
    #'(define (compare-files)
        (check-equal? (file->lines output-filename) (file->lines COMPARE-FILE-STRING)))))
 
 
 (define-macro (output-list-expr (COL-NAME FORMAT-SPEC) ...)
-  (with-shared-id
+  (mark-as-shared-id
    (eval-result eval-chip output)
    (with-pattern
     ([(COL-ID ...) (suffix-id #'(COL-NAME ...))]

@@ -21,7 +21,7 @@
 ;; ============================================================
 ;; Overall module:
 
-(define #'(module-begin _lines ...)
+(define-macro (module-begin _lines ...)
   #'(#%module-begin
      _lines ...
      
@@ -35,46 +35,44 @@
 ;; Process parse trees from the reader:
 
 (provide txtadv-program)
-(define #'txtadv-program #'module-begin)
+(define-macro txtadv-program #'module-begin)
 
 (provide verb-section)
-(define #'(verb-section
-           ((_name0 . _transitive0?)
-            (_name . _transitive?) ... _desc) ...)
-  (inject-syntax ([#'in-verbs (shared-syntax 'in-verbs)])
-                 #'(define-verbs in-verbs
-                     [_name0 #,@(if (syntax->datum #'_transitive0?) #'(_) #'()) (= _name ...) _desc] ...)))
+(define-macro-cases verb-section
+  [(_ ((NAME0 . TRANSITIVE0?) (NAME . _) ... DESC) ...)
+   (mark-as-shared-id
+    (in-verbs)
+    #'(define-verbs in-verbs
+        [(NAME0 . TRANSITIVE0?) (= NAME ...) DESC] ...))])
 
 (provide everywhere-section)
-(define #'(everywhere-section [_id _desc] ...)
+(define-macro (everywhere-section [ID DESC] ...)
   #'(define-everywhere everywhere-actions
-      ([_id _desc] ...)))
+      ([ID DESC] ...)))
 
 (provide things-section)
-(define #'(things-section (_thingname (_actionname _actiondesc) ...) ...)
-  #'(begin (define-thing _thingname [_actionname _actiondesc] ...) ...))
+(define-macro (things-section (THINGNAME (ACTIONNAME ACTIONDESC) ...) ...)
+  #'(begin (define-thing THINGNAME [ACTIONNAME ACTIONDESC] ...) ...))
 
 (provide places-section)
-(define #'(places-section (_place-id _place-desc [_place-item ...] [_actionname _actiondesc] ...) ...)
-  #'(begin (define-place _place-id _place-desc [_place-item ...] ([_actionname _actiondesc] ...)) ...))
+(define-macro (places-section (PLACE-ID PLACE-DESC [PLACE-ITEM ...] [ACTIONNAME ACTIONDESC] ...) ...)
+  #'(begin (define-place PLACE-ID PLACE-DESC [PLACE-ITEM ...] ([ACTIONNAME ACTIONDESC] ...)) ...))
 
 
 ;; todo: consolidate the game-starters.
 ;; `start-game-at` works with s-exp language,
 ;; `start-section` works with text lang. 
 (provide start-game-at)
-(define #'(start-game-at _where)
-  (inject-syntax ([#'in-verbs (shared-syntax 'in-verbs)])
-                 #'(init-game _where
-                              in-verbs
-                              everywhere-actions)))
+(define-macro (start-game-at WHERE)
+  #'(init-game WHERE
+               in-verbs
+               everywhere-actions))
 
 (provide start-section)
-(define #'(start-section _where)
-  (inject-syntax ([#'in-verbs (shared-syntax 'in-verbs)])
-                 #'(init-game _where
-                              in-verbs
-                              everywhere-actions)))
+(define-macro (start-section WHERE)
+  #'(init-game WHERE
+               in-verbs
+               everywhere-actions))
 
 ;; ============================================================
 ;; Model:
@@ -108,42 +106,42 @@
 ;; ============================================================
 ;; Macros for constructing and registering elements:
 
-(define #'(define-verbs _all-id [_id _spec ...] ...)
+(define-macro (define-verbs ALL-ID [(ID . MAYBE-UNDERSCORE) SPEC ...] ...)
   #'(begin
-      (define-one-verb _id _spec ...) ...
-      (record-element! '_id _id) ...
-      (define _all-id (list _id ...))))
+      (define-one-verb (ID . MAYBE-UNDERSCORE) SPEC ...) ...
+      (record-element! 'ID ID) ...
+      (define ALL-ID (list ID ...))))
 
 
 ;; todo: the underscore arguments in cases 2 & 4 should be literal underscores, not wildcards
-(define-cases #'define-one-verb
-  [#'(_ _id (= _alias ...) _desc)
-   #'(define _id (verb (list '_id '_alias ...) _desc #f))]
-  [#'(_ _id _ (= _alias ...) _desc)
-   #'(define _id (verb (list '_id '_alias ...) _desc #t))]
-  [#'(_ _id)
-   #'(define _id (verb (list '_id) (symbol->string '_id) #f))]
-  [#'(_ _id _)
-   #'(define _id (verb (list '_id) (symbol->string '_id) #t))])
+(define-macro (define-one-verb (ID . MAYBE-UNDERSCORE) . REST)
+  (with-pattern
+   ([TRANSITIVE? (equal? '("_") (syntax->datum #'MAYBE-UNDERSCORE))]
+    [VERB-ARGS (syntax-case #'REST ()
+                 [((= ALIAS ...) DESC)
+                  #'((list 'ID 'ALIAS ...) DESC TRANSITIVE?)]
+                 [else
+                  #'((list 'ID) (symbol->string 'ID) TRANSITIVE?)])])
+   #'(define ID (verb . VERB-ARGS))))
 
 
-(define #'(define-thing _id [_vrb _expr] ...)
+(define-macro (define-thing ID [VERB-ARG EXPR] ...)
   #'(begin
-      (define _id
-        (thing '_id #f (list (cons _vrb (λ () _expr)) ...)))
-      (record-element! '_id _id)))
+      (define ID
+        (thing 'ID #f (list (cons VERB-ARG (λ () EXPR)) ...)))
+      (record-element! 'ID ID)))
 
 
-(define #'(define-place _id _desc (_thng ...) ([_vrb _expr] ...))
+(define-macro (define-place ID DESC (THING-ARG ...) ([VERB-ARG EXPR] ...))
   #'(begin
-      (define _id (place _desc
-                         (list _thng ...)
-                         (list (cons _vrb (λ () _expr)) ...)))
-      (record-element! '_id _id)))
+      (define ID (place DESC
+                        (list THING-ARG ...)
+                        (list (cons VERB-ARG (λ () EXPR)) ...)))
+      (record-element! 'ID ID)))
 
 
-(define #'(define-everywhere _id ([_vrb _expr] ...))
-  #'(define _id (list (cons _vrb (λ () _expr)) ...)))
+(define-macro (define-everywhere ID ([VERB-ARG EXPR] ...))
+  #'(define ID (list (cons VERB-ARG (λ () EXPR)) ...)))
 
 ;; ============================================================
 ;; Game state
