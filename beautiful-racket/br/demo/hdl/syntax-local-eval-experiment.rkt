@@ -1,21 +1,31 @@
-#lang racket
-(require (for-syntax racket/syntax))
+#lang br
+(require (for-syntax racket/syntax) rackunit)
 
 (module pred racket
-  (provide pred?)
+  (provide pred? val)
+  (define val 43)
   (define (pred? x) (zero? (modulo x 7))))
 
 (require 'pred)
-(require (for-syntax 'pred))
 
-(define val 42)
-(define-for-syntax val 43)
 
 (define-syntax (foo stx)
   (syntax-case stx ()
-    [(_) (if (syntax-local-eval (syntax-shift-phase-level #'(pred? val) 0))
-             #''yay
-             #''boo)]))
+    [(_) #'(if (pred? val)
+               'yay
+               'boo)]))
 
-(foo)
+(check-equal? (foo) 'boo)
+
+
+(define-syntax (foo2 stx)
+  (syntax-case stx ()
+    [(_)
+     (let ()
+       (local-require (submod "." pred))
+       (if (syntax-local-eval (syntax-shift-phase-level #'(pred? val) 1))
+             #''yay
+             #''boo))]))
+
+(check-equal? (foo2) 'boo)
 

@@ -128,4 +128,9 @@
   (check-equal? (syntax-property* x 'foo 'bar 'zam) '(#f #t boni)))
 
 
+;; the Søgaard technique
+;; http://blog.scheme.dk/2006/05/how-to-write-unhygienic-macro.html
+(define-syntax-rule (introduce-id (id ...) . body)
+  (with-syntax ([id (syntax-local-introduce (syntax-local-get-shadower #'id))] ...)
+    . body))
 

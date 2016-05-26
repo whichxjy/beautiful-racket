@@ -1,5 +1,5 @@
 #lang br
-(require "helper.rkt" (for-syntax racket/syntax racket/require-transform br/syntax))
+(require "helper.rkt" (for-syntax racket/syntax racket/require-transform br/syntax "helper.rkt"))
 (provide #%top-interaction #%module-begin #%app #%datum (all-defined-out))
 
 (define-macro (chip-program CHIPNAME
@@ -34,29 +34,13 @@
        [(_ module-path)
         (expand-import #'module-path)]))))
 
+
 (define-macro (handle-buses BUS-ASSIGNMENTS ...)
   (let-values
       ([(in-bus-assignments out-bus-assignments)
         (syntax-case-partition #'(BUS-ASSIGNMENTS ...) ()
                                [((PREFIXED-WIRE . _) _)
-                                (let ()
-                                  #|
-phase 1 binding with `for-syntax` import active, no shift: (works)
-'(#<module-path-index:("Nand.hdl.rkt")> a #<module-path-index:("Nand.hdl.rkt")> Nand-a 0 1 0)
-phase 1 binding without `for-syntax` import (only regular require), but shifted up 1: (doesn't work)
-'(#<module-path-index:("Nand.hdl.rkt")> a #<module-path-index:("Nand.hdl.rkt")> Nand-a 0 0 0)
-phase 1 binding of `input-bus?` with shift 1:
-'(#<module-path-index:("helper.rkt" br/demo/hdl/expander)> input-bus #<module-path-index:("helper.rkt" br/demo/hdl/expander)> input-bus 0 0 0)
-|#
-                                  
-                                  
-                                  (syntax-local-eval (with-syntax ([ib (syntax-shift-phase-level #'input-bus? 1)]
-                                                                   [pw (syntax-shift-phase-level #'PREFIXED-WIRE 1)])
-                                                       #;(report (identifier-binding #'input-bus? 0))
-                                                       #;(report (identifier-binding #'ib 1))
-                                                       #;(report (identifier-binding #'PREFIXED-WIRE 0))
-                                                       #;(report (identifier-binding #'pw 1))
-                                                       #'(ib pw))))])])
+                                (input-bus? (syntax-local-eval #'PREFIXED-WIRE))])])
     (with-pattern
      ([(((IN-BUS IN-BUS-ARG ...) IN-BUS-VALUE) ...) in-bus-assignments]
       [(IN-BUS-WRITE ...) (suffix-id #'(IN-BUS ...) "-write")]
