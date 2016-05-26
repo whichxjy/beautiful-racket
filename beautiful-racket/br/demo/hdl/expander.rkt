@@ -23,7 +23,7 @@
    ([(PARTNAME-BUS-LEFT ...) (prefix-id #'PARTNAME "-" #'(BUS-LEFT ...))]
     [CHIP-MODULE-PATH (format-string "~a.hdl.rkt" #'PARTNAME)])
    #'(begin
-       (require (import-chip CHIP-MODULE-PATH) (for-syntax (import-chip CHIP-MODULE-PATH)))
+       (require (import-chip CHIP-MODULE-PATH) #;(for-syntax (import-chip CHIP-MODULE-PATH)))
        (handle-buses ((PARTNAME-BUS-LEFT . BUS-LEFT-ARGS) BUS-RIGHT-EXPR) ...))))
 
 
@@ -34,13 +34,13 @@
        [(_ module-path)
         (expand-import #'module-path)]))))
 
-
+(require (for-syntax rackunit))
 (define-macro (handle-buses BUS-ASSIGNMENTS ...)
   (let-values
       ([(in-bus-assignments out-bus-assignments)
         (syntax-case-partition #'(BUS-ASSIGNMENTS ...) ()
                                [((PREFIXED-WIRE . _) _)
-                                (let ([pw (syntax-shift-phase-level #'PREFIXED-WIRE 0)])
+                                (let ()
                                   #|
 phase 1 binding with `for-syntax` import active, no shift: (works)
 '(#<module-path-index:("Nand.hdl.rkt")> a #<module-path-index:("Nand.hdl.rkt")> Nand-a 0 1 0)
@@ -49,7 +49,18 @@ phase 1 binding without `for-syntax` import (only regular require), but shifted 
 phase 1 binding of `input-bus?` with shift 1:
 '(#<module-path-index:("helper.rkt" br/demo/hdl/expander)> input-bus #<module-path-index:("helper.rkt" br/demo/hdl/expander)> input-bus 0 0 0)
 |#
-                                  (syntax-local-eval (syntax-shift-phase-level #`(input-bus? #,pw) 1)))])])
+                                  
+                                  
+                                  (syntax-local-eval (with-syntax ([ib (syntax-shift-phase-level #'input-bus? 1)]
+                                                                   [pw (syntax-shift-phase-level #'PREFIXED-WIRE 3)])
+                                                       #;(report (identifier-binding #'input-bus? 0))
+                                                       #;(report (identifier-binding #'ib 1))
+                                                       #;(report (identifier-binding #'PREFIXED-WIRE 0))
+                                                       #;(report (identifier-binding #'pw 1))
+                                                       #'(ib pw))))])])
+    (check-equal? (length in-bus-assignments) 2)
+    (check-equal? (length out-bus-assignments) 1)
+    (error 'stop)
     (with-pattern
      ([(((IN-BUS IN-BUS-ARG ...) IN-BUS-VALUE) ...) in-bus-assignments]
       [(IN-BUS-WRITE ...) (suffix-id #'(IN-BUS ...) "-write")]
