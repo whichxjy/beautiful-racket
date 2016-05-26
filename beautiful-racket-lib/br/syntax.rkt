@@ -127,10 +127,5 @@
   (check-true (syntax-property* x 'bar))
   (check-equal? (syntax-property* x 'foo 'bar 'zam) '(#f #t boni)))
 
-(define-syntax-rule (introduce-id (id ...) . body)
-  (with-syntax ([id (syntax-local-introduce (datum->syntax #f 'id))] ...)
-    . body))
 
-(define-syntax with-shared-id (make-rename-transformer #'introduce-id))
-(define-syntax mark-as-shared-id (make-rename-transformer #'introduce-id))
 

@@ -6,7 +6,7 @@
          (all-from-out racket/list racket/string racket/format racket/match racket/port
                        br/syntax br/datum br/debug br/conditional)
          (for-syntax (all-from-out racket/base racket/syntax br/syntax br/debug))
-         (for-syntax caller-stx shared-syntax let-shared-id) ; from br/define
+         (for-syntax caller-stx shared-syntax with-shared-id with-calling-site-id) ; from br/define
          (filtered-out
           (λ (name)
             (let ([pat (regexp "^br:")])

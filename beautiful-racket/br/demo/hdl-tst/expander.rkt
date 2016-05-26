@@ -36,9 +36,11 @@
 
 
 (define-macro (tst-program EXPR ...)
-  #'(begin
-      EXPR ...
-      (compare-files)))
+  (with-shared-id
+   (compare-files)
+   #'(begin
+       EXPR ...
+       (compare-files))))
 
 
 (define-macro (load-expr CHIPFILE-STRING)
@@ -49,7 +51,7 @@
 
 
 (define-macro (output-file-expr OUTPUT-FILE-STRING)
-  (mark-as-shared-id
+  (with-shared-id
    (output-file output-filename)
    #'(begin
        (define output-filename OUTPUT-FILE-STRING)
@@ -60,15 +62,15 @@
 
 
 (define-macro (compare-to-expr COMPARE-FILE-STRING)
-  (mark-as-shared-id
-   (compare-files)
+  (with-shared-id
+   (compare-files output-filename)
    #'(define (compare-files)
        (check-equal? (file->lines output-filename) (file->lines COMPARE-FILE-STRING)))))
 
 
 (define-macro (output-list-expr (COL-NAME FORMAT-SPEC) ...)
-  (mark-as-shared-id
-   (eval-result eval-chip output)
+  (with-shared-id
+   (eval-result eval-chip output output-filename)
    (with-pattern
     ([(COL-ID ...) (suffix-id #'(COL-NAME ...))]
      [(CHIP-COL-ID ...) (prefix-id chip-prefix "-" #'(COL-NAME ...))])
@@ -86,7 +88,13 @@
    #'(CHIP-IN-BUS-ID-WRITE IN-VAL)))
 
 
-(define-macro (eval-expr) #'(set! eval-result (eval-chip)))
+(define-macro (eval-expr)
+  (with-shared-id
+   (eval-result eval-chip)
+   #'(set! eval-result (eval-chip))))
 
 
-(define-macro (output-expr) #'(apply output eval-result))
+(define-macro (output-expr)
+  (with-shared-id
+   (output eval-result)
+   #'(apply output eval-result)))

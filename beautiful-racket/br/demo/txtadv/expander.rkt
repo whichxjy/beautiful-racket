@@ -40,7 +40,7 @@
 (provide verb-section)
 (define-macro-cases verb-section
   [(_ ((NAME0 . TRANSITIVE0?) (NAME . _) ... DESC) ...)
-   (mark-as-shared-id
+   (with-shared-id
     (in-verbs)
     #'(define-verbs in-verbs
         [(NAME0 . TRANSITIVE0?) (= NAME ...) DESC] ...))])
@@ -70,9 +70,11 @@
 
 (provide start-section)
 (define-macro (start-section WHERE)
-  #'(init-game WHERE
-               in-verbs
-               everywhere-actions))
+  (with-shared-id
+   (in-verbs)
+   #'(init-game WHERE
+                in-verbs
+                everywhere-actions)))
 
 ;; ============================================================
 ;; Model:
