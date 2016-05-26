@@ -40,7 +40,16 @@
       ([(in-bus-assignments out-bus-assignments)
         (syntax-case-partition #'(BUS-ASSIGNMENTS ...) ()
                                [((PREFIXED-WIRE . _) _)
-                                (syntax-local-eval (syntax-shift-phase-level #'(input-bus? PREFIXED-WIRE) 1))])])
+                                (let ([pw (syntax-shift-phase-level #'PREFIXED-WIRE 0)])
+                                  #|
+phase 1 binding with `for-syntax` import active, no shift: (works)
+'(#<module-path-index:("Nand.hdl.rkt")> a #<module-path-index:("Nand.hdl.rkt")> Nand-a 0 1 0)
+phase 1 binding without `for-syntax` import (only regular require), but shifted up 1: (doesn't work)
+'(#<module-path-index:("Nand.hdl.rkt")> a #<module-path-index:("Nand.hdl.rkt")> Nand-a 0 0 0)
+phase 1 binding of `input-bus?` with shift 1:
+'(#<module-path-index:("helper.rkt" br/demo/hdl/expander)> input-bus #<module-path-index:("helper.rkt" br/demo/hdl/expander)> input-bus 0 0 0)
+|#
+                                  (syntax-local-eval (syntax-shift-phase-level #`(input-bus? #,pw) 1)))])])
     (with-pattern
      ([(((IN-BUS IN-BUS-ARG ...) IN-BUS-VALUE) ...) in-bus-assignments]
       [(IN-BUS-WRITE ...) (suffix-id #'(IN-BUS ...) "-write")]
