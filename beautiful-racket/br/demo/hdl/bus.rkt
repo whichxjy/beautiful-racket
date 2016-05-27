@@ -1,5 +1,5 @@
 #lang br
-(require racket/list (for-syntax br/syntax) racket/splicing)
+(require racket/list (for-syntax br/syntax) racket/splicing "bus-properties.rkt")
 (provide (all-defined-out))
 
 (module+ test
@@ -101,8 +101,6 @@ base bus:
 |#
 
 
-(define-values (bus bus? bus-get)
-  (make-impersonator-property 'bus))
 
 (define-macro-cases define-base-bus
   [#'(_macro-name ID THUNK) #'(_macro-name ID THUNK default-bus-width)]
@@ -156,8 +154,8 @@ output bus:
 + cannot write
 |#
 
-(define-values (output-bus output-bus? output-bus-get)
-  (make-impersonator-property 'output-bus))
+
+
 
 (define-macro (define-output-bus . _args)
   (syntax-property #'(define-base-bus . _args) 'impersonate #'output-bus))
@@ -188,8 +186,6 @@ input bus:
 + can write all, or bits
 |#
 
-(define-values (input-bus input-bus? input-bus-get)
-  (make-impersonator-property 'input-bus))
 
 (define-macro-cases define-input-bus
   [#'(_macro-name _id)

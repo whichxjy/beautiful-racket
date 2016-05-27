@@ -1,6 +1,6 @@
 #lang br
 (provide (prefix-out Nand- (all-defined-out)))
-(require "helper.rkt")
+(require "bus.rkt")
 
 (define-input-bus a)
 (define-input-bus b)

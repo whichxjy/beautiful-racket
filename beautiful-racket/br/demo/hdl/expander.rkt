@@ -1,5 +1,5 @@
 #lang br
-(require "helper.rkt" (for-syntax racket/syntax racket/require-transform br/syntax "helper.rkt"))
+(require "bus.rkt" (for-syntax racket/syntax racket/require-transform br/syntax "bus-properties.rkt"))
 (provide #%top-interaction #%module-begin #%app #%datum (all-defined-out))
 
 (define-macro (chip-program CHIPNAME
@@ -21,13 +21,13 @@
 (define-macro (part PARTNAME ((BUS-LEFT . BUS-LEFT-ARGS) BUS-RIGHT-EXPR) ...)
   (with-pattern
    ([(PARTNAME-BUS-LEFT ...) (prefix-id #'PARTNAME "-" #'(BUS-LEFT ...))]
-    [CHIP-MODULE-PATH (format-string "~a.hdl.rkt" #'PARTNAME)])
+    [PARTNAME-MODULE-PATH (format-string "~a.hdl.rkt" #'PARTNAME)])
    #'(begin
-       (require (import-chip CHIP-MODULE-PATH)
+       (require (import-chip PARTNAME-MODULE-PATH)
                 ;; need for-syntax to make phase 1 binding available
                 ;; so we can determine during expansion which buses are `input-bus?`
                 ;; because the pin-spec syntax is inherently ambiguous
-                (for-syntax (import-chip CHIP-MODULE-PATH))) 
+                (for-syntax (import-chip PARTNAME-MODULE-PATH))) 
        (handle-buses ((PARTNAME-BUS-LEFT . BUS-LEFT-ARGS) BUS-RIGHT-EXPR) ...))))
 
 
@@ -46,7 +46,7 @@
                                [((PREFIXED-WIRE . _) _)
                                 ;; we "pre-evaluate" #'PREFIXED-WIRE so we can set up the program correctly.
                                 ;; This is not ideal: usually we want evaluate runtime expressions only at runtime.
-                                ;; But in this case, it controls which identifiers we `define`
+                                ;; But in this case, it controls which identifiers we `define` as output buses
                                 ;; so there's no way around it. Runtime would be too late.
                                 (input-bus? (syntax-local-eval #'PREFIXED-WIRE))])])
     (with-pattern
