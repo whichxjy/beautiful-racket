@@ -11,7 +11,7 @@
     [(IN-BUS-WRITE ...) (suffix-id #'(IN-BUS ...) "-write")]
     [(PREFIX-OUT-BUS ...) (prefix-id #'CHIP-PREFIX #'(OUT-BUS ...))])
    #'(begin
-       (provide (prefix-out CHIP-PREFIX (combine-out IN-BUS ... IN-BUS-WRITE ...))) 
+       (provide (prefix-out CHIP-PREFIX (combine-out IN-BUS ... IN-BUS-WRITE ...)))
        (define-input-bus IN-BUS IN-WIDTH ...) ...
        PART ...
        (provide PREFIX-OUT-BUS ...)
@@ -23,7 +23,11 @@
    ([(PARTNAME-BUS-LEFT ...) (prefix-id #'PARTNAME "-" #'(BUS-LEFT ...))]
     [CHIP-MODULE-PATH (format-string "~a.hdl.rkt" #'PARTNAME)])
    #'(begin
-       (require (import-chip CHIP-MODULE-PATH) (for-syntax (import-chip CHIP-MODULE-PATH)))
+       (require (import-chip CHIP-MODULE-PATH)
+                ;; need for-syntax to make phase 1 binding available
+                ;; so we can determine during expansion which buses are `input-bus?`
+                ;; because the pin-spec syntax is inherently ambiguous
+                (for-syntax (import-chip CHIP-MODULE-PATH))) 
        (handle-buses ((PARTNAME-BUS-LEFT . BUS-LEFT-ARGS) BUS-RIGHT-EXPR) ...))))
 
 
@@ -40,6 +44,10 @@
       ([(in-bus-assignments out-bus-assignments)
         (syntax-case-partition #'(BUS-ASSIGNMENTS ...) ()
                                [((PREFIXED-WIRE . _) _)
+                                ;; we "pre-evaluate" #'PREFIXED-WIRE so we can set up the program correctly.
+                                ;; This is not ideal: usually we want evaluate runtime expressions only at runtime.
+                                ;; But in this case, it controls which identifiers we `define`
+                                ;; so there's no way around it. Runtime would be too late.
                                 (input-bus? (syntax-local-eval #'PREFIXED-WIRE))])])
     (with-pattern
      ([(((IN-BUS IN-BUS-ARG ...) IN-BUS-VALUE) ...) in-bus-assignments]

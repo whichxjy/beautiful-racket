@@ -12,7 +12,7 @@
 
 (module+ test
   (require rackunit)
-  (check-equal? (begin (a 0) (b 0) (out)) 1)
-  (check-equal? (begin (a 0) (b 1) (out)) 1)
-  (check-equal? (begin (a 1) (b 0) (out)) 1)
-  (check-equal? (begin (a 1) (b 1) (out)) 0))
+  (check-equal? (begin (a-write 0) (b-write 0) (out)) 1)
+  (check-equal? (begin (a-write 0) (b-write 1) (out)) 1)
+  (check-equal? (begin (a-write 1) (b-write 0) (out)) 1)
+  (check-equal? (begin (a-write 1) (b-write 1) (out)) 0))

@@ -33,33 +33,35 @@
   (check-equal? #xA (glue-bytes (list #xA)))
   (check-equal? #x0 (glue-bytes (list #x0))))
 
-(define-syntax (define-memory-vector stx)
-  (syntax-case stx ()
-    [(_ ID [FIELD LENGTH SIZE] ...)
-     (with-syntax ([(ID-FIELD-REF ...) (map (λ(field) (format-id stx "~a-~a-ref" #'ID field)) (syntax->list #'(FIELD ...)))]
-                   [(ID-FIELD-SET! ...) (map (λ(field) (format-id stx "~a-~a-set!" #'ID field)) (syntax->list #'(FIELD ...)))]
-                   [(FIELD-OFFSET ...) (reverse (cdr
-                                                 (for/fold ([offsets '(0)])
-                                                           ([len (in-list (syntax->list #'(LENGTH ...)))]
-                                                            [size (in-list  (syntax->list #'(SIZE ...)))])
-                                                   (cons (+ (syntax-local-eval #`(* #,len #,size)) (car offsets)) offsets))))])
-       #'(begin
-           (define ID (make-vector (+ (* LENGTH SIZE) ...)))
-           (define (ID-FIELD-REF idx)
-             (unless (< idx LENGTH)
-               (raise-argument-error 'ID-FIELD-REF (format "index less than field length ~a" LENGTH) idx))
-             (glue-bytes
-              (for/list ([i (in-range SIZE)])
-                        (vector-ref ID (+ FIELD-OFFSET i idx)))))
-           ...
-           (define (ID-FIELD-SET! idx val)
-             (unless (< idx LENGTH)
-               (raise-argument-error 'ID-FIELD-SET! (format "index less than field length ~a" LENGTH) idx))
-             (unless (< val (expt 16 SIZE))
-               (raise-argument-error 'ID-FIELD-SET! (format "value less than field size ~a" (expt 16 SIZE)) val))
-             (for ([i (in-range SIZE)]
-                   [b (in-list (explode-bytes val))])
-                  (vector-set! ID (+ FIELD-OFFSET i idx) b))) ...))]))
+(define-macro (define-memory-vector ID [FIELD LENGTH SIZE] ...)
+  (with-pattern
+   ([(PREFIXED-ID ...)  (prefix-id #'ID "-" #'(FIELD ...))]
+    [(PREFIXED-ID-REF ...) (suffix-id #'(PREFIXED-ID ...) "-ref")]
+    [(PREFIXED-ID-SET! ...) (suffix-id #'(PREFIXED-ID ...) "-set!")]
+    [(FIELD-OFFSET ...) (reverse (cdr
+                                  (for/fold ([accum-stxs (list #'0)])
+                                            ([len-size-stx (in-list (syntax->list #'((LENGTH SIZE) ...)))])
+                                    (cons (with-pattern
+                                           ([accum (car accum-stxs)]
+                                            [(len size) len-size-stx])
+                                           #'(+ (* len size) accum)) accum-stxs))))])
+   #'(begin
+       (define ID (make-vector (+ (* LENGTH SIZE) ...)))
+       (define (PREFIXED-ID-REF idx)
+         (unless (< idx LENGTH)
+           (raise-argument-error 'PREFIXED-ID-REF (format "index less than field length ~a" LENGTH) idx))
+         (glue-bytes
+          (for/list ([i (in-range SIZE)])
+                    (vector-ref ID (+ FIELD-OFFSET i idx)))))
+       ...
+       (define (PREFIXED-ID-SET! idx val)
+         (unless (< idx LENGTH)
+           (raise-argument-error 'PREFIXED-ID-SET! (format "index less than field length ~a" LENGTH) idx))
+         (unless (< val (expt 16 SIZE))
+           (raise-argument-error 'PREFIXED-ID-SET! (format "value less than field size ~a" (expt 16 SIZE)) val))
+         (for ([i (in-range SIZE)]
+               [b (in-list (explode-bytes val))])
+              (vector-set! ID (+ FIELD-OFFSET i idx) b))) ...)))
 
 (define-memory-vector chip 
   [opcode 1 2] ; two bytes
