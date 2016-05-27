@@ -80,9 +80,23 @@
 ;(setup-graphics chip8)
 ;(setup-input chip8)
 
-;; Initialize the Chip8 system and load the game into the memory  
+;; Initialize the Chip8 system and load the game into the memory
+#;(define (initialize c)
+  ;; Initialize registers and memory once
+  )
+
 ;(initialize chip8)
 ;(load-game chip8 "pong")
+
+
+#;(define (emulate-cycle c)
+;    // Fetch Opcode
+;  // Decode Opcode
+;  // Execute Opcode
+; 
+;  // Update timers
+
+    )
 
 ;; Emulation loop
 #;(let loop ()
