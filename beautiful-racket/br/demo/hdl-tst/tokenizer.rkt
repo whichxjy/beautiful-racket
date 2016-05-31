@@ -7,7 +7,7 @@
 (define (tokenize input-port)
   (define (next-token)
     (define get-token
-      (lexer
+      (lexer-src-pos
        [(eof) eof]
         [(union
          (seq "/*" (complement (seq any-string "*/" any-string)) "*/")

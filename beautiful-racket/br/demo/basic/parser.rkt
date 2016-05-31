@@ -1,29 +1,30 @@
 #lang brag
 
-program : line*
+basic-program : line*
 
-line: NUMBER statement [":" statement]*
+line: NUMBER statement [/":" statement]*
 
-statement : "END"
-| "GOSUB" NUMBER
-| "GOTO" expr
-| "IF" expr "THEN" (statement | expr) ["ELSE" (statement | expr)]
-| "INPUT" [print-list ";"] ID
-| ID "=" expr ; change: make "LET" opt
-| "PRINT" print-list
-| "RETURN"
+statement : "end"
+| "gosub" expr
+| "goto" expr
+| "if" expr /"then" (statement | expr) [/"else" (statement | expr)]
+| "input" [print-list /";"] ID
+| ID "=" expr
+| "print" [print-list]
+| "return"
 
-print-list : [expr [";" [print-list]]]
+print-list : expr [";" [print-list]]
 
 expr : comp-expr [("AND" | "OR") expr]
 
 comp-expr : sum [("=" | ">" | ">=" | "<" | "<=" | "<>") comp-expr]
 
-sum : product [("+" | "-") sum]
+sum : [sum ("+" | "-")] product
 
-product : value [("*" | "/") product]
+product : [product ("*" | "/")] value 
 
-@value : ID | id-expr
+@value : ID
+| id-expr
 | /"(" expr /")"
 | STRING
 | NUMBER

@@ -13,16 +13,17 @@
 (define (tokenize input-port)
   (define (next-token)
     (define get-token
-      (lexer
+      (lexer-src-pos
        [(eof) eof]
        [(union #\tab #\space #\newline
                (seq number " REM" (repetition 1 +inf.0 (char-complement #\newline)) #\newline)) (get-token input-port)]
-       [(union "PRINT" "FOR" "TO" "STEP" "IF" "GOTO"
-               "INPUT" "LET" "NEXT"  "RETURN"
-               "CLEAR" "LIST" "RUN" "END"
-               "THEN" "ELSE" "GOSUB" "AND" "OR"
+       [(union "PRINT" "print" "FOR" "for" "TO" "to" "STEP" "step" "IF" "if"
+               "GOTO" "goto" "INPUT" "input" "LET" "let" "NEXT" "next"
+               "RETURN" "return" "CLEAR" "clear" "LIST" "list" "RUN" "run"
+               "END" "end" "THEN" "then" "ELSE" "else" "GOSUB" "gosub"
+               "AND" "and" "OR" "or"
                ";" "=" "(" ")" "+" "-" "*" "/"
-               "<=" ">=" "<>" "<" ">" "=" ":") lexeme]
+               "<=" ">=" "<>" "<" ">" "=" ":") (string-downcase lexeme)]
        [(union ",") (get-token input-port)]
        [number (token 'NUMBER (string->number lexeme))]
        [(seq (repetition 1 +inf.0 upper-case) (? "$")) (token 'ID (string->symbol lexeme))]

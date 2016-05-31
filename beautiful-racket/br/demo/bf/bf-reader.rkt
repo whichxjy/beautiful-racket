@@ -3,7 +3,7 @@
 (define (tokenize input-port)
   (define (next-token)
     (define get-token
-      (lexer
+      (lexer-src-pos
        [(char-set "><-.,+[]") lexeme]
        [(char-complement (char-set "><-.,+[]")) 
          (token 'OTHER #:skip? #t)]
