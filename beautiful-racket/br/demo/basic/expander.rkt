@@ -35,6 +35,10 @@
 (define (raise-program-end-error)
   (raise (exn:program-end "" (current-continuation-marks))))
 
+(struct exn:line-end exn:fail ())
+(define (raise-line-end-error)
+  (raise (exn:line-end "" (current-continuation-marks))))
+
 (define (run line-list)
   (define lines (list->vector line-list))
   (define (find-index ln)
@@ -57,12 +61,14 @@
 
 (define return-stack empty)
 
-(define (do-gosub number where)
+(define (do-gosub this-line where)
   (if (or (empty? return-stack)
-          (not (= number (car return-stack))))
+          (not (= this-line (car return-stack))))
       (begin
-        (set! return-stack (cons number return-stack))
+        (set! return-stack (cons this-line return-stack))
         (basic:goto where))
+      ;; if (= number (car return-stack))
+      ;; then we reached this line by `return`, which means the end of a gosub
       (set! return-stack (cdr return-stack))))
 
 (struct $line (number thunk) #:transparent)
@@ -70,7 +76,8 @@
   [(_ NUMBER (statement "gosub" WHERE))
    #'($line NUMBER (λ () (do-gosub NUMBER WHERE)))]
   [(_ NUMBER . STATEMENTS)
-   #'($line NUMBER (λ () . STATEMENTS))])
+   #'($line NUMBER (λ () (with-handlers ([exn:line-end? (λ _ #f)])
+                           . STATEMENTS)))])
 
 (define-macro statement
   [(statement ID "=" EXPR) #'(set! ID EXPR)]
@@ -84,9 +91,10 @@
    #'(if (true? COND-EXPR)
          TRUE-EXPR
          FALSE-EXPR)]
-  [(_ COND TRUE-EXPR)
-   #'(when (true? COND)
-       TRUE-EXPR)])
+  [(_ COND-EXPR TRUE-EXPR)
+   #'(if (true? COND-EXPR)
+         TRUE-EXPR
+         (raise-line-end-error))]) ; special short-circuit rule for one-armed conditional
 
 (define true? (compose1 not zero?))
 (define (cond->int cond) (if cond 1 0))
@@ -149,3 +157,43 @@
 (define (basic:return) (car return-stack))
 
 (define (basic:end) (raise-program-end-error))
+
+(define for-stack empty)
+
+(define (push-for-stack thunk)
+  (set! for-stack (cons thunk for-stack)))
+
+(define (pop-for-stack)
+  (set! for-stack (cdr for-stack)))
+
+(define-macro basic:for
+  [(_ VAR START-VALUE END-VALUE)
+   #'(basic:for VAR START-VALUE END-VALUE 1)]
+  [(_ VAR START-VALUE END-VALUE STEP-VALUE)
+   #'(begin
+       (cond
+         [(and (pair? for-stack)
+               (eq? 'VAR (car (car for-stack))))
+          ;; we're already in the midst of a loop, so keep going
+          (raise-line-end-error)]
+         [else
+          (statement VAR "=" START-VALUE)
+          (call/cc (λ(for-k)
+                     (push-for-stack (λ ()
+                                       (define next-val (+ VAR STEP-VALUE))
+                                       (and (<= next-val END-VALUE)
+                                            (set! VAR next-val)
+                                            (for-k))))))
+          (raise-line-end-error)]))])
+
+(define-macro basic:next
+  [(_ VAR)
+   ;; todo: named `next` means find var in stack
+   #'()]
+  [(_)
+   ;; plain `next` implies var on top of stack
+   #'(if (pair? for-stack)
+         (let ([for-thunk (car for-stack)])
+           (unless (for-thunk)
+             (pop-for-stack)))
+         (error 'next "for-stack is empty"))])

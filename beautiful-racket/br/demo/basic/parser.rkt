@@ -12,6 +12,8 @@ statement : "end"
 | ID "=" expr
 | "print" [print-list]
 | "return"
+| "for" ID /"=" value /"to" value [/"step" value]
+| "next" [ID]
 
 print-list : expr [";" [print-list]]
 
