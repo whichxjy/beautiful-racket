@@ -103,8 +103,8 @@
 
 (define-macro expr
   [(_ COMP-EXPR) #'COMP-EXPR]
-  [(_ COMP-EXPR "AND" SUBEXPR) #'(basic:and COMP-EXPR SUBEXPR)]
-  [(_ COMP-EXPR "OR" SUBEXPR) #'(basic:or COMP-EXPR SUBEXPR)])
+  [(_ COMP-EXPR "and" SUBEXPR) #'(basic:and COMP-EXPR SUBEXPR)]
+  [(_ COMP-EXPR "or" SUBEXPR) #'(basic:or COMP-EXPR SUBEXPR)])
 
 (define-macro comp-expr
   [(_ SUM) #'SUM]
@@ -144,18 +144,20 @@
 (define (RND num) (* (random) num))
 
 (define-macro basic:input
-  [(_ PRINT-LIST _ID)
+  [(_ (print-list . PL-ITEMS) ID ...)
    #'(begin
-       (basic:print (append PRINT-LIST (list ";")))
-       (basic:input _ID))]
-  [(_ ID) #'(set! ID (let* ([str (read-line)]
+       (basic:print (append (print-list . PL-ITEMS) (list ";")))
+       (basic:input ID) ...)]
+  [(_ ID ...) #'(begin
+                  (set! ID (let* ([str (read-line)]
                             [num (string->number str)])
-                       (or num str)))])
+                       (or num str))) ...)])
 
 (define (basic:goto where) where)
 
 (define (basic:return) (car return-stack))
 
+(define (basic:stop) (basic:end))
 (define (basic:end) (raise-program-end-error))
 
 (define for-stack empty)
@@ -179,21 +181,21 @@
          [else
           (statement VAR "=" START-VALUE)
           (call/cc (λ(for-k)
-                     (push-for-stack (λ ()
-                                       (define next-val (+ VAR STEP-VALUE))
-                                       (and (<= next-val END-VALUE)
-                                            (set! VAR next-val)
-                                            (for-k))))))
+                     (push-for-stack (cons 'VAR
+                                           (λ ()
+                                             (define next-val (+ VAR STEP-VALUE))
+                                             (and (<= next-val END-VALUE)
+                                                  (set! VAR next-val)
+                                                  (for-k)))))))
           (raise-line-end-error)]))])
 
+(define (handle-next [stack-selector-proc car])
+  (unless (pair? for-stack)
+    (error 'next "for-stack is empty"))
+  (let ([for-thunk (cdr (stack-selector-proc for-stack))])
+    (unless (for-thunk)
+      (pop-for-stack))))
+
 (define-macro basic:next
-  [(_ VAR)
-   ;; todo: named `next` means find var in stack
-   #'()]
-  [(_)
-   ;; plain `next` implies var on top of stack
-   #'(if (pair? for-stack)
-         (let ([for-thunk (car for-stack)])
-           (unless (for-thunk)
-             (pop-for-stack)))
-         (error 'next "for-stack is empty"))])
+  [(_ VAR) #'(handle-next (λ(stack) (assq 'VAR stack)))] ; named `next` means find var in stack
+  [(_) #'(handle-next)]) ; plain `next` implies var on top of stack
