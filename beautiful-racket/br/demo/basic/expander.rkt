@@ -8,21 +8,32 @@
 ; BASIC implementation details
 ; http://www.atariarchives.org/basicgames/showpage.php?page=i12
 
-(define-language-variables [A 0][B 0][C 0][D 0][E 0][F 0][G 0][H 0][I 0][J 0][K 0][L 0][M 0][N 0][O 0][P 0][Q 0][R 0][S 0][T 0][U 0][V 0][W 0][X 0][Y 0][Z 0][A$ ""][B$ ""][C$ ""][D$ ""][E$ ""][F$ ""][G$ ""][H$ ""][I$ ""][J$ ""][K$ ""][L$ ""][M$ ""][N$ ""][O$ ""][P$ ""][Q$ ""][R$ ""][S$ ""][T$ ""][U$ ""][V$ ""][W$ ""][X$ ""][Y$ ""][Z$ ""])
+(begin-for-syntax
+  (require racket/match racket/list)
+  (define (gather-unique-ids stx)
+    (define ids empty)
+    (let loop ([x (syntax->datum stx)])
+      (match x
+        [(or (list 'statement (? symbol? id-name) "=" etc ...)
+             (list 'statement "input" (list 'print-list etc ...) (? symbol? id-name) ...)
+             (list 'statement "for" (? symbol? id-name) etc ...)) (set! ids (cons id-name ids))]
+        [(? list?) (map loop x)]
+        [else #f]))
+    (remove-duplicates (flatten ids) eq?)))
 
-(define-macro (basic-module-begin . PROGRAM-LINES)
-  #'(#%module-begin
-     (inject-language-variables (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z A$ B$ C$ D$ E$ F$ G$ H$ I$ J$ K$ L$ M$ N$ O$ P$ Q$ R$ S$ T$ U$ V$ W$ X$ Y$ Z$)
-                                (println (quote . PROGRAM-LINES))
-                                . PROGRAM-LINES)))
+(define-macro (basic-module-begin (basic-program PROGRAM-LINE ...))
+  (with-pattern
+   ([(UNIQUE-ID ...) (map (compose1 syntax-local-introduce (λ(id) (datum->syntax #f id)))
+                          (gather-unique-ids #'(PROGRAM-LINE ...)))])
+   #'(#%module-begin
+      (define UNIQUE-ID 0) ...
+      (run PROGRAM-LINE ...))))
 
 ; #%app and #%datum have to be present to make #%top work
 (define-macro (basic-top . ID)
   #'(begin
       (displayln (format "got unbound identifier: ~a" 'ID))
       (procedure-rename (λ xs (cons 'ID xs)) (string->symbol (format "undefined:~a" 'ID)))))
-
-(define-macro (basic-program LINE ...) #'(run (list LINE ...)))
 
 (struct exn:line-not-found exn:fail ())
 (define (raise-line-not-found-error ln)
@@ -39,7 +50,7 @@
 (define (raise-line-end-error)
   (raise (exn:line-end "" (current-continuation-marks))))
 
-(define (run line-list)
+(define (run . line-list)
   (define lines (list->vector line-list))
   (define (find-index ln)
     (or
@@ -150,8 +161,8 @@
        (basic:input ID) ...)]
   [(_ ID ...) #'(begin
                   (set! ID (let* ([str (read-line)]
-                            [num (string->number str)])
-                       (or num str))) ...)])
+                                  [num (string->number str)])
+                             (or num str))) ...)])
 
 (define (basic:goto where) where)
 
