@@ -8,12 +8,12 @@ statement : "end" | "stop"
 | "gosub" expr
 | "goto" expr
 | "if" expr /"then" (statement | expr) [/"else" (statement | expr)]
-| "input" [print-list /";"] ID [/"," ID]*
-| [/"let"] ID "=" expr
+| "input" [print-list /";"] id [/"," id]*
+| [/"let"] id "=" expr
 | "print" [print-list]
 | "return"
-| "for" ID /"=" value /"to" value [/"step" value]
-| "next" [ID]
+| "for" id /"=" value /"to" value [/"step" value]
+| "next" [id]
 
 print-list : expr [[";"] [print-list]]
 
@@ -25,10 +25,12 @@ sum : [sum ("+" | "-")] product
 
 product : [product ("*" | "/")] value 
 
-@value : ID
+@value : id
 | id-expr
 | /"(" expr /")"
 | NUMBER
 | STRING
 
-/id-expr : ID [/"(" expr [/"," expr]* /")"]
+/id-expr : id [/"(" expr [/"," expr]* /")"]
+
+@id : ID

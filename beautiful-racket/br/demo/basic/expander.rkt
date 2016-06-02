@@ -8,17 +8,9 @@
 ; http://www.atariarchives.org/basicgames/showpage.php?page=i12
 
 (begin-for-syntax
-  (require racket/match racket/list)
+  (require racket/list)
   (define (gather-unique-ids stx)
-    (define ids empty)
-    (let loop ([x (syntax->datum stx)])
-      (match x
-        [(or (list 'statement (? symbol? id-name) "=" etc ...)
-             (list 'statement "input" (list 'print-list etc ...) (? symbol? id-name) ...)
-             (list 'statement "for" (? symbol? id-name) etc ...)) (set! ids (cons id-name ids))]
-        [(? list?) (map loop x)]
-        [else #f]))
-    (remove-duplicates (flatten ids) eq?)))
+    (remove-duplicates (map syntax->datum (filter (λ(s) (syntax-property s 'id)) (syntax-flatten stx))) eq?)))
 
 (define-macro (basic-module-begin (basic-program PROGRAM-LINE ...))
   (with-pattern
