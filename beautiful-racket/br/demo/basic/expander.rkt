@@ -3,7 +3,6 @@
          (rename-out [basic-module-begin #%module-begin])
          (rename-out [basic-top #%top])
          (all-defined-out))
-(require br/stxparam)
 
 ; BASIC implementation details
 ; http://www.atariarchives.org/basicgames/showpage.php?page=i12
@@ -42,13 +41,13 @@
     (format "line number ~a not found in program" ln)
     (current-continuation-marks))))
 
-(struct exn:program-end exn:fail ())
-(define (raise-program-end-error)
-  (raise (exn:program-end "" (current-continuation-marks))))
+(struct end-program-signal exn:fail ())
+(define (raise-end-program-signal)
+  (raise (end-program-signal "" (current-continuation-marks))))
 
-(struct exn:line-end exn:fail ())
-(define (raise-line-end-error)
-  (raise (exn:line-end "" (current-continuation-marks))))
+(struct end-line-signal exn:fail ())
+(define (raise-end-line-signal)
+  (raise (end-line-signal "" (current-continuation-marks))))
 
 (define (run . line-list)
   (define lines (list->vector line-list))
@@ -59,7 +58,7 @@
                   idx))
      (raise-line-not-found-error ln)))
   (void
-   (with-handlers ([exn:program-end? void])
+   (with-handlers ([end-program-signal? void])
      (for/fold ([program-counter 0])
                ([i (in-naturals)])
        (if (= program-counter (vector-length lines))
@@ -87,7 +86,7 @@
   [(_ NUMBER (statement "gosub" WHERE))
    #'($line NUMBER (λ () (do-gosub NUMBER WHERE)))]
   [(_ NUMBER . STATEMENTS)
-   #'($line NUMBER (λ () (with-handlers ([exn:line-end? (λ _ #f)])
+   #'($line NUMBER (λ () (with-handlers ([end-line-signal? (λ _ #f)])
                            . STATEMENTS)))])
 
 (define-macro statement
@@ -105,7 +104,7 @@
   [(_ COND-EXPR TRUE-EXPR)
    #'(if (true? COND-EXPR)
          TRUE-EXPR
-         (raise-line-end-error))]) ; special short-circuit rule for one-armed conditional
+         (raise-end-line-signal))]) ; special short-circuit rule for one-armed conditional
 
 (define true? (compose1 not zero?))
 (define (cond->int cond) (if cond 1 0))
@@ -169,7 +168,7 @@
 (define (basic:return) (car return-stack))
 
 (define (basic:stop) (basic:end))
-(define (basic:end) (raise-program-end-error))
+(define (basic:end) (raise-end-program-signal))
 
 (define for-stack empty)
 
@@ -187,18 +186,20 @@
        (cond
          [(and (pair? for-stack)
                (eq? 'VAR (car (car for-stack))))
-          ;; we're already in the midst of a loop, so keep going
-          (raise-line-end-error)]
+          ;; we're already in the midst of a loop, so abort the rest of the line
+          (raise-end-line-signal)]
          [else
+          ;; initialize the loop counter
           (statement VAR "=" START-VALUE)
-          (call/cc (λ(for-k)
-                     (push-for-stack (cons 'VAR
-                                           (λ ()
-                                             (define next-val (+ VAR STEP-VALUE))
-                                             (and (<= next-val END-VALUE)
-                                                  (set! VAR next-val)
-                                                  (for-k)))))))
-          (raise-line-end-error)]))])
+          ;; create a point for the `next` statement to return to, using a continuation
+          (let/cc return-point-for-next
+            (push-for-stack (cons 'VAR
+                                  (λ () ; thunk that increments counter & teleports back to beginning of loop
+                                    (define next-val (+ VAR STEP-VALUE))
+                                    (when (<= next-val END-VALUE)
+                                      (set! VAR next-val)
+                                      (return-point-for-next))))))
+          (raise-end-line-signal)]))])
 
 (define (handle-next [stack-selector-proc car])
   (unless (pair? for-stack)
