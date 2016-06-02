@@ -4,10 +4,10 @@
          rackunit)
 
 (define parse-result (parse (list "{" 
-               (token 'ID "message")
-               ":"
-               (token 'STRING "'hello world'")
-               "}")))
+                                  (token 'ID "message")
+                                  ":"
+                                  (token 'STRING "'hello world'")
+                                  "}")))
 (check-equal? (syntax->datum parse-result) '(json ":"))
 
 (define syntaxed-colon (cadr (syntax->list parse-result)))

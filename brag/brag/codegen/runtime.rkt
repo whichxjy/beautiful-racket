@@ -164,32 +164,36 @@ This would be the place to check a syntax property for hiding.
 ;; Creates an stx out of the rule name and its components.
 ;; The location information of the rule spans that of its components.
 (define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] #:hide-or-splice? [hide-or-splice #f] . componentss)
-  (define (remove-rule-name cs)
+  (define (remove-rule-name components-stx)
     ;; when removing a rule name, we apply it as a syntax property to the remaining elements
     ;; for possible later usage (aka, why throw away information)
     ;; todo: distinguish hiding and splicing behavior.
-    ;; when hiding, returned list should be a syntaxed list with the property.
-    ;; when splicing, returned list should be a regualr list, with each element having the property.
-    (let* ([cs-list (syntax->list cs)]
-           [rule-name (syntax->datum (car cs-list))]
-           [elements (cdr cs-list)])
-      (map (λ(e) (syntax-property e rule-name #t)) elements)))
-  (define spliced-componentss
+    ;; when hiding, returned list should be a syntaxed list with the property (?)
+    ;; when splicing, returned list should be a regular list, with each element having the property.
+    (let* ([name+elements (syntax->list components-stx)]
+           [name-datum (syntax->datum (car name+elements))]
+           [elements (cdr name+elements)])
+      (map (λ(e) (syntax-property e name-datum #t)) elements)))
+  (define componentss-hoisted
     (apply append
            (for/list ([css (in-list componentss)])
                      (list
-                      (cond
-                        [(and (pair? css) (eq? (syntax-property (car css) 'hide-or-splice) 'hide))
-                         (list (remove-rule-name (car css)))] ; hidden version still contained in `list`
-                        [(and (pair? css) (or (eq? (syntax-property (car css) 'hide-or-splice) 'splice)
-                                              (syntax-property (car css) 'splice-rh-id)))
-                         (remove-rule-name (car css))] ; spliced version is "delisted"
-                        [else css])))))
+                      ;; each `css` is a list that's either empty, or has a single syntaxed component list
+                      (let ([components-stx (and (pair? css) (car css))])
+                        (if components-stx
+                            (cond
+                              [(eq? (syntax-property components-stx 'hide-or-splice) 'hide)
+                               (list (remove-rule-name components-stx))] ; hidden version still wrapped in a sub-`list`
+                              [(or (eq? (syntax-property components-stx 'hide-or-splice) 'splice)
+                                   (syntax-property components-stx 'splice-rh-id))
+                               (remove-rule-name components-stx)] ; spliced version is "delisted"
+                              [else css])
+                            css))))))
   (syntax-property
    (datum->syntax #f 
                   (cons
                    (datum->syntax #f rule-name/false srcloc stx-with-original?-property)
-                   (apply append spliced-componentss))
+                   (apply append componentss-hoisted))
                   srcloc
                   stx-with-original?-property)
    ;; not 'hide-or-splice-lhs-id, because it is now a component in a different rule
