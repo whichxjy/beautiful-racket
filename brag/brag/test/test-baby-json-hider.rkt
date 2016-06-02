@@ -3,15 +3,15 @@
          brag/support
          rackunit)
 
-(check-equal?
- (syntax->datum
-  (parse (list "{" 
+(define parse-result (parse (list "{" 
                (token 'ID "message")
                ":"
                (token 'STRING "'hello world'")
                "}")))
- '(json ":"))
+(check-equal? (syntax->datum parse-result) '(json ":"))
 
+(define syntaxed-colon (cadr (syntax->list parse-result)))
+(check-true (syntax-property syntaxed-colon 'kvpair))
 
 (check-equal? 
  (syntax->datum

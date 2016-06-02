@@ -158,21 +158,32 @@ This would be the place to check a syntax property for hiding.
   (datum->syntax #f d (positions->srcloc start-pos end-pos) stx-with-original?-property))
 
 
+(require sugar/debug)
+
 ;; rule-components->syntax: (U symbol false) (listof stx) ... #:srcloc (U #f (list src line column offset span)) -> stx
 ;; Creates an stx out of the rule name and its components.
 ;; The location information of the rule spans that of its components.
 (define (rule-components->syntax rule-name/false #:srcloc [srcloc #f] #:hide-or-splice? [hide-or-splice #f] . componentss)
-  (define (remove-rule-name cs) (cdr (syntax->list cs)))
+  (define (remove-rule-name cs)
+    ;; when removing a rule name, we apply it as a syntax property to the remaining elements
+    ;; for possible later usage (aka, why throw away information)
+    ;; todo: distinguish hiding and splicing behavior.
+    ;; when hiding, returned list should be a syntaxed list with the property.
+    ;; when splicing, returned list should be a regualr list, with each element having the property.
+    (let* ([cs-list (syntax->list cs)]
+           [rule-name (syntax->datum (car cs-list))]
+           [elements (cdr cs-list)])
+      (map (λ(e) (syntax-property e rule-name #t)) elements)))
   (define spliced-componentss
     (apply append
            (for/list ([css (in-list componentss)])
                      (list
                       (cond
                         [(and (pair? css) (eq? (syntax-property (car css) 'hide-or-splice) 'hide))
-                         (list (remove-rule-name (car css)))] ; hidden version still contained in sublist
+                         (list (remove-rule-name (car css)))] ; hidden version still contained in `list`
                         [(and (pair? css) (or (eq? (syntax-property (car css) 'hide-or-splice) 'splice)
                                               (syntax-property (car css) 'splice-rh-id)))
-                         (remove-rule-name (car css))] ; spliced version is "unlisted"
+                         (remove-rule-name (car css))] ; spliced version is "delisted"
                         [else css])))))
   (syntax-property
    (datum->syntax #f 
