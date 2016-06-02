@@ -1,19 +1,10 @@
 #lang racket/base
-(require (for-syntax racket/list racket/base syntax/parse racket/syntax syntax/datum syntax/strip-context racket/string) sugar/define)
+(require (for-syntax racket/list racket/base syntax/parse br/syntax racket/syntax syntax/datum syntax/strip-context racket/string) sugar/define)
 (provide (all-defined-out))
 
 ;; everything is prefixed br: whether it needs it or not so it can be stripped by #lang br
 
-(define-for-syntax (syntax-flatten stx)
-  (flatten
-   (let loop ([stx stx])
-     (define maybe-list (syntax->list stx))
-     (if maybe-list
-         (map loop maybe-list)
-         stx))))
-
-(define-for-syntax (upcased? str)
-  (equal? (string-upcase str) str))
+(define-for-syntax (upcased? str) (equal? (string-upcase str) str))
 
 (define-for-syntax (generate-literals pats)
   ;; generate literals for any symbols that are not ... or _ or _underscore-prefixed

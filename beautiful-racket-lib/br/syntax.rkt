@@ -134,3 +134,11 @@
   (with-syntax ([id (syntax-local-introduce (syntax-local-get-shadower #'id))] ...)
     . body))
 
+
+(define (syntax-flatten stx)
+  (flatten
+   (let loop ([stx stx])
+     (define maybe-list (syntax->list stx))
+     (if maybe-list
+         (map loop maybe-list)
+         stx))))
