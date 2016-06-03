@@ -1,18 +1,17 @@
 #lang br
 
-(define (read-syntax source-path input-port)
-  (define src-strs (remove-blank-lines (port->lines input-port)))
-  (define (make-datum str) (format-datum '(dispatch ~a) str))
-  (define src-exprs (map make-datum src-strs))
-  (strip-context
-   (with-pattern ([(SRC-EXPR ...) (map make-datum src-strs)])
-                 #'(module stacker-mod br/demo/stacker
-                     SRC-EXPR ...))))
+(define (read-syntax src-path in-port)
+  (define lines (remove-blank-lines (port->lines in-port)))
+  (define (make-exec-datum line) (format-datum '(exec ~a) line))
+  (define exec-exprs (map make-exec-datum lines))
+  (strip-context (with-pattern ([(EXEC-EXPR ...) exec-exprs])
+                   #'(module stacker-mod br/demo/stacker
+                       EXEC-EXPR ...))))
 (provide read-syntax)
 
-(define-macro (stacker-module-begin READER-LINE ...)
+(define-macro (stacker-module-begin SRC-LINE ...)
   #'(#%module-begin
-     READER-LINE ...
+     SRC-LINE ...
      (display (first stack))))
 (provide (rename-out [stacker-module-begin #%module-begin]))
 
@@ -20,10 +19,14 @@
 (define (push num) (set! stack (cons num stack)))
 (provide push)
 
-(define-cases dispatch
-  [(_ push num) (push num)]
-  [(_ op) (define op-result (op (first stack) (second stack)))
-          (set! stack (cons op-result (drop stack 2)))])
-(provide dispatch)
+(define-cases exec
+  [(_ func num) (func num)]
+  [(_ op) (define result (op (first stack) (second stack)))
+          (set! stack (cons result (drop stack 2)))])
+(provide exec)
 
 (provide + * #%app #%datum #%top-interaction)
+
+(module+ test 
+  (require rackunit)
+  (check-equal? (with-output-to-string (λ () (dynamic-require "stacker-test.rkt" #f))) "36"))
