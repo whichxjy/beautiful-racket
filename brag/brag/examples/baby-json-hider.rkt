@@ -13,4 +13,6 @@ array: "[" [json ("," json)*] "]"
 
 object: /"{" [kvpair ("," kvpair)*] /"}"
 
-@kvpair : /ID ":" /json
+@kvpair : /ID colon /json
+
+/colon : ":"

@@ -8,10 +8,10 @@
                                   ":"
                                   (token 'STRING "'hello world'")
                                   "}")))
-(check-equal? (syntax->datum parse-result) '(json ":"))
+(check-equal? (syntax->datum parse-result) '(json (":")))
 
-(define syntaxed-colon (cadr (syntax->list parse-result)))
-(check-true (syntax-property syntaxed-colon 'kvpair))
+(define syntaxed-colon-parens (cadr (syntax->list parse-result)))
+(check-equal? (syntax->datum (syntax-property syntaxed-colon-parens 'kvpair)) 'kvpair)
 
 (check-equal? 
  (syntax->datum
