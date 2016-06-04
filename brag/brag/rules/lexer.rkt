@@ -3,7 +3,8 @@
 (require parser-tools/lex
          (prefix-in : parser-tools/lex-sre)
          "parser.rkt"
-         "rule-structs.rkt")
+         "rule-structs.rkt"
+         racket/string)
 
 (provide lex/1 tokenize)
 
@@ -11,20 +12,22 @@
 (define-lex-abbrev NL (:or "\r\n" "\r" "\n"))
 
 ;; chars used for quantifiers & parse-tree filtering
-(define-for-syntax quantifiers "+:*")
+(define-for-syntax quantifiers "+:*") ; colon is reserved to separate rules and productions
 (define-lex-trans reserved-chars
   (λ(stx) #`(char-set #,(format "~a~a~a" quantifiers hide-char splice-char))))
 
+(define-lex-trans hide-char-trans (λ(stx) #`(char-set #,(format "~a" hide-char))))
+(define-lex-trans splice-char-trans (λ(stx) #`(char-set #,(format "~a" splice-char))))
+
 (define-lex-abbrevs
-   [letter (:or (:/ "a" "z") (:/ #\A #\Z))]
-   [digit (:/ #\0 #\9)]
-   [id-char (:or letter digit (:& (char-set "+:*@!-.$%&/=?^_~<>") (char-complement (reserved-chars))))]
- )
+  [letter (:or (:/ "a" "z") (:/ #\A #\Z))]
+  [digit (:/ #\0 #\9)]
+  [id-char (:or letter digit (:& (char-set "+:*@!-.$%&/=?^_~<>") (char-complement (reserved-chars))))]
+  [hide-char (hide-char-trans)]
+  [splice-char (splice-char-trans)]
+  )
 
-(define-lex-abbrev id
-  (:& (complement (:+ digit))
-      (:+ id-char)))
-
+(define-lex-abbrev id (:& (complement (:+ digit)) (:+ id-char)))
 
 (define lex/1
   (lexer-src-pos
@@ -44,9 +47,9 @@
     (token-RPAREN lexeme)]
    ["]"
     (token-RBRACKET lexeme)]
-   ["/"
+   [hide-char
     (token-HIDE lexeme)]
-   ["@"
+   [splice-char
     (token-SPLICE lexeme)]
    ["|"
     (token-PIPE lexeme)]
@@ -56,18 +59,25 @@
     ;; Skip whitespace
     (return-without-pos (lex/1 input-port))]
    ;; Skip comments up to end of line
-   [(:: (:or "#" ";")
+   ;; but detect possble kwargs.
+   [(:: (:or "#" ";") ; remove # as comment char
         (complement (:: (:* any-char) NL (:* any-char)))
         (:or NL ""))
-    ;; Skip comments up to end of line.
-    (return-without-pos (lex/1 input-port))]
+    (let ([maybe-kwarg-match (regexp-match #px"^#:(.*?)\\s*(.*?)$" lexeme)])
+      (when maybe-kwarg-match
+        (let* ([parts (map string->symbol (string-split (string-trim lexeme "#:" #:right? #f)))]
+               [kw (car parts)][val (cadr parts)])
+          (case kw
+            [(prefix-out) (current-prefix-out val)]
+            [else (error 'lexer (format "got unknown keyword ~a" kw))])))
+      (return-without-pos (lex/1 input-port)))]
    [(eof)
     (token-EOF lexeme)]
    [(:: id (:* whitespace) ":")
     (token-RULE_HEAD lexeme)]
-   [(:: "/" id (:* whitespace) ":")
+   [(:: hide-char id (:* whitespace) ":")
     (token-RULE_HEAD_HIDDEN lexeme)]
-   [(:: "@" id (:* whitespace) ":")
+   [(:: splice-char id (:* whitespace) ":")
     (token-RULE_HEAD_SPLICED lexeme)]
    [id
     (token-ID lexeme)]
@@ -75,7 +85,7 @@
    ;; We call the error handler for everything else:
    [(:: any-char)
     (let-values ([(rest-of-text end-pos-2)
-                 (lex-nonwhitespace input-port)])
+                  (lex-nonwhitespace input-port)])
       ((current-parser-error-handler)
        #f
        'error

@@ -56,3 +56,18 @@
 
 (check-equal? (l "'he\\'llo'")
               '(LIT "'he\\'llo'" 1 10))
+
+(check-equal? (l "/")
+              '(HIDE "/" 1 2))
+
+(check-equal? (l " /")
+              '(HIDE "/" 2 3))
+
+(check-equal? (l "@")
+              '(SPLICE "@" 1 2))
+
+(check-equal? (l " @")
+              '(SPLICE "@" 2 3))
+
+(check-equal? (l "#:prefix-out val:")
+              (list 'EOF eof 18 18)) ; lexer skips kwarg

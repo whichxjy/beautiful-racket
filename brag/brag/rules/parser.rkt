@@ -28,6 +28,7 @@
          
          current-source
          current-parser-error-handler
+         current-prefix-out
          
          [struct-out rule]
          [struct-out lhs-id]
@@ -249,6 +250,8 @@
 
 ;; During parsing, we should define the source of the input.
 (define current-source (make-parameter #f))
+
+(define current-prefix-out (make-parameter #f))
 
 
 ;; When bad things happen, we need to emit errors with source location.
