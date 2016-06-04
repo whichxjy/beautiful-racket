@@ -18,7 +18,7 @@
                        (gather-unique-ids #'(PROGRAM-LINE ...)))])
     #'(#%module-begin
        (define UNIQUE-ID 0) ...
-       (run PROGRAM-LINE ...))))
+       (run PROGRAM-LINE ... (line #f (statement "end"))))))
 
 ; #%app and #%datum have to be present to make #%top work
 (define-macro (basic-top . ID)
@@ -53,13 +53,11 @@
    (with-handlers ([end-program-signal? void])
      (for/fold ([program-counter 0])
                ([i (in-naturals)])
-       (if (= program-counter (vector-length lines))
-           (basic:end)
-           (let* ([line-thunk ($line-thunk (vector-ref lines program-counter))]
-                  [maybe-line-number (line-thunk)])
-             (if (number? maybe-line-number)
-                 (find-index maybe-line-number)
-                 (add1 program-counter))))))))
+       (let* ([line-thunk ($line-thunk (vector-ref lines program-counter))]
+              [maybe-line-number (line-thunk)])
+         (if (number? maybe-line-number)
+             (find-index maybe-line-number)
+             (add1 program-counter)))))))
 
 (define return-stack empty)
 
@@ -70,8 +68,8 @@
 
 (struct $line (number thunk) #:transparent)
 (define-macro (line NUMBER . STATEMENTS)
-   #'($line NUMBER (λ () (with-handlers ([end-line-signal? (λ _ #f)])
-                           . STATEMENTS))))
+  #'($line NUMBER (λ () (with-handlers ([end-line-signal? (λ _ #f)])
+                          . STATEMENTS))))
 
 (define-macro statement
   [(statement ID "=" EXPR) #'(set! ID EXPR)]
@@ -170,31 +168,27 @@
    #'(basic:for VAR START-VALUE END-VALUE 1)]
   [(_ VAR START-VALUE END-VALUE STEP-VALUE)
    #'(begin
-       (cond
-         [(and (pair? for-stack)
-               (eq? 'VAR (car (car for-stack))))
-          ;; we're already in the midst of a loop, so abort the rest of the line
-          (raise-end-line-signal)]
-         [else
-          ;; initialize the loop counter
-          (statement VAR "=" START-VALUE)
-          ;; create a point for the `next` statement to return to, using a continuation
-          (let/cc return-point-for-next
-            (push-for-stack (cons 'VAR
-                                  (λ () ; thunk that increments counter & teleports back to beginning of loop
-                                    (define next-val (+ VAR STEP-VALUE))
-                                    (when (<= next-val END-VALUE)
-                                      (set! VAR next-val)
-                                      (return-point-for-next))))))
-          (raise-end-line-signal)]))])
+       ;; initialize the loop counter
+       (statement VAR "=" START-VALUE)
+       ;; create a point for the `next` statement to return to, using a continuation
+       (let/cc return-point-for-next
+         (push-for-stack (cons 'VAR
+                               (procedure-rename
+                                (λ () ; thunk that increments counter & teleports back to beginning of loop
+                                  (define next-val (+ VAR STEP-VALUE))
+                                  (if (<= next-val END-VALUE)
+                                      (begin
+                                        (set! VAR next-val)
+                                        (return-point-for-next #f)) ; return value for subsequent visits to line
+                                      (pop-for-stack))) (format-datum "~a-incrementer" 'VAR))))
+         #f))]) ; return value for first visit to line
 
-(define (handle-next [stack-selector-proc car])
-  (unless (pair? for-stack)
-    (error 'next "for-stack is empty"))
-  (let ([for-thunk (cdr (stack-selector-proc for-stack))])
-    (unless (for-thunk)
-      (pop-for-stack))))
+(define (handle-next [which #f])
+  (unless (pair? for-stack) (error 'next "for-stack is empty"))
+  (define for-thunk (cdr (if which
+                             (assq which for-stack)
+                             (car for-stack))))
+  (for-thunk))
 
-(define-macro basic:next
-  [(_ VAR) #'(handle-next (λ(stack) (assq 'VAR stack)))] ; named `next` means find var in stack
-  [(_) #'(handle-next)]) ; plain `next` implies var on top of stack
+(define-macro (basic:next VAR ...)
+  #'(handle-next 'VAR ...))
