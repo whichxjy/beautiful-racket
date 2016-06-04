@@ -13,12 +13,12 @@
     (remove-duplicates (map syntax->datum (filter (λ(s) (syntax-property s 'id)) (syntax-flatten stx))) eq?)))
 
 (define-macro (basic-module-begin (basic-program PROGRAM-LINE ...))
-  (with-pattern
-   ([(UNIQUE-ID ...) (map (compose1 syntax-local-introduce (λ(id) (datum->syntax #f id)))
-                          (gather-unique-ids #'(PROGRAM-LINE ...)))])
-   #'(#%module-begin
-      (define UNIQUE-ID 0) ...
-      (run PROGRAM-LINE ...))))
+  (with-pattern ([(UNIQUE-ID ...)
+                  (map (compose1 syntax-local-introduce (λ(id) (datum->syntax #f id)))
+                       (gather-unique-ids #'(PROGRAM-LINE ...)))])
+    #'(#%module-begin
+       (define UNIQUE-ID 0) ...
+       (run PROGRAM-LINE ...))))
 
 ; #%app and #%datum have to be present to make #%top work
 (define-macro (basic-top . ID)
@@ -63,30 +63,22 @@
 
 (define return-stack empty)
 
-(define (do-gosub this-line where)
-  (if (or (empty? return-stack)
-          (not (= this-line (car return-stack))))
-      (begin
-        (set! return-stack (cons this-line return-stack))
-        (basic:goto where))
-      ;; if (= number (car return-stack))
-      ;; then we reached this line by `return`, which means the end of a gosub
-      (set! return-stack (cdr return-stack))))
+(define (basic:gosub where)
+  (let/cc return-k
+    (set! return-stack (cons return-k return-stack))
+    (basic:goto where)))
 
 (struct $line (number thunk) #:transparent)
-(define-macro line
-  [(_ NUMBER (statement "gosub" WHERE))
-   #'($line NUMBER (λ () (do-gosub NUMBER WHERE)))]
-  [(_ NUMBER . STATEMENTS)
+(define-macro (line NUMBER . STATEMENTS)
    #'($line NUMBER (λ () (with-handlers ([end-line-signal? (λ _ #f)])
-                           . STATEMENTS)))])
+                           . STATEMENTS))))
 
 (define-macro statement
   [(statement ID "=" EXPR) #'(set! ID EXPR)]
   [(statement PROC-NAME . ARGS)
    (with-pattern
-    ([PROC-ID (prefix-id "basic:" #'PROC-NAME)])
-    #'(PROC-ID . ARGS))])
+     ([PROC-ID (prefix-id "basic:" #'PROC-NAME)])
+     #'(PROC-ID . ARGS))])
 
 (define-macro basic:if
   [(_ COND-EXPR TRUE-EXPR FALSE-EXPR)
@@ -114,8 +106,8 @@
    #'(cond->int (equal? SUM COMP-EXPR))] ; special case because `=` is overloaded in basic
   [(_ SUM OP-STR COMP-EXPR)
    (with-pattern
-    ([OP (replace-context #'here (prefix-id #'OP-STR))])
-    #'(cond->int (OP SUM COMP-EXPR)))])
+     ([OP (replace-context #'here (prefix-id #'OP-STR))])
+     #'(cond->int (OP SUM COMP-EXPR)))])
 
 (define <> (compose1 not equal?))
 
@@ -157,7 +149,10 @@
 
 (define (basic:goto where) where)
 
-(define (basic:return) (car return-stack))
+(define (basic:return)
+  (define return-k (car return-stack))
+  (set! return-stack (cdr return-stack))
+  (return-k #f))
 
 (define (basic:stop) (basic:end))
 (define (basic:end) (raise-end-program-signal))
