@@ -66,7 +66,7 @@
     (set! return-stack (cons return-k return-stack))
     (basic:goto where)))
 
-(struct $line (number thunk) #:transparent)
+(struct $line (number thunk))
 (define-macro (line NUMBER . STATEMENTS)
   #'($line NUMBER (λ () (with-handlers ([end-line-signal? (λ _ #f)])
                           . STATEMENTS))))
@@ -168,19 +168,16 @@
    #'(basic:for VAR START-VALUE END-VALUE 1)]
   [(_ VAR START-VALUE END-VALUE STEP-VALUE)
    #'(begin
-       ;; initialize the loop counter
-       (statement VAR "=" START-VALUE)
-       ;; create a point for the `next` statement to return to, using a continuation
-       (let/cc return-point-for-next
+       (statement VAR "=" START-VALUE) ; initialize the loop counter
+       (let/cc return-k ; create a return point
          (push-for-stack (cons 'VAR
-                               (procedure-rename
-                                (λ () ; thunk that increments counter & teleports back to beginning of loop
-                                  (define next-val (+ VAR STEP-VALUE))
-                                  (if (<= next-val END-VALUE)
-                                      (begin
-                                        (set! VAR next-val)
-                                        (return-point-for-next #f)) ; return value for subsequent visits to line
-                                      (pop-for-stack))) (format-datum "~a-incrementer" 'VAR))))
+                               (λ () ; thunk that increments counter & teleports back to beginning of loop
+                                 (define next-val (+ VAR STEP-VALUE))
+                                 (if (<= next-val END-VALUE)
+                                     (begin
+                                       (set! VAR next-val)
+                                       (return-k #f)) ; return value for subsequent visits to line
+                                     (pop-for-stack)))))
          #f))]) ; return value for first visit to line
 
 (define (handle-next [which #f])
