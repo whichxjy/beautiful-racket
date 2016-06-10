@@ -24,7 +24,7 @@
                "RETURN" "return" "CLEAR" "clear" "LIST" "list" "RUN" "run"
                "END" "end" "THEN" "then" "ELSE" "else" "GOSUB" "gosub"
                "AND" "and" "OR" "or" "STOP" "stop" "LET" "let" "DEF" "def" "DIM" "dim" "ON" "on"
-               ";" "=" "(" ")" "+" "-" "*" "/"
+               ";" "=" "(" ")" "+" "-" "*" "/" "^"
                "<=" ">=" "<>" "<" ">" "=" ":" ",") (string-downcase lexeme)]
        [number (token 'NUMBER (string->number lexeme))]
        [(seq upper-case (repetition 0 +inf.0 (or upper-case numeric)) (? "$")) (token 'ID (string->symbol lexeme))]

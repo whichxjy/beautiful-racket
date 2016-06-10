@@ -15,7 +15,7 @@ statement : "def" id /"(" id /")" /"=" expr
 | [/"let"] id-expr "=" expr
 | "print" [print-list]
 | "return"
-| "for" id /"=" value /"to" value [/"step" value]
+| "for" id /"=" expr /"to" expr [/"step" expr]
 | "next" [id]
 
 print-list : expr [[";"] [print-list]]
@@ -26,7 +26,9 @@ comp-expr : sum [("=" | ">" | ">=" | "<" | "<=" | "<>") comp-expr]
 
 sum : [sum ("+" | "-")] product
 
-product : [product ("*" | "/")] value 
+product : [product ("*" | "/")] power
+
+power : value [/"^" value]
 
 @value : id-val
 | id-expr

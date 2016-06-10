@@ -146,6 +146,10 @@
   [(_ PRODUCT "*" VALUE) #'(* PRODUCT VALUE)]
   [(_ PRODUCT "/" VALUE) #'(/ PRODUCT VALUE)])
 
+(define-macro power
+  [(_ BASE) #'BASE]
+  [(_ BASE POWER) #'(expt BASE POWER)])
+
 (define-macro number
   [(_ "-" NUM) #'(- NUM)]
   [(_ NUM) #'NUM])
@@ -156,10 +160,15 @@
 
 (define print-list list)
 
-;; todo: make it work more like http://www.antonis.de/qbebooks/gwbasman/PRINT.html
 (define (basic:print [args #f])
-  (define (println [x ""]) (displayln x) (set! current-print-position 0))
-  (define (print x) (display x) (set! current-print-position (+ current-print-position (string-length x))))
+  (define (println [x ""])
+    (define xstr (format "~a" x))
+    (displayln xstr)
+    (set! current-print-position 0))
+  (define (print x)
+    (define xstr (format "~a" x))
+    (display xstr)
+    (set! current-print-position (+ current-print-position (string-length xstr))))
   
   (match args
     [#f (println)]
@@ -176,11 +185,8 @@
     [(list print-list-items ...)
      (for-each println print-list-items)]))
 
-
-;; todo: make it work more like http://www.antonis.de/qbebooks/gwbasman/TAB.html
-;; need to track current line position
 (define current-print-position 0)
-(define (TAB num) (make-string (max 0 (- num current-print-position)) #\space))
+(define (TAB num) (make-string (max 0 (INT (- num current-print-position))) #\space))
 (define (INT num) (inexact->exact (truncate num)))
 (define (SIN num) (sin num))
 (define (ABS num) (inexact->exact (abs num)))
@@ -195,7 +201,7 @@
        (basic:input ID) ...)]
   [(_ ID ...) #'(begin
                   (set! ID (let* ([str (read-line)]
-                                  [num (string->number str)])
+                                  [num (string->number (string-trim str))])
                              (or num str))) ...)])
 
 (define (basic:goto where) where)

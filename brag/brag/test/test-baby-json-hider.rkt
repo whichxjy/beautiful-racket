@@ -8,12 +8,12 @@
                                   ":"
                                   (token 'STRING "'hello world'")
                                   "}")))
-(check-equal? (syntax->datum parse-result) '(my:json (":")))
+(check-equal? (syntax->datum parse-result) '(json (":")))
 
 (define syntaxed-colon-parens (cadr (syntax->list parse-result)))
-(check-equal? (syntax->datum (syntax-property syntaxed-colon-parens 'my:kvpair)) 'my:kvpair)
+(check-equal? (syntax->datum (syntax-property syntaxed-colon-parens 'kvpair)) 'kvpair)
 
 (check-equal? 
  (syntax->datum
   (parse "[[[{}]],[],[[{}]]]"))
- '(my:json (my:array #\[ (my:json (my:array #\[ (my:json (my:array #\[ (my:json) #\])) #\])) #\, (my:json (my:array #\[ #\])) #\, (my:json (my:array #\[ (my:json (my:array #\[ (my:json) #\])) #\])) #\])))
+ '(json (array #\[ (json (array #\[ (json (array #\[ (json) #\])) #\])) #\, (json (array #\[ #\])) #\, (json (array #\[ (json (array #\[ (json) #\])) #\])) #\])))
