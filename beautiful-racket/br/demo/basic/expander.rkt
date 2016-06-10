@@ -18,6 +18,7 @@
                        (gather-unique-ids #'(PROGRAM-LINE ...)))])
     #'(#%module-begin
        (define UNIQUE-ID 0) ...
+       (provide UNIQUE-ID ...)
        (run PROGRAM-LINE ... (line #f (statement "end"))))))
 
 ; #%app and #%datum have to be present to make #%top work
@@ -66,17 +67,32 @@
     (set! return-stack (cons return-k return-stack))
     (basic:goto where)))
 
+(define current-line (make-parameter #f))
 (struct $line (number thunk))
 (define-macro (line NUMBER . STATEMENTS)
-  #'($line NUMBER (λ () (with-handlers ([end-line-signal? (λ _ #f)])
-                          . STATEMENTS))))
+  #'($line NUMBER (λ ()
+                    (current-line NUMBER)
+                    (with-handlers ([end-line-signal? (λ _ #f)]
+                                    [end-program-signal? raise]
+                                    [exn:fail? (λ(exn)
+                                                 (displayln (format "in line ~a" NUMBER))
+                                                 (raise exn))])
+                      . STATEMENTS))))
 
 (define-macro statement
-  [(statement ID "=" EXPR) #'(set! ID EXPR)]
+  [(statement ID "=" EXPR) #'(basic:let ID EXPR)]
   [(statement PROC-NAME . ARGS)
    (with-pattern
        ([PROC-ID (prefix-id "basic:" #'PROC-NAME)])
      #'(PROC-ID . ARGS))])
+
+(define-macro basic:let
+  [(_ (id-expr ID) EXPR)
+   #'(begin
+       #;(displayln (format "setting ~a = ~a in ~a" 'ID EXPR (current-line)))
+       (set! ID EXPR))]
+  [(_ (id-expr ID DIM-IDX ...) EXPR)
+   #'(array-set! ID DIM-IDX ... EXPR)])
 
 (define-macro basic:if
   [(_ COND-EXPR TRUE-EXPR FALSE-EXPR)
@@ -92,6 +108,16 @@
 (define (cond->int cond) (if cond 1 0))
 (define (basic:and . args) (cond->int (andmap true? args)))
 (define (basic:or . args) (cond->int (ormap true? args)))
+
+(define-macro id-expr
+  [(_ ID) #'(cond
+              [(procedure? ID) (ID)]
+              [(array? ID) (array-ref ID (make-vector (array-rank ID) 0))] ; no subscript => zeroth element
+              [else ID])]
+  [(_ ID EXPR0 EXPR ...) #'(cond
+                             [(procedure? ID) (ID EXPR0 EXPR ...)]
+                             [(array? ID) (array-ref ID EXPR0 EXPR ...)]
+                             [else (error 'id-expr-confused)])])
 
 (define-macro expr
   [(_ COMP-EXPR) #'COMP-EXPR]
@@ -132,22 +158,30 @@
 
 ;; todo: make it work more like http://www.antonis.de/qbebooks/gwbasman/PRINT.html
 (define (basic:print [args #f])
+  (define (println [x ""]) (displayln x) (set! current-print-position 0))
+  (define (print x) (display x) (set! current-print-position (+ current-print-position (string-length x))))
+  
   (match args
-    [#f (displayln "")]
-    [(list print-list-item ... ";" pl) (begin (for-each (λ(pli)
-                                                          (let ([pli (if (number? pli)
-                                                                         (format "~a " pli)
-                                                                         pli)])
-                                                            (display pli))) print-list-item)
-                                              (basic:print pl))]
-    [(list print-list-item ... ";") (for-each display print-list-item)]
-    [(list print-list-item ...) (for-each displayln print-list-item)]))
+    [#f (println)]
+    [(list print-list-items ... ";" pl)
+     (begin
+       (for-each
+        (λ(pli)
+          (print (if (number? pli)
+                     (format "~a " pli)
+                     pli)))
+        print-list-items)
+       (basic:print pl))]
+    [(list print-list-items ... ";") (for-each print print-list-items)]
+    [(list print-list-items ...)
+     (for-each println print-list-items)]))
 
 
 ;; todo: make it work more like http://www.antonis.de/qbebooks/gwbasman/TAB.html
 ;; need to track current line position
-(define (TAB num) (make-string num #\space))
-(define-macro (INT _ARG ...) #'(inexact->exact (truncate (expr _ARG ...))))
+(define current-print-position 0)
+(define (TAB num) (make-string (max 0 (- num current-print-position)) #\space))
+(define (INT num) (inexact->exact (truncate num)))
 (define (SIN num) (sin num))
 (define (ABS num) (inexact->exact (abs num)))
 (define (RND num) (* (random) num))
@@ -166,6 +200,13 @@
 
 (define (basic:goto where) where)
 
+(define-macro basic:on
+  [(_ TEST-EXPR "goto" OPTION ...)
+   #'(basic:goto (list-ref (list OPTION ...) (sub1 TEST-EXPR)))]
+  [(_ TEST-EXPR "gosub" OPTION ...)
+   #'(basic:gosub (list-ref (list OPTION ...) (sub1 TEST-EXPR)))])
+
+
 (define (basic:return)
   (define return-k (car return-stack))
   (set! return-stack (cdr return-stack))
@@ -173,6 +214,12 @@
 
 (define (basic:stop) (basic:end))
 (define (basic:end) (raise-end-program-signal))
+
+(require srfi/25)
+
+(define-macro (basic:dim (id-expr ID EXPR ...) ...)
+  #'(begin
+      (set! ID (make-array (apply shape (append (list 0 (add1 EXPR)) ...)))) ...))
 
 (define for-stack empty)
 
@@ -191,7 +238,7 @@
    #'(basic:for VAR START-VALUE END-VALUE 1)]
   [(_ VAR START-VALUE END-VALUE STEP-VALUE)
    #'(begin
-       (statement VAR "=" START-VALUE) ; initialize the loop counter
+       (statement (id-expr VAR) "=" START-VALUE) ; initialize the loop counter
        (let/cc return-k ; create a return point
          (push-for-stack (cons 'VAR
                                (λ () ; thunk that increments counter & teleports back to beginning of loop

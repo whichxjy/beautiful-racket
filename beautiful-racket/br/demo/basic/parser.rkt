@@ -5,12 +5,14 @@ basic-program : line*
 line: NUMBER statement [/":" statement]*
 
 statement : "def" id /"(" id /")" /"=" expr
+| "dim" id-expr [/"," id-expr]*
 | "end" | "stop"
 | "gosub" expr
 | "goto" expr
+| "on" expr ("gosub" | "goto") expr [/"," expr]*
 | "if" expr /"then" (statement | expr) [/"else" (statement | expr)]
 | "input" [print-list /";"] id [/"," id]*
-| [/"let"] id "=" expr
+| [/"let"] id-expr "=" expr
 | "print" [print-list]
 | "return"
 | "for" id /"=" value /"to" value [/"step" value]
@@ -32,10 +34,10 @@ product : [product ("*" | "/")] value
 | number
 | STRING
 
-/id-expr : id [/"(" expr [/"," expr]* /")"]
+id-expr : id [/"(" expr [/"," expr]* /")"]
 
 @id : ID
 
-id-val : ["-"] id
+id-val : ["-"] id-expr
 
 number : ["-"] NUMBER

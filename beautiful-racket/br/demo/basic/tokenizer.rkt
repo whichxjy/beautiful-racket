@@ -23,7 +23,7 @@
                "GOTO" "goto" "INPUT" "input" "LET" "let" "NEXT" "next"
                "RETURN" "return" "CLEAR" "clear" "LIST" "list" "RUN" "run"
                "END" "end" "THEN" "then" "ELSE" "else" "GOSUB" "gosub"
-               "AND" "and" "OR" "or" "STOP" "stop" "LET" "let" "DEF" "def"
+               "AND" "and" "OR" "or" "STOP" "stop" "LET" "let" "DEF" "def" "DIM" "dim" "ON" "on"
                ";" "=" "(" ")" "+" "-" "*" "/"
                "<=" ">=" "<>" "<" ">" "=" ":" ",") (string-downcase lexeme)]
        [number (token 'NUMBER (string->number lexeme))]
