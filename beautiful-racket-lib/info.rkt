@@ -4,5 +4,5 @@
 (define version "0.01")
 (define deps '("base"
                "sugar"
-               ["gui-lib" #:version "1.26"])) ; for indenter fix
+               "gui-lib"))
 (define build-deps '("racket-doc" "rackunit-lib" "scribble-lib"))
