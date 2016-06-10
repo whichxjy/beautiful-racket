@@ -75,7 +75,7 @@
   [(statement ID "=" EXPR) #'(set! ID EXPR)]
   [(statement PROC-NAME . ARGS)
    (with-pattern
-     ([PROC-ID (prefix-id "basic:" #'PROC-NAME)])
+       ([PROC-ID (prefix-id "basic:" #'PROC-NAME)])
      #'(PROC-ID . ARGS))])
 
 (define-macro basic:if
@@ -104,7 +104,7 @@
    #'(cond->int (equal? SUM COMP-EXPR))] ; special case because `=` is overloaded in basic
   [(_ SUM OP-STR COMP-EXPR)
    (with-pattern
-     ([OP (replace-context #'here (prefix-id #'OP-STR))])
+       ([OP (replace-context #'here (prefix-id #'OP-STR))])
      #'(cond->int (OP SUM COMP-EXPR)))])
 
 (define <> (compose1 not equal?))
@@ -115,25 +115,44 @@
   [(_ SUM "-" PRODUCT) #'(- SUM PRODUCT)])
 
 (define-macro product
+  [(_ "-" VALUE) #'(- VALUE)]
   [(_ VALUE) #'VALUE]
   [(_ PRODUCT "*" VALUE) #'(* PRODUCT VALUE)]
   [(_ PRODUCT "/" VALUE) #'(/ PRODUCT VALUE)])
 
+(define-macro number
+  [(_ "-" NUM) #'(- NUM)]
+  [(_ NUM) #'NUM])
+
+(define-macro id-val
+  [(_ "-" ID) #'(- ID)]
+  [(_ ID) #'ID])
+
 (define print-list list)
 
+;; todo: make it work more like http://www.antonis.de/qbebooks/gwbasman/PRINT.html
 (define (basic:print [args #f])
   (match args
     [#f (displayln "")]
-    [(list print-list-item ... ";" pl) (begin (for-each display print-list-item)
+    [(list print-list-item ... ";" pl) (begin (for-each (λ(pli)
+                                                          (let ([pli (if (number? pli)
+                                                                         (format "~a " pli)
+                                                                         pli)])
+                                                            (display pli))) print-list-item)
                                               (basic:print pl))]
     [(list print-list-item ... ";") (for-each display print-list-item)]
     [(list print-list-item ...) (for-each displayln print-list-item)]))
 
+
+;; todo: make it work more like http://www.antonis.de/qbebooks/gwbasman/TAB.html
+;; need to track current line position
 (define (TAB num) (make-string num #\space))
 (define-macro (INT _ARG ...) #'(inexact->exact (truncate (expr _ARG ...))))
 (define (SIN num) (sin num))
 (define (ABS num) (inexact->exact (abs num)))
 (define (RND num) (* (random) num))
+(define (EXP num) (exp num))
+(define (SQR num) (sqrt num))
 
 (define-macro basic:input
   [(_ (print-list . PL-ITEMS) ID ...)
@@ -163,6 +182,10 @@
 (define (pop-for-stack)
   (set! for-stack (cdr for-stack)))
 
+(define (in-closed-interval? x left right)
+  (define cmp (if (< left right) <= >=))
+  (cmp left x right))
+
 (define-macro basic:for
   [(_ VAR START-VALUE END-VALUE)
    #'(basic:for VAR START-VALUE END-VALUE 1)]
@@ -173,7 +196,7 @@
          (push-for-stack (cons 'VAR
                                (λ () ; thunk that increments counter & teleports back to beginning of loop
                                  (define next-val (+ VAR STEP-VALUE))
-                                 (if (<= next-val END-VALUE)
+                                 (if (next-val . in-closed-interval? . START-VALUE END-VALUE)
                                      (begin
                                        (set! VAR next-val)
                                        (return-k #f)) ; return value for subsequent visits to line
@@ -189,3 +212,6 @@
 
 (define-macro (basic:next VAR ...)
   #'(handle-next 'VAR ...))
+
+(define-macro (basic:def DEF-ID LAMBDA-ID EXPR)
+  #'(set! DEF-ID (λ (LAMBDA-ID) EXPR)))

@@ -4,7 +4,8 @@ basic-program : line*
 
 line: NUMBER statement [/":" statement]*
 
-statement : "end" | "stop"
+statement : "def" id /"(" id /")" /"=" expr
+| "end" | "stop"
 | "gosub" expr
 | "goto" expr
 | "if" expr /"then" (statement | expr) [/"else" (statement | expr)]
@@ -25,12 +26,16 @@ sum : [sum ("+" | "-")] product
 
 product : [product ("*" | "/")] value 
 
-@value : id
+@value : id-val
 | id-expr
 | /"(" expr /")"
-| NUMBER
+| number
 | STRING
 
 /id-expr : id [/"(" expr [/"," expr]* /")"]
 
 @id : ID
+
+id-val : ["-"] id
+
+number : ["-"] NUMBER
