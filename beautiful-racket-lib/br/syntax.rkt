@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base syntax/parse racket/syntax syntax/strip-context)
-         syntax/strip-context racket/function racket/list racket/syntax)
+         syntax/strip-context racket/function racket/list racket/syntax br/to-string)
 (provide (all-defined-out) (all-from-out syntax/strip-context))
 
 (module+ test
@@ -142,3 +142,22 @@
      (if maybe-list
          (map loop maybe-list)
          stx))))
+
+(define-syntax-rule (begin-label LABEL . EXPRS)
+  (begin
+    (define LABEL (syntax->string #'EXPRS))
+    (provide LABEL)
+    (begin . EXPRS)))
+
+(module+ test
+  (begin-label
+    zing
+    (define (f x)
+      [+ x x])
+    
+    (define (g x)
+      (* x x)))
+  
+  (check-equal? zing "(define (f x)\n  [+ x x])\n\n(define (g x)\n  (* x x))")
+  (check-equal? (f 5) 10)
+  (check-equal? (g 5) 25))
