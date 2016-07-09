@@ -1,6 +1,6 @@
 #lang reader br/demo/stacker
-push 4
-push 8
+4
+8
 +
-push 3
+3
 *
