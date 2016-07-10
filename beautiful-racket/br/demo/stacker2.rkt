@@ -1,30 +1,26 @@
 #lang br/quicklang
-#:read-syntax stacker-read-syntax
-#:#%module-begin stacker-module-begin
+(provide read-syntax
+         (rename-out [stacker-module-begin #%module-begin])
+         + *)
 
-(define (stacker-read-syntax src-path in-port)
-  (define stack-args (port->list read in-port))
-  (with-pattern ([(STACK-ARG ...) stack-args])
-    (strip-identifier-bindings
-     #'(module stacker2-mod br/demo/stacker2
-         STACK-ARG ...))))
+(define (read-syntax src-path in-port)
+  (define args (port->list read in-port))
+  (define module-datum `(module stacker2-mod br/demo/stacker2
+                          ,@args))
+  (datum->syntax #f module-datum))
 
-(define-macro (stacker-module-begin STACK-ARG ...)
+(define-macro (stacker-module-begin ARG ...)
   #'(#%module-begin
      (define stack-result
        (for/fold ([stack empty])
-                 ([arg (in-list (list STACK-ARG ...))])
+                 ([arg (in-list (list ARG ...))])
          (push arg stack)))
      (display (first stack-result))))
 
 (define (push arg stack)
-  (cond
-    [(number? arg) (cons arg stack)]
-    [else
-     (define result (arg (first stack) (second stack)))
-     (cons result (drop stack 2))]))
-
-(provide + *)
+  (if (number? arg)
+      (cons arg stack)
+      (cons (arg (first stack) (second stack)) (drop stack 2))))
 
 (module+ test 
   (require rackunit)

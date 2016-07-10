@@ -1,24 +1,22 @@
 #lang br/quicklang
-#:read-syntax stacker-read-syntax
-#:#%module-begin stacker-module-begin
+(provide read-syntax (rename-out [stacker-module-begin #%module-begin]) + *)
 
-(define (stacker-read-syntax src-path in-port)
+(define (read-syntax path port)
   (strip-context
    #`(module stacker3-mod br/demo/stacker3
-       #,@(port->list read in-port))))
+       #,@(port->list read port))))
 
-(define-macro (stacker-module-begin STACK-ARG ...)
+(define-macro (stacker-module-begin ARG ...)
   #'(#%module-begin
-     (display
-      (first
-       (foldl (λ(arg stack)
-                (if (number? arg)
-                    (cons arg stack)
-                    (cons (arg (car stack) (cadr stack)) (cddr stack))))
-              null (list STACK-ARG ...))))))
+     (display (first
+               (foldl
+                (λ(x xs)
+                  (if (number? x)
+                      (cons x xs)
+                      (cons (x (car xs) (cadr xs)) (cddr xs))))
+                null (list ARG ...))))))
 
-(provide + *)
 
 (module+ test 
   (require rackunit)
-  (check-equal? (with-output-to-string (λ () (dynamic-require "stacker2-test.rkt" #f))) "36"))
+  (check-equal? (with-output-to-string (λ () (dynamic-require "stacker3-test.rkt" #f))) "36"))
