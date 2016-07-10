@@ -4,14 +4,14 @@
 
 (define (stacker-read-syntax src-path in-port)
   (define stack-args (port->list read in-port))
-  (strip-context
-   (with-pattern ([(STACK-ARG ...) stack-args])
+  (with-pattern ([(STACK-ARG ...) stack-args])
+    (strip-identifier-bindings
      #'(module stacker-mod br/demo/stacker
          (push STACK-ARG) ...))))
 
-(define-macro (stacker-module-begin PUSH-STACK-ARG ...)
+(define-macro (stacker-module-begin PUSH-EXPR ...)
   #'(#%module-begin
-     PUSH-STACK-ARG ...
+     PUSH-EXPR ...
      (display (first stack))))
 
 (define stack empty)

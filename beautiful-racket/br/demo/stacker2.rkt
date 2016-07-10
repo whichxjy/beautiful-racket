@@ -4,15 +4,15 @@
 
 (define (stacker-read-syntax src-path in-port)
   (define stack-args (port->list read in-port))
-  (strip-context
-   (with-pattern ([(STACK-ARG ...) stack-args])
+  (with-pattern ([(STACK-ARG ...) stack-args])
+    (strip-identifier-bindings
      #'(module stacker2-mod br/demo/stacker2
          STACK-ARG ...))))
 
 (define-macro (stacker-module-begin STACK-ARG ...)
   #'(#%module-begin
      (define stack-result
-       (for/fold ([stack null])
+       (for/fold ([stack empty])
                  ([arg (in-list (list STACK-ARG ...))])
          (push arg stack)))
      (display (first stack-result))))

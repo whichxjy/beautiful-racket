@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base syntax/parse racket/syntax syntax/strip-context)
          syntax/strip-context racket/function racket/list racket/syntax br/to-string)
-(provide (all-defined-out) (all-from-out syntax/strip-context))
+(provide (all-defined-out) (all-from-out syntax/strip-context)
+         (rename-out [strip-context strip-identifier-bindings]))
 
 (module+ test
   (require rackunit))
