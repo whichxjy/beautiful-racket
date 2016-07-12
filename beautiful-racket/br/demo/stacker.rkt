@@ -1,27 +1,34 @@
 #lang br/quicklang
 
-(define (stacker-read-syntax src-path in-port)
-  (define args (port->list read in-port))
-  (with-pattern ([(ARG ...) args])
-    (strip-identifier-bindings
-     #'(module stacker-mod br/demo/stacker
-         ARG ...))))
+(define (read-syntax src-path in-port)
+  (define arg-datums (port->list read in-port))
+  (define module-datum `(module mod-name br/demo/stacker
+                          ,@arg-datums))
+  (datum->syntax #f module-datum))
 (provide read-syntax)
 
-(define-macro (stacker-module-begin ARG ...)
+(define-macro (stacker-module-begin ARG-STX ...)
   #'(#%module-begin
-     (push ARG) ...
-     (display (first stack))))
+     (put ARG-STX) ...
+     (display (pop-stack!))))
 (provide (rename-out [stacker-module-begin #%module-begin]))
 
 (define stack empty)
 
-(define (push arg)
+(define (pop-stack!)
+  (define item (first stack))
+  (set! stack (rest stack))
+  item)
+
+(define (push-stack! item)
+  (set! stack (cons item stack)))
+
+(define (put arg)
   (cond
-    [(number? arg) (set! stack (cons arg stack))]
+    [(number? arg) (push-stack! arg)]
     [else
-     (define op-result (arg (first stack) (second stack)))
-     (set! stack (cons op-result (drop stack 2)))]))
+     (define op-result (arg (pop-stack!) (pop-stack!))) 
+     (push-stack! op-result)]))
 
 (provide + *)
 
