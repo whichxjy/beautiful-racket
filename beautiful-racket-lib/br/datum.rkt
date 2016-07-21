@@ -26,6 +26,9 @@
                                                                              (syntax->datum arg)
                                                                              arg)) args))))
 
+(define (format-datums datum-template args)
+  (map (λ(arg) (format-datum datum-template arg)) args))
+
 (module+ test
   (require rackunit syntax/datum)
   (check-equal? (string->datum "foo") 'foo)
@@ -36,4 +39,5 @@
   (check-equal? (format-datum '(~a-bar-~a) #'foo #'zam) '(foo-bar-zam))
   (check-equal? (format-datum (datum (~a-bar-~a)) "foo" "zam") '(foo-bar-zam))
   (check-equal? (format-datum '~a "foo") 'foo)
-  (check-equal? (format-datum (datum ~a) "foo") 'foo))
+  (check-equal? (format-datum (datum ~a) "foo") 'foo)
+  (check-equal? (format-datums '(put ~a) '("foo" "zam")) '((put foo) (put zam))))
