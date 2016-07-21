@@ -1,9 +1,6 @@
-#lang br
-
-(define-macro (bf-module-begin SRC-EXPR ...)
-  #'(#%module-begin
-     SRC-EXPR ...)) 
-(provide (rename-out [bf-module-begin #%module-begin]))
+#lang br/quicklang
+ 
+(provide #%module-begin)
 
 (define-macro (bf-program OP-OR-LOOP ...)
   #'(begin OP-OR-LOOP ...))
@@ -30,5 +27,3 @@
   #'(until (zero? (get-current-byte))
            LOOP-ARG ...))
 (provide loop)
-
-(provide #%top-interaction)
