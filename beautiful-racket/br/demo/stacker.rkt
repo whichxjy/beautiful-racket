@@ -1,9 +1,9 @@
 #lang br/quicklang
 
-(define (read-syntax src-path in-port)
-  (define args (port->list read in-port))
+(define (read-syntax path port)
+  (define args (port->lines port))
   (define arg-datums (format-datums '(handle ~a) args))
-  (define module-datum `(module mod-name br/demo/stacker
+  (define module-datum `(module stacker-mod br/demo/stacker
                           ,@arg-datums))
   (datum->syntax #f module-datum))
 (provide read-syntax)
@@ -24,10 +24,10 @@
 (define (push-stack! item)
   (set! stack (cons item stack)))
 
-(define (handle arg)
+(define (handle [arg #f])
   (cond
     [(number? arg) (push-stack! arg)]
-    [else
+    [(procedure? arg)
      (define op-result (arg (pop-stack!) (pop-stack!))) 
      (push-stack! op-result)]))
 
