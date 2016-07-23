@@ -2,15 +2,15 @@
 
 (define (read-syntax path port)
   (define args (port->lines port))
-  (define arg-datums (format-datums '(handle ~a) args))
+  (define handle-datums (format-datums '(handle ~a) args))
   (define module-datum `(module stacker-mod br/demo/stacker
-                          ,@arg-datums))
+                          ,@handle-datums))
   (datum->syntax #f module-datum))
 (provide read-syntax)
 
-(define-macro (stacker-module-begin ARG-DATUM-STX ...)
+(define-macro (stacker-module-begin DATUM-STX ...)
   #'(#%module-begin
-     ARG-DATUM-STX ...
+     DATUM-STX ...
      (display (pop-stack!))))
 (provide (rename-out [stacker-module-begin #%module-begin]))
 
