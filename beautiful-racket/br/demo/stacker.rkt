@@ -8,10 +8,10 @@
   (datum->syntax #f module-datum))
 (provide read-syntax)
 
-(define-macro (stacker-module-begin DATUM-STX ...)
+(define-macro (stacker-module-begin HANDLE-EXPR ...)
   #'(#%module-begin
-     DATUM-STX ...
-     (display (pop-stack!))))
+     HANDLE-EXPR ...
+     (display (first stack))))
 (provide (rename-out [stacker-module-begin #%module-begin]))
 
 (define stack empty)
@@ -27,11 +27,12 @@
 (define (handle [arg #f])
   (cond
     [(number? arg) (push-stack! arg)]
-    [(procedure? arg)
+    [(or (equal? * arg) (equal? + arg))
      (define op-result (arg (pop-stack!) (pop-stack!))) 
      (push-stack! op-result)]))
+(provide handle)
 
-(provide handle + *)
+(provide + *)
 
 (module+ test 
   (require rackunit)
