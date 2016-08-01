@@ -5,7 +5,7 @@
 
 (define (read-syntax src-path in-port)
   (define args (port->list read in-port))
-  (define module-datum `(module stacker2-mod br/demo/stacker2
+  (define module-datum `(module funstacker-mod br/demo/funstacker
                           ,@args))
   (datum->syntax #f module-datum))
 
@@ -24,4 +24,4 @@
 
 (module+ test 
   (require rackunit)
-  (check-equal? (with-output-to-string (λ () (dynamic-require "stacker2-test.rkt" #f))) "36"))
+  (check-equal? (with-output-to-string (λ () (dynamic-require "funstacker-test.rkt" #f))) "36"))
