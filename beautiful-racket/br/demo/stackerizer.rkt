@@ -3,7 +3,7 @@
 
 (define-macro (stackerizer-module-begin EXPR ...)
   #'(#%module-begin
-     (for-each displayln (reverse (flatten (list EXPR ...))))))
+     (stackerize EXPR ...)))
 (provide (rename-out [stackerizer-module-begin #%module-begin]))
 
 #|
@@ -18,6 +18,8 @@
   [(+ EXPR0 EXPR ...) #'(list '+ EXPR0 (+ EXPR ...))])
 |#
 
+(define (stackerize . args)
+  (for-each displayln (reverse (flatten args))))
 
 (define-macro (define-op-macro OP-NAME IDENTITY-VAL)
   #'(define-macro-cases OP-NAME
