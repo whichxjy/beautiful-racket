@@ -3,12 +3,14 @@
 (provide (all-defined-out))
 
 ;; read "foo bar" the same way as "(foo bar)" 
-;; other "bar" is dropped, which is too astonishing
+;; otherwise "bar" is dropped, which is too astonishing
 (define (string->datum str)
-  (let ([result (read (open-input-string (format "(~a)" str)))])
-    (if (= (length result) 1)
-        (car result)
-        result)))
+  (if (positive? (string-length str))
+      (let ([result (read (open-input-string (format "(~a)" str)))])
+        (if (= (length result) 1)
+            (car result)
+            result))
+      (void)))
 
 #;(define-syntax format-datum
     (λ(stx)
