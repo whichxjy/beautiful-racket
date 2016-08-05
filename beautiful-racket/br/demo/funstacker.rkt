@@ -8,19 +8,20 @@
   (datum->syntax #f module-datum))
 (provide read-syntax)
 
-(define-macro (stacker-module-begin HANDLE-ARGS-EXPR)
+(define-macro (funstacker-module-begin HANDLE-ARGS-EXPR)
   #'(#%module-begin
      (display (first HANDLE-ARGS-EXPR))))
-(provide (rename-out [stacker-module-begin #%module-begin]))
+(provide (rename-out [funstacker-module-begin #%module-begin]))
 
 (define (handle-args . args)
-  (for/fold ([stack empty])
-            ([arg (in-list (filter-not void? args))])
+  (for/fold ([stack-acc empty])
+            ([arg (filter-not void? args)])
     (cond
-      [(number? arg) (cons arg stack)]
+      [(number? arg) (cons arg stack-acc)]
       [(or (equal? * arg) (equal? + arg))
-       (define op-result (arg (first stack) (second stack)))
-       (cons op-result (drop stack 2))])))
+       (define op-result
+         (arg (first stack-acc) (second stack-acc)))
+       (cons op-result (drop stack-acc 2))])))
 (provide handle-args)
 
 (provide + *)
