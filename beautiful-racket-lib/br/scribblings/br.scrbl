@@ -12,6 +12,7 @@ This library provides the @tt{#lang br} teaching language used in the book, as w
 
 
 @;defmodulelang[br]
+@defmodule[br]
 
 @tt{#lang br} is a teaching language designed to smooth over some of the small idiosyncrasies and inconsistencies in Racket, so that those new to Racket will say ``ah, that makes sense'' rather than ``huh? what?'' @tt{#lang br} is not meant to hide the true nature of Racket, but rather defer certain parts of the learning curve.
 
@@ -50,7 +51,17 @@ TK
 
 @defmodule[br/define]
 
-TK
+@defform[
+(define-macro
+(tag-id attr-id elem-id) body ...)]
+Hello
+
+
+@defform[
+(define-macro-cases
+(tag-id attr-id elem-id) body ...)]
+Hello
+
 
 @section{Reader utilities}
 
