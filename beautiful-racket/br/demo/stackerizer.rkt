@@ -1,28 +1,27 @@
 #lang br/quicklang
 (provide + *)
 
-(define-macro (stackerizer-module-begin EXPR ...)
+(define-macro (stackerizer-mb EXPR ...)
   #'(#%module-begin
      (for-each displayln (reverse (flatten EXPR ...)))))
-(provide (rename-out [stackerizer-module-begin #%module-begin]))
+(provide (rename-out [stackerizer-mb #%module-begin]))
 
-#|
-(define-macro-cases *
-  [(*) #'1]
-  [(* EXPR0) #'EXPR0]
-  [(* EXPR0 EXPR ...) #'(list '* EXPR0 (* EXPR ...))])
+(define-macro (define-ops OP ...)
+  #'(begin
+      (define-macro-cases OP
+        [(OP FIRST) #'FIRST]
+        [(OP FIRST NEXT (... ...))
+         #'(list 'OP FIRST (OP NEXT (... ...)))]) 
+      ...))
 
-(define-macro-cases +
-  [(+) #'0]
-  [(+ EXPR0) #'EXPR0]
-  [(+ EXPR0 EXPR ...) #'(list '+ EXPR0 (+ EXPR ...))])
-|#
+(define-ops + *)
 
-(define-macro (define-op-macro OP-NAME IDENTITY-VAL)
-  #'(define-macro-cases OP-NAME
-      [(OP-NAME) #'IDENTITY-VAL]
-      [(OP-NAME EXPR0) #'EXPR0]
-      [(OP-NAME EXPR0 EXPR (... ...)) #'(list 'OP-NAME EXPR0 (OP-NAME EXPR (... ...)))]))
-
-(define-op-macro * 1)
-(define-op-macro + 0)
+(module+ test 
+  (require rackunit)
+  (check-equal? (with-output-to-string (λ () (dynamic-require "stackerizer-test.rkt" #f)))
+                "4
+8
++
+3
+*
+"))
