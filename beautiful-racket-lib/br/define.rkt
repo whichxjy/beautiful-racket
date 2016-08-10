@@ -48,40 +48,11 @@
   (syntax-parse stx
     #:literals (syntax)
     
-    ;; defective for syntax or function
+    ;; defective for function
     [(_ top-id)
      (raise-syntax-error 'define-cases "no cases given" (syntax->datum #'top-id))]
     
-    ;; defective for syntax
-    [(_ (sid:syntaxed-id . _) . _)  ; (define (#'f1 stx) expr ...)
-     (raise-syntax-error 'define-cases "definition of a syntax transformer must use lambda notation, because otherwise it's too easy to confuse the compile-time shape and the run-time shape" (syntax->datum #'sid.name))]
     
-    ;; syntax matcher
-    [(_ top-id:syntaxed-id . patexprs)
-     ;; todo: rephrase this check as a syntax-parse pattern above
-     (let ([all-but-last-pat-datums (map syntax->datum (syntax->list (syntax-case #'patexprs ()
-                                                                       [((pat result) ... last-one) #'(pat ...)])))])
-       (when (member 'else all-but-last-pat-datums)
-         (raise-syntax-error 'define-cases "else case must be last" (syntax->datum #'top-id.name))))
-     (with-syntax* ([((pat . result-exprs) ... else-result-exprs)
-                     (syntax-parse #'patexprs
-                       #:literals (syntax else)
-                       ;; syntax notation on pattern is optional
-                       [(((~or (syntax pat) pat) result-expr) ... (else . else-result-exprs))
-                        #'((pat result-expr) ... else-result-exprs)]
-                       [(((~or (syntax pat) pat) result-expr) ...)
-                        #'((pat result-expr) ... (list (raise-syntax-error 'define-cases (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'top-id.name))))])]
-                    [LITERALS (generate-literals #'(pat ...))])
-       #'(define-syntax top-id.name (λ (stx)
-                                      (define result
-                                        (syntax-case stx LITERALS
-                                          [pat (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
-                                                 (syntax-parameterize ([shared-syntax (make-shared-syntax-macro caller-stx)])
-                                                   . result-exprs))] ...
-                                          [else . else-result-exprs]))
-                                      (if (syntax? result)
-                                          result
-                                          (datum->syntax #'top-id.name result)))))]
     
     ;; function matcher
     [(_ top-id:id [(_ . pat-args) . body] ...)
@@ -97,45 +68,6 @@
     [(_ arg1 arg2) (+ arg1 arg2)])
   (check-equal? (f 42) 43)
   (check-equal? (f 42 5) 47))
-
-
-(define-syntax (br:define stx)
-  
-  ;;todo: share syntax classes
-  
-  (define-syntax-class syntaxed-id
-    #:literals (syntax)
-    #:description "id in syntaxed form"
-    (pattern (syntax name:id)))
-  
-  (define-syntax-class syntaxed-thing
-    #:literals (syntax)
-    #:description "some datum in syntaxed form"
-    (pattern (syntax thing:expr)))
-  
-  (syntax-parse stx
-    #:literals (syntax)
-    
-    ;; syntax
-    [(_ (syntax (id . pat-args)) . body) ; (define #'(foo arg) #'(+ arg arg))
-     #'(define-cases (syntax id) [(syntax (_ . pat-args)) (begin . body)])]
-    
-    [(_ sid:syntaxed-id sid2:syntaxed-id) ; (define #'f1 #'f2)
-     #'(define-syntax sid.name (make-rename-transformer sid2))]
-    
-    [(_ (syntax id) (syntax thing)) ; (define #'f1 #'42)
-     #'(define-cases (syntax id) [#'_ (syntax thing)])]
-    
-    [(_ (sid:syntaxed-id stx-arg ...) . exprs)  ; (define (#'f1 stx) expr ...)
-     (raise-syntax-error 'define "definition of a syntax transformer must use lambda notation, because otherwise it's too easy to confuse the compile-time shape and the run-time shape" (syntax->datum #'sid.name))]
-    
-    [(_ sid:syntaxed-id (λ (stx-arg ...) . exprs)) ; (define #'f1 (λ(stx) expr ...)
-     #:fail-when (not (= (length (syntax->datum #'(stx-arg ...))) 1))
-     (raise-syntax-error 'define "did not get exactly one argument for macro" (syntax->datum #'(stx-arg ...)))
-     (with-syntax ([(first-stx-arg other ...) #'(stx-arg ...)])
-       #'(define-syntax (sid.name first-stx-arg) . exprs))]
-    
-    [(_ . args) #'(define . args)]))
 
 
 (define-syntax-rule (debug-define-macro (id . pat-args) body-exp)
@@ -167,14 +99,12 @@
 (begin-for-syntax
   (begin-for-syntax
     (require (for-syntax racket/base))
-    (define-syntax (make-shared-syntax-macro stx)
-      (syntax-case stx ()
-        [(_ caller-stx)
-         #'(λ(stx) (syntax-case stx ()
-                     [(_ form)
-                      #'(datum->syntax caller-stx (if (syntax? form)
-                                                      (syntax-e form)
-                                                      form))]))]))))
+    (define-syntax-rule (make-shared-syntax-macro caller-stx)
+      #'(syntax-rules stx
+          [(_ form)
+           #'(datum->syntax caller-stx (if (syntax? form)
+                                           (syntax-e form)
+                                           form))]))))
 
 (begin-for-syntax
   (define-syntax-rule (with-shared-id (id ...) . body)
@@ -184,7 +114,7 @@
   (define-syntax with-calling-site-id (make-rename-transformer #'with-shared-id)))
 
 (define-syntax (define-macro stx)
-   (define-syntax-class syntaxed-id
+  (define-syntax-class syntaxed-id
     #:literals (syntax)
     #:description "id in syntaxed form"
     (pattern (syntax name:id)))
@@ -193,18 +123,25 @@
     #:literals (syntax)
     #:description "some datum in syntaxed form"
     (pattern (syntax thing:expr)))
+
+  (define-syntax-class transformer-func
+    #:literals (lambda λ)
+    (pattern ([~or lambda λ] (arg:id) . body:expr)))
   
   (syntax-parse stx
     #:literals (syntax)
-    [(_ id #'other-id) ; (define-macro id #'other-id)
-     #'(br:define #'id #'other-id)]
-    [(_ (id . patargs) . body)
-     #'(br:define #'(id . patargs) . body)]
-    [(_ id [pat . patbody] ...)
-     #'(define-cases (syntax id) [pat . patbody] ...)]))
+    [(_ id:id sid:syntaxed-id)
+     #'(define-syntax id (make-rename-transformer sid))]
+    [(_ id:id func:transformer-func)
+     #'(define-syntax id func)]
+    [(_ id:id thing:syntaxed-thing) 
+     #'(define-syntax id (λ(stx) thing))]
+    [(_ (id:id . patargs) . body:expr)
+     #'(define-macro-cases id [(id . patargs) (begin . body)])]))
+
 
 (define-syntax (define-macro-cases stx)
-   (define-syntax-class syntaxed-id
+  (define-syntax-class syntaxed-id
     #:literals (syntax)
     #:description "id in syntaxed form"
     (pattern (syntax name:id)))
@@ -216,17 +153,42 @@
   
   (syntax-parse stx
     #:literals (syntax)
-    [(_ id . body)
-     #'(define-cases (syntax id) . body)]))
+    [(_ id:id) ; defective for syntax
+     (raise-syntax-error 'define-macro-cases "no cases given" (syntax->datum #'id))]
+    [(_ id:id . patexprs)
+     ;; todo: rephrase this check as a syntax-parse pattern above
+     (let ([all-but-last-pat-datums (map syntax->datum (syntax->list (syntax-case #'patexprs ()
+                                                                       [((pat result) ... last-one) #'(pat ...)])))])
+       (when (member 'else all-but-last-pat-datums)
+         (raise-syntax-error 'define-cases "else case must be last" (syntax->datum #'id))))
+     (with-syntax* ([((pat . result-exprs) ... else-result-exprs)
+                     (syntax-parse #'patexprs
+                       #:literals (syntax else)
+                       ;; syntax notation on pattern is optional
+                       [(((~or (syntax pat) pat) result-expr) ... (else . else-result-exprs))
+                        #'((pat result-expr) ... else-result-exprs)]
+                       [(((~or (syntax pat) pat) result-expr) ...)
+                        #'((pat result-expr) ... (list (raise-syntax-error 'define-cases (format "no matching case for syntax pattern ~v" (syntax->datum stx)) (syntax->datum #'id))))])]
+                    [LITERALS (generate-literals #'(pat ...))])
+       #'(define-syntax id
+           (λ (stx)
+             (define result
+               (syntax-case stx LITERALS
+                 [pat (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
+                        (syntax-parameterize ([shared-syntax (make-shared-syntax-macro caller-stx)])
+                          . result-exprs))] ...
+                 [else . else-result-exprs]))
+             (if (syntax? result)
+                 result
+                 (datum->syntax #'id result)))))]))
 
 
 (module+ test
-  ;; todo: make these tests work, if they still make sense
-  #;(define-macro plus (λ(stx) #'+))
-  #;(check-equal? (plus 42) +)
-  #;(define-macro plusser #'plus)
-  #;(check-equal? (plusser 42) +)
-  #;(check-equal? plusser +)
+  (define-macro plus (λ(stx) #'+))
+  (check-equal? (plus 42) +)
+  (define-macro plusser #'plus)
+  (check-equal? (plusser 42) +)
+  (check-equal? plusser +)
   (define-macro (times [nested ARG]) #'(* ARG ARG))
   (check-equal? (times [nested 10]) 100)
   (define-macro timeser #'times)
@@ -254,7 +216,7 @@
   (check-equal? (add 5) 10)
   (define-macro-cases add-again [(_ X) #'(+ X X)])
   (check-equal? (add-again 5) 10)
-  (define-macro add-3rd [(_ X) #'(+ X X)])
+  (define-macro-cases add-3rd [(_ X) #'(+ X X)])
   (check-equal? (add-3rd 5) 10)
   (define-macro add-4th #'add-3rd)
   (check-equal? (add-4th 5) 10)
@@ -278,7 +240,8 @@
   (check-equal? (elseop "+") 'got-arg)
   (check-equal? (elseop "+" 42) 'got-else)
 
-  ;; todo: fix test, should throw error because `else` clause is out of order
-  #;(check-exn exn:fail:syntax? (λ _ (expand-once #'(define-macro-cases badelseop
+  (check-exn exn:fail:syntax? (λ _ (expand-once #'(define-macro-cases no-cases))))
+
+  (check-exn exn:fail:syntax? (λ _ (expand-once #'(define-macro-cases badelseop
                                                       [else #''got-else]
                                                       [(_ _arg) #''got-arg])))))
