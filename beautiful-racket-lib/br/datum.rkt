@@ -23,13 +23,16 @@
                                                                                    (syntax->datum arg)
                                                                                    arg)) (list <arg> ...)))))])))
 
+(define (datum? x) (or (list? x) (symbol? x)))
+
 (define (format-datum datum-template . args)
   (string->datum (apply format (format "~a" datum-template) (map (λ(arg) (if (syntax? arg)
                                                                              (syntax->datum arg)
                                                                              arg)) args))))
 
-(define (format-datums datum-template args)
-  (map (λ(arg) (format-datum datum-template arg)) args))
+;; todo: rephrase errors from `format` or `map` in terms of `format-datums`
+(define (format-datums datum-template . argss)
+  (apply map (λ args (apply format-datum datum-template args)) argss))
 
 (module+ test
   (require rackunit syntax/datum)
