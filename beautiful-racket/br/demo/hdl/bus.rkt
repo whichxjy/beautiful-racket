@@ -103,8 +103,8 @@ base bus:
 
 
 (define-macro-cases define-base-bus
-  [#'(_macro-name ID THUNK) #'(_macro-name ID THUNK default-bus-width)]
-  [#'(_macro-name ID THUNK _bus-width-in)
+  [(_macro-name ID THUNK) #'(_macro-name ID THUNK default-bus-width)]
+  [(_macro-name ID THUNK _bus-width-in)
    (with-pattern
     ([_id-thunk (suffix-id #'ID "-val")]
      [_bus-type (or (syntax-property caller-stx 'impersonate) #'bus)])
@@ -188,9 +188,9 @@ input bus:
 
 
 (define-macro-cases define-input-bus
-  [#'(_macro-name _id)
+  [(_macro-name _id)
    #'(_macro-name _id default-bus-width)]
-  [#'(_macro-name _id _bus-width)
+  [(_macro-name _id _bus-width)
    (syntax-property* #'(define-base-bus _id (λ () 0) _bus-width)
                      ['impersonate #'input-bus]
                      ['writer #t])])
