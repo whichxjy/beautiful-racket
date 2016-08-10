@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base br/syntax) br/define)
-(provide (all-defined-out))
+(provide (except-out (all-defined-out) string->datum))
 
 ;; read "foo bar" the same way as "(foo bar)" 
 ;; otherwise "bar" is dropped, which is too astonishing
@@ -12,18 +12,8 @@
             result))
       (void)))
 
-#;(define-syntax format-datum
-    (λ(stx)
-      (syntax-case stx (quote datum)
-        [(_ (quote <datum-template>) <arg> ...)
-         #'(format-datum (datum <datum-template>) <arg> ...)]
-        [(_ (datum datum-template) <arg> ...)
-         (syntax-let ([#'format-string (format "~a" (syntax->datum #'datum-template))])
-                     #'(string->datum (apply format format-string (map (λ(arg) (if (syntax? arg)
-                                                                                   (syntax->datum arg)
-                                                                                   arg)) (list <arg> ...)))))])))
-
-(define (datum? x) (or (list? x) (symbol? x)))
+(define (datum? x)
+  (or (list? x) (symbol? x)))
 
 (define (format-datum datum-template . args)
   (string->datum (apply format (format "~a" datum-template) (map (λ(arg) (if (syntax? arg)

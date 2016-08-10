@@ -2,17 +2,12 @@
 (require racket/provide racket/list racket/string racket/format racket/match racket/port
          br/define br/syntax br/datum br/debug br/cond racket/function
          (for-syntax racket/base racket/syntax br/syntax br/debug br/define))
-(provide (except-out (all-from-out racket/base) define)
+(provide (all-from-out racket/base)
          (all-from-out racket/list racket/string racket/format racket/match racket/port
-                       br/syntax br/datum br/debug br/cond racket/function)
+                       br/syntax br/datum br/debug br/cond racket/function br/define)
          (for-syntax (all-from-out racket/base racket/syntax br/syntax br/debug))
-         (for-syntax caller-stx shared-syntax with-shared-id with-calling-site-id) ; from br/define
-         (filtered-out
-          (λ (name)
-            (let ([pat (regexp "^br:")])
-              (and (regexp-match? pat name)
-                   (regexp-replace pat name ""))))
-          (combine-out (all-from-out br/define))))
+         (for-syntax caller-stx shared-syntax with-shared-id with-calling-site-id)) ; from br/define
+         
 
 ;; todo: activate at-exp reader by default
 
