@@ -6,7 +6,7 @@
   #'(begin OP-OR-LOOP ...))
 (provide bf-program)
 
-(define-macro op
+(define-macro-cases op
   [(op ">") #'(move-pointer 1)]
   [(op "<") #'(move-pointer -1)]
   [(op "+") #'(set-current-byte! (add1 (get-current-byte)))]

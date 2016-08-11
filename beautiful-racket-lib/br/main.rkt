@@ -6,16 +6,9 @@
          (all-from-out racket/list racket/string racket/format racket/match racket/port
                        br/syntax br/datum br/debug br/cond racket/function br/define)
          (for-syntax (all-from-out racket/base racket/syntax br/syntax br/debug))
-         (for-syntax caller-stx with-shared-id with-calling-site-id)) ; from br/define
+         (for-syntax caller-stx with-shared-id)) ; from br/define
          
-
 ;; todo: activate at-exp reader by default
-
-(define (remove-blank-lines strs)
-  (filter (λ(str) (regexp-match #px"\\S" str)) strs))
-
-(provide remove-blank-lines)
-
 
 (module reader syntax/module-reader
   #:language 'br

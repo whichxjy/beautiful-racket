@@ -9,7 +9,7 @@
               syntax/define
               racket/string))
 (provide (all-defined-out)
-         (for-syntax with-shared-id with-calling-site-id))
+         (for-syntax with-shared-id))
 
 (module+ test
   (require rackunit))
@@ -116,9 +116,10 @@
 
 (begin-for-syntax
   (define-syntax-rule (with-shared-id (id ...) . body)
-    (with-syntax ([id (shared-syntax 'id)] ...)
-      . body))
-  (define-syntax with-calling-site-id (make-rename-transformer #'with-shared-id)))
+    (with-syntax ([id (datum->syntax caller-stx (if (syntax? id)
+                                                    (syntax-e id)
+                                                    id))] ...)
+      . body)))
 
 
 ;; `syntax-parse` classes shared by `define-macro` and `define-macro-cases`
@@ -172,8 +173,8 @@
              (define result
                (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
                  (syntax-case stx LITERALS
-                     [pat . result-exprs] ...
-                     else-clause)))
+                   [pat . result-exprs] ...
+                   else-clause)))
              (if (syntax? result)
                  result
                  (datum->syntax #'id result)))))]
