@@ -43,9 +43,8 @@
 (begin-for-syntax
   ;; expose the caller context within br:define macros with syntax parameter
   (require (for-syntax racket/base) racket/stxparam)
-  (provide caller-stx shared-syntax)
-  (define-syntax-parameter caller-stx (λ(stx) (error 'caller-stx-not-parameterized)))
-  (define-syntax-parameter shared-syntax (λ(stx) (error 'shared-syntax-not-parameterized))))
+  (provide caller-stx)
+  (define-syntax-parameter caller-stx (λ(stx) (error 'caller-stx-not-parameterized))))
 
 
 (define-syntax (define-cases stx)
@@ -172,10 +171,9 @@
            (λ (stx)
              (define result
                (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
-                 (syntax-parameterize ([shared-syntax (make-shared-syntax-macro caller-stx)])
-                   (syntax-case stx LITERALS
+                 (syntax-case stx LITERALS
                      [pat . result-exprs] ...
-                     else-clause))))
+                     else-clause)))
              (if (syntax? result)
                  result
                  (datum->syntax #'id result)))))]
