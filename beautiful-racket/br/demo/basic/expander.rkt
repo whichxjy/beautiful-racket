@@ -79,14 +79,14 @@
                                                  (raise exn))])
                       . STATEMENTS))))
 
-(define-macro statement
+(define-macro-cases statement
   [(statement ID "=" EXPR) #'(basic:let ID EXPR)]
   [(statement PROC-NAME . ARGS)
    (with-pattern
        ([PROC-ID (prefix-id "basic:" #'PROC-NAME)])
      #'(PROC-ID . ARGS))])
 
-(define-macro basic:let
+(define-macro-cases basic:let
   [(_ (id-expr ID) EXPR)
    #'(begin
        #;(displayln (format "setting ~a = ~a in ~a" 'ID EXPR (current-line)))
@@ -94,7 +94,7 @@
   [(_ (id-expr ID DIM-IDX ...) EXPR)
    #'(array-set! ID DIM-IDX ... EXPR)])
 
-(define-macro basic:if
+(define-macro-cases basic:if
   [(_ COND-EXPR TRUE-EXPR FALSE-EXPR)
    #'(if (true? COND-EXPR)
          TRUE-EXPR
@@ -109,7 +109,7 @@
 (define (basic:and . args) (cond->int (andmap true? args)))
 (define (basic:or . args) (cond->int (ormap true? args)))
 
-(define-macro id-expr
+(define-macro-cases id-expr
   [(_ ID) #'(cond
               [(procedure? ID) (ID)]
               [(array? ID) (array-ref ID (make-vector (array-rank ID) 0))] ; no subscript => zeroth element
@@ -119,12 +119,12 @@
                              [(array? ID) (array-ref ID EXPR0 EXPR ...)]
                              [else (error 'id-expr-confused)])])
 
-(define-macro expr
+(define-macro-cases expr
   [(_ COMP-EXPR) #'COMP-EXPR]
   [(_ COMP-EXPR "and" SUBEXPR) #'(basic:and COMP-EXPR SUBEXPR)]
   [(_ COMP-EXPR "or" SUBEXPR) #'(basic:or COMP-EXPR SUBEXPR)])
 
-(define-macro comp-expr
+(define-macro-cases comp-expr
   [(_ SUM) #'SUM]
   [(_ SUM "=" COMP-EXPR)
    #'(cond->int (equal? SUM COMP-EXPR))] ; special case because `=` is overloaded in basic
@@ -135,26 +135,26 @@
 
 (define <> (compose1 not equal?))
 
-(define-macro sum
+(define-macro-cases sum
   [(_ SUM) #'SUM]
   [(_ SUM "+" PRODUCT) #'(+ SUM PRODUCT)]
   [(_ SUM "-" PRODUCT) #'(- SUM PRODUCT)])
 
-(define-macro product
+(define-macro-cases product
   [(_ "-" VALUE) #'(- VALUE)]
   [(_ VALUE) #'VALUE]
   [(_ PRODUCT "*" VALUE) #'(* PRODUCT VALUE)]
   [(_ PRODUCT "/" VALUE) #'(/ PRODUCT VALUE)])
 
-(define-macro power
+(define-macro-cases power
   [(_ BASE) #'BASE]
   [(_ BASE POWER) #'(expt BASE POWER)])
 
-(define-macro number
+(define-macro-cases number
   [(_ "-" NUM) #'(- NUM)]
   [(_ NUM) #'NUM])
 
-(define-macro id-val
+(define-macro-cases id-val
   [(_ "-" ID) #'(- ID)]
   [(_ ID) #'ID])
 
@@ -194,7 +194,7 @@
 (define (EXP num) (exp num))
 (define (SQR num) (sqrt num))
 
-(define-macro basic:input
+(define-macro-cases basic:input
   [(_ (print-list . PL-ITEMS) ID ...)
    #'(begin
        (basic:print (append (print-list . PL-ITEMS) (list ";")))
@@ -206,7 +206,7 @@
 
 (define (basic:goto where) where)
 
-(define-macro basic:on
+(define-macro-cases basic:on
   [(_ TEST-EXPR "goto" OPTION ...)
    #'(basic:goto (list-ref (list OPTION ...) (sub1 TEST-EXPR)))]
   [(_ TEST-EXPR "gosub" OPTION ...)
@@ -239,7 +239,7 @@
   (define cmp (if (< left right) <= >=))
   (cmp left x right))
 
-(define-macro basic:for
+(define-macro-cases basic:for
   [(_ VAR START-VALUE END-VALUE)
    #'(basic:for VAR START-VALUE END-VALUE 1)]
   [(_ VAR START-VALUE END-VALUE STEP-VALUE)
