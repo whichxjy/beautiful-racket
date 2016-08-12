@@ -1,10 +1,10 @@
 #lang scribble/manual
-@(require (for-label racket/base racket/contract br/cond br/datum))
+@(require (for-label racket/base racket/contract br))
 
 @(require scribble/eval)
 
 @(define my-eval (make-base-eval))
-@(my-eval `(require br/cond br/datum))
+@(my-eval `(require br))
 
 
 @title[#:style 'toc]{Beautiful Racket}
@@ -66,7 +66,7 @@ Loop over @racket[_body] until @racket[_cond] is not @racket[#f]. If @racket[_co
 
 @defmodule[br/datum]
 
-A @defterm{datum} is a literal representation of Racket code that describes an S-expression. Unlike a string, a datum preserves the internal structure of the S-expression. Meaning, if the S-expression is a single value, or list-shaped, or tree-shaped, so is its corresponding datum. 
+A @defterm{datum} is a literal representation of a single unit of Racket code, also known as an @defterm{S-expression}. Unlike a string, a datum preserves the internal structure of the S-expression. Meaning, if the S-expression is a single value, or list-shaped, or tree-shaped, so is its corresponding datum. 
 
 Datums are made with @racket[quote] or its equivalent notation, the @litchar{'} prefix (see @secref["quote" #:doc '(lib "scribblings/guide/guide.scrbl")]).
 
@@ -110,7 +110,10 @@ Like @racket[format-datum], but applies @racket[_datum-form] to the lists of @ra
 @defmodule[br/debug]
 
 
-@defform*[((report expr) (report expr maybe-name))]
+@defform*[[
+(report expr) 
+(report expr maybe-name)
+]]
 Print the name and value of @racket[_expr] to @racket[current-error-port], but also return the evaluated result of @racket[_expr] as usual. This lets you see the value of an expression or variable at runtime without disrupting any of the surrounding code. Optionally, you can use @racket[_maybe-name] to change the name shown in @racket[current-error-port].
 
 For instance, suppose you wanted to see how @racket[first-condition?] was being evaluted in this expression:
@@ -164,16 +167,154 @@ A variant of @racket[report] for use with @secref["stx-obj" #:doc '(lib "scribbl
 @defmodule[br/define]
 
 @defform[
-(define-macro
-(tag-id attr-id elem-id) body ...)]
-Hello
+(define-cases id 
+  [pat body ...+] ...+)
+]
+Define a function that behaves differently depending on how many arguments are supplied (also known as @seclink["Evaluation_Order_and_Arity" #:doc '(lib "scribblings/guide/guide.scrbl")]{@italic{arity}}). Like @racket[cond], you can have any number of branches. Each branch starts with a @racket[_pat] that accepts a certain number of arguments. If the current invocation of the function matches the number of arguments in @racket[_pat], then the @racket[_body] on the right-hand side is evaluated. If there is no matching case, an arity error arises.
+
+Derived from @racket[case-lambda], which you might prefer.
+
+@examples[#:eval my-eval
+(define-cases f
+  [(f arg1) (* arg1 arg1)]
+  [(f arg1 arg2) (* arg1 arg2)]
+  [(f arg1 arg2 arg3 arg4) (* arg1 arg2 arg3 arg4)])
+
+(f 4)
+(f 6 7)
+(f 1 2 3 4)
+(f "three" "arguments" "will-trigger-an-error")
+
+(define-cases f2
+  [(f2) "got zero args"]
+  [(f2 . args) (format "got ~a args" (length args))])
+
+(f2)
+(f2 6 7)
+(f2 1 2 3 4)
+(f2 "three" "arguments" "will-not-trigger-an-error-this-time")
+
+]
 
 
-@defform[
-(define-macro-cases
-(tag-id attr-id elem-id) body ...)]
-Hello
+@defform*[
+#:literals (syntax lambda stx)
+[
+(define-macro id (syntax other-id)) 
+(define-macro id (lambda (arg-id) result-expr ...+))
+(define-macro id (syntax result-expr)) 
+(define-macro (id pat-arg ...) expr ...+) 
+]]
+Create a macro using one of the subforms above, which are explained below:
 
+@specsubform[#:literals (define-macro syntax lambda stx) 
+(define-macro id (syntax other-id))]{
+If the first argument is an identifier @racket[_id] and the second a syntaxed identifier that looks like @racket[(syntax other-id)], create a @tech{rename transformer}, which is a fancy term for ``macro that replaces @racket[_id] with @racket[_other-id].'' (This subform is equivalent to @racket[make-rename-transformer].)
+
+Why do we need rename transformers? Because an ordinary macro operates on its whole calling expression, like @racket[(macro-name this-arg that-arg . and-so-on)]. Whereas a rename transformer operates only on the identifier itself (regardless of where it appears in the code). It's like creating an alias for an identifier.
+
+Below, notice how the rename transformer, operating in the macro realm, approximates the behavior of a run-time assignment. 
+
+@examples[#:eval my-eval
+(define foo 'foo-value)
+(define bar foo)
+bar
+(define-macro zam-macro #'foo)
+zam-macro
+(define add +)
+(add 20 22)
+(define-macro sum-macro #'+)
+(sum-macro 20 22)
+]
+}
+
+
+@specsubform[#:literals (define-macro lambda stx) 
+(define-macro id (lambda (arg-id) result-expr ...+))]{
+If the first argument is an @racket[_id] and the second a single-argument procedure, create a macro called @racket[_id] that uses the procedure as a @tech{syntax transformer}. This transformer must return a @tech{syntax object}, otherwise you'll trigger an error. Beyond that, the transformer can do whatever you like. (This subform is equivalent to @racket[define-syntax].)
+
+
+@examples[#:eval my-eval
+(define-macro nice-sum (lambda (stx) #'(+ 2 2)))
+nice-sum
+(define-macro not-nice (lambda (stx) '(+ 2 2)))
+not-nice
+]
+
+}
+
+@specsubform[#:literals (define-macro) 
+(define-macro id syntax-object)
+#:contracts ([syntax-object syntax?])]{
+If the first argument is an @racket[_id] and the second a @racket[_syntax-object], create a @tech{syntax transformer} that returns @racket[_syntax-object]. This is just alternate notation for the previous subform, wrapping @racket[_syntax-object] inside a syntax-transformer body. The effect is to create a macro from @racket[_id] that always returns @racket[_syntax-object], regardless of how it's invoked. Not especially useful within programs. Mostly handy for making quick macros at the @tech{REPL}.
+
+@examples[#:eval my-eval
+(define-macro bad-listener #'"did you say something?")
+bad-listener
+(bad-listener)
+(bad-listener "hello")
+(bad-listener 1 2 3 4)
+]
+
+}
+
+@specsubform[#:literals (define-macro) 
+(define-macro (id pat-arg ...) result-expr ...+)]{
+If the first argument is a @tech{syntax pattern} starting with @racket[_id], then create a @tech{syntax transformer} for this pattern using @racket[_result-expr ...] as the return value. As usual, @racket[_result-expr ...] needs to return a @tech{syntax object} or you'll get an error.
+
+By convention, if a @racket[pat-arg] has a @tt{CAPITALIZED-NAME}, it's treated as a named wildcard match (meaning, it will match any expression in that position, and can be subsequently referred to by that name). Otherwise, @racket[pat-arg] is treated as a literal matcher (meaning, it will only match the same expression). 
+
+For instance, the @racket[sandwich] macro below requires three arguments, and the third must be @racket[please], but the other two are wildcards:
+
+@examples[#:eval my-eval
+(define-macro (sandwich TOPPING FILLING please)
+  #'(format "I love ~a with ~a." 'FILLING 'TOPPING))
+
+(sandwich brie ham)
+(sandwich brie ham now)
+(sandwich brie ham please)
+(sandwich banana bacon please)
+
+]
+
+The ellipsis @racket[...] can be used with a wildcard matcher to match a list of arguments. Please note: though a wildcard matcher standing alone must match one argument, once you add an ellipsis, it's allowed to match zero:
+
+@examples[#:eval my-eval
+(define-macro (pizza TOPPING ...)
+  #'(string-join (cons "Waiter!"
+                       (list (format "More ~a!" 'TOPPING) ...))
+                 " "))
+
+(pizza mushroom)
+(pizza mushroom pepperoni)
+(pizza)
+]
+
+The capitalization convention for a wildcard @racket[pat-arg] makes it easy to mix literal and wildcard matchers in one pattern. But it also makes it easy to mistype a pattern and not get the wildcard matcher you were expecting. Below, @racket[bad-squarer] doesn't work because @racket[any-number] is meant to be a wildcard. But it's not capitalized, so it's considered a literal matcher, and it triggers an error:
+
+@examples[#:eval my-eval
+(define-macro (bad-squarer any-number)
+  #'(* any-number any-number))
+(bad-squarer +10i)
+]
+
+The error is cleared when the argument is capitalized, thus making it a wilcard matcher:
+
+@examples[#:eval my-eval
+(define-macro (good-squarer ANY-NUMBER)
+  #'(* ANY-NUMBER ANY-NUMBER))
+(good-squarer +10i)
+]
+
+This subform of @racket[define-macro] is useful for macros that have one calling pattern. To make a macro with multiple calling patterns, see @racket[define-macro-cases].
+}
+
+
+@defform*[
+[
+(define-macro-cases id [(_ pat-arg ...) result-expr ...+] ...+) 
+]]
+TBD
 
 @section{Reader utilities}
 
