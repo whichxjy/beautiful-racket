@@ -12,7 +12,6 @@
 @author[(author+email "Matthew Butterick" "mb@mbtype.com")]
 
 
-@defmodule[br]
 
 @link["http://beautifulracket.com"]{@italic{Beautiful Racket}} is a book about making programming languages with Racket.
 
@@ -20,13 +19,14 @@ This library provides the @tt{#lang br} teaching language used in the book, as w
 
 This library is designed to smooth over some of the small idiosyncrasies and inconsistencies in Racket, so that those new to Racket are more likely to say ``ah, that makes sense'' rather than ``huh? what?''
 
+@;{
 @section{The @tt{br} language(s)}
 
 @defmodulelang[br]
 
 
 @defmodulelang[br/quicklang]
-
+}
 
 
 @section{Conditionals}
@@ -407,8 +407,10 @@ The generated @racket[read] function takes one argument, an input port. It calls
 
 }
 
+@;{
 @section{Syntax}
 
 @defmodule[br/syntax]
 
 TK
+}
