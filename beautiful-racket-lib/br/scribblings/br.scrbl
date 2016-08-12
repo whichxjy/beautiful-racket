@@ -75,9 +75,9 @@ When I use ``datum'' in its specific Racket sense, I use ``datums'' as its plura
 
 @defproc[
 (format-datum
-[datum-form datum?]
+[datum-form (or/c list? symbol?)]
 [val any/c?] ...)
-datum?]{
+(or/c list? symbol?)]{
 Similar to @racket[format], but the template @racket[datum-form] is a datum, rather than a string, and the function returns a datum, rather than a string. Otherwise, the same formatting escapes can be used in the template (see @racket[fprintf]).
 
 Two special cases. First, a string that describes a list of datums is parenthesized so the result is a single datum. Second, an empty string returns @racket[void] (not @racket[#f], because that's a legitimate datum).
@@ -94,9 +94,9 @@ Two special cases. First, a string that describes a list of datums is parenthesi
 
 @defproc[
 (format-datums
-[datum-form datum?]
+[datum-form (or/c list? symbol?)]
 [vals (listof any/c?)] ...)
-(listof datum?)]{
+(listof (or/c list? symbol?))]{
 Like @racket[format-datum], but applies @racket[datum-form] to the lists of @racket[vals] in similar way to @racket[map], where values for the format string are taken from the lists of @racket[vals] in parallel. This means that a) @racket[datum-form] must accept as many arguments as there are lists of @racket[vals], and b) the lists of @racket[vals] must all have the same number of items.
 
 @examples[#:eval my-eval
@@ -107,6 +107,7 @@ Like @racket[format-datum], but applies @racket[datum-form] to the lists of @rac
 (format-datums '(~a ~a) '("foo" "bar" "zam") '(42))
 ]
 }
+
 
 @section{Debugging}
 
@@ -211,7 +212,7 @@ Create a macro using one of the subforms above, which are explained below:
 
 @specsubform[#:literals (define-macro syntax lambda stx) 
 (define-macro id (syntax other-id))]{
-If the first argument is an identifier @racket[id] and the second a syntaxed identifier that looks like @racket[(syntax other-id)], create a @tech{rename transformer}, which is a fancy term for ``macro that replaces @racket[id] with @racket[other-id].'' (This subform is equivalent to @racket[make-rename-transformer].)
+If the first argument is an identifier @racket[id] and the second a syntaxed identifier that looks like @racket[(syntax other-id)], create a rename transformer, which is a fancy term for ``macro that replaces @racket[id] with @racket[other-id].'' (This subform is equivalent to @racket[make-rename-transformer].)
 
 Why do we need rename transformers? Because an ordinary macro operates on its whole calling expression (which it receives as input) like @racket[(macro-name this-arg that-arg . and-so-on)]. By contrast, a rename transformer operates only on the identifier itself (regardless of where that identifier appears in the code). It's like making one identifier into an alias for another identifier.
 
@@ -259,7 +260,7 @@ nice-summer
 @specsubform[#:literals (define-macro) 
 (define-macro id syntax-object)
 #:contracts ([syntax-object syntax?])]{
-If the first argument is an @racket[id] and the second a @racket[syntax-object], create a syntax transformer that returns @racket[syntax-object]. This is just alternate notation for the previous subform, wrapping @racket[syntax-object] inside a function body. The effect is to create a macro from @racket[id] that always returns @racket[syntax-object], regardless of how it's invoked. Not especially useful within programs. Mostly handy for making quick macros at the @tech{REPL}.
+If the first argument is an @racket[id] and the second a @racket[syntax-object], create a syntax transformer that returns @racket[syntax-object]. This is just alternate notation for the previous subform, wrapping @racket[syntax-object] inside a function body. The effect is to create a macro from @racket[id] that always returns @racket[syntax-object], regardless of how it's invoked. Not especially useful within programs. Mostly handy for making quick macros at the REPL.
 
 @examples[#:eval my-eval
 (define-macro bad-listener #'"what?")
@@ -320,7 +321,7 @@ The error is cleared when the argument is capitalized, thus making it a wilcard:
 (good-squarer +10i)
 ]
 
-You can use the special identifier @racket[caller-stx] — available only within the body of @racket[define-macro] — to access the original input argument to the macro.
+@;{You can use the special identifier @racket[caller-stx] — available only within the body of @racket[define-macro] — to access the original input argument to the macro.}
 
 @;{todo: fix this example. complains that caller-stx is unbound}
 @;{
