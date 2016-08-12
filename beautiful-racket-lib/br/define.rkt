@@ -1,5 +1,6 @@
 #lang racket/base
 (require
+  racket/function
   (for-syntax racket/list
               racket/base
               syntax/parse
@@ -56,7 +57,7 @@
      #'(define id
          (case-lambda
            [pat-args . body] ...
-           [else (raise-syntax-error 'id "no matching case for argument pattern")]))]
+           [rest-pat (apply raise-arity-error 'id (normalize-arity (map length '(pat-args ...))) rest-pat)]))]
     [else (raise-syntax-error
            'define-cases
            "no matching case for calling pattern"
@@ -66,9 +67,15 @@
 (module+ test
   (define-cases f
     [(_ arg) (add1 arg)]
-    [(_ arg1 arg2) (+ arg1 arg2)])
+    [(_ arg1 arg2) (+ arg1 arg2)]
+    [(_ . any) 'boing])
   (check-equal? (f 42) 43)
-  (check-equal? (f 42 5) 47))
+  (check-equal? (f 42 5) 47)
+  (check-equal? (f 42 5 'zonk) 'boing)
+
+  (define-cases f-one-arg
+    [(_ arg) (add1 arg)])
+  (check-exn exn:fail:contract:arity? (λ _ (f-one-arg 1 2 3))))
 
 
 (define-syntax-rule (debug-define-macro (ID . PAT-ARGS) BODY)
