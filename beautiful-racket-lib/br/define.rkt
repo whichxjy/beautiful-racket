@@ -157,6 +157,8 @@
      #'(define-syntax id (make-rename-transformer stxed-id))]
     [(_ id:id func:transformer-func)
      #'(define-syntax id func)]
+    [(_ id:id func-id:id)
+     #'(define-syntax id func-id)]
     [(_ id:id stxed-thing:syntaxed-thing) 
      #'(define-macro id (λ (stx) stxed-thing))]
     [(_ (id:id . patargs:expr) . body:expr)
