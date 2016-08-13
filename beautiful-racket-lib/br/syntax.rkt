@@ -139,9 +139,10 @@
 (define (syntax-flatten stx)
   (flatten
    (let loop ([stx stx])
-     (define maybe-list (syntax->list stx))
-     (if maybe-list
-         (map loop maybe-list)
+     (define maybe-pair (let ([e-stx (syntax-e stx)])
+                          (and (pair? e-stx) (flatten e-stx))))
+     (if maybe-pair
+         (map loop maybe-pair)
          stx))))
 
 (define-syntax-rule (begin-label LABEL . EXPRS)

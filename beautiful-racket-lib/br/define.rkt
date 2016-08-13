@@ -1,8 +1,7 @@
 #lang racket/base
 (require
   racket/function
-  (for-syntax racket/list
-              racket/base
+  (for-syntax racket/base
               syntax/parse
               br/syntax
               racket/syntax
@@ -36,7 +35,7 @@
     (for*/list ([pat-arg (in-list (syntax-flatten pats))]
                 [pat-datum (in-value (syntax->datum pat-arg))]
                 #:when (and (symbol? pat-datum)
-                            (not (member pat-datum '(... _ else))) ; exempted from literality
+                            (not (member pat-datum '(... _))) ; exempted from literality
                             (not (string-prefix? (symbol->string pat-datum) pattern-arg-prefixer))
                             (not (upcased? (symbol->string pat-datum)))))
                pat-arg)))

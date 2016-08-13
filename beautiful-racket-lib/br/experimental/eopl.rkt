@@ -2,41 +2,15 @@
 (require racket/struct (for-syntax br/datum))
 (provide define-datatype cases occurs-free?)
 
-#;(begin
-    (struct lc-exp () #:transparent)
-    
-    (struct var-exp lc-exp (var) #:transparent
-      #:guard (λ(var name)
-                (unless (symbol? var)
-                  (error name (format "arg ~a not ~a" var 'symbol?)))
-                (values var)))
-    
-    (struct lambda-exp lc-exp (bound-var body) #:transparent
-      #:guard (λ(bound-var body name)
-                (unless (symbol? bound-var)
-                  (error name (format "arg ~a not ~a" bound-var 'symbol?)))
-                (unless (lc-exp? body)
-                  (error name (format "arg ~a not ~a" body 'lc-exp?)))
-                (values bound-var body)))
-    
-    (struct app-exp lc-exp (rator rand) #:transparent
-      #:guard (λ(rator rand name)
-                (unless (lc-exp? rator)
-                  (error name (format "arg ~a not ~a" rator 'lc-exp?)))
-                (unless (lc-exp? rand)
-                  (error name (format "arg ~a not ~a" rand 'lc-exp?)))
-                (values rator rand))))
-
-
-(define #'(define-datatype _base-type _base-type-predicate?
-            (_subtype [_field _field-predicate?] ...) ...)
+(define-macro (define-datatype BASE-TYPE _base-type-predicate?
+                (SUBTYPE [FIELD FIELD-PREDICATE?] ...) ...)
   #'(begin
-      (struct _base-type () #:transparent #:mutable)
-      (struct _subtype _base-type (_field ...) #:transparent #:mutable
-        #:guard (λ(_field ... name)
-                  (unless (_field-predicate? _field)
-                    (error name (format "arg ~a is not ~a" _field '_field-predicate?))) ...
-                  (values _field ...))) ...))
+      (struct BASE-TYPE () #:transparent #:mutable)
+      (struct SUBTYPE BASE-TYPE (FIELD ...) #:transparent #:mutable
+        #:guard (λ(FIELD ... name)
+                  (unless (FIELD-PREDICATE? FIELD)
+                    (error name (format "arg ~a is not ~a" FIELD 'FIELD-PREDICATE?))) ...
+                  (values FIELD ...))) ...))
 
 
 (define-datatype lc-exp lc-exp?
@@ -45,35 +19,36 @@
   (app-exp [rator lc-exp?] [rand lc-exp?]))
 
 
-#;(define (occurs-free? search-var exp)
-    (cond
-      [(var-exp? exp) (let ([var (var-exp-var exp)])
-                        (eqv? var  search-var))]
-      [(lambda-exp? exp) (let ([bound-var (lambda-exp-bound-var exp)]
-                               [body (lambda-exp-body exp)])
-                           (and (not (eqv? search-var bound-var))
-                                (occurs-free? search-var body)))]
-      [(app-exp? exp) (let ([rator (app-exp-rator exp)]
-                            [rand (app-exp-rand exp)])
-                        (or
-                         (occurs-free? search-var rator)
-                         (occurs-free? search-var rand)))]))
+#;(define-syntax (cases stx)
+    (syntax-case stx (else)
+      [(_ _base-type INPUT-VAR
+          [SUBTYPE (POSITIONAL-VAR ...) . _body] ...
+          [else . _else-body])
+       (inject-syntax ([#'(_subtype? ...) (suffix-id #'(SUBTYPE ...) "?")])
+                      #'(cond
+                          [(_subtype? INPUT-VAR) (match-let ([(list POSITIONAL-VAR ...) (struct->list INPUT-VAR)])
+                                                   . _body)] ...
+                                                             [else . _else-body]))]
+      [(_ _base-type INPUT-VAR
+          SUBTYPE-CASE ...)
+       #'(cases _base-type INPUT-VAR
+           SUBTYPE-CASE ...
+           [else (void)])]))
 
-(define-syntax (cases stx)
-  (syntax-case stx (else)
-    [(_ _base-type _input-var
-        [_subtype (_positional-var ...) . _body] ...
-        [else . _else-body])
-     (inject-syntax ([#'(_subtype? ...) (suffix-id #'(_subtype ...) "?")])
-                    #'(cond
-                        [(_subtype? _input-var) (match-let ([(list _positional-var ...) (struct->list _input-var)])
-                                                    . _body)] ...
-                                                                 [else . _else-body]))]
-    [(_ _base-type _input-var
-        _subtype-case ...)
-     #'(cases _base-type _input-var
-         _subtype-case ...
-         [else (void)])]))
+(define-macro-cases cases
+  [(_ BASE-TYPE INPUT-VAR
+      [SUBTYPE (POSITIONAL-VAR ...) . BODY] ...
+      [else . ELSE-BODY])
+   (with-syntax ([(SUBTYPE? ...) (suffix-id #'(SUBTYPE ...) "?")])
+     #'(cond
+         [(SUBTYPE? INPUT-VAR) (match-let ([(list POSITIONAL-VAR ...) (struct->list INPUT-VAR)])
+                                 . BODY)] ...
+                                          [else . ELSE-BODY]))]
+  [(_ BASE-TYPE INPUT-VAR
+      SUBTYPE-CASE ...)
+   #'(cases BASE-TYPE INPUT-VAR
+       SUBTYPE-CASE ...
+       [else (void)])])
 
 
 (define (occurs-free? search-var exp)
