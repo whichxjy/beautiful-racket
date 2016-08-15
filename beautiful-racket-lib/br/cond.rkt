@@ -1,27 +1,27 @@
 #lang racket/base
-(require (for-syntax racket/base))
+(require (for-syntax racket/base br/syntax)
+         br/define)
 (provide (all-defined-out))
 
-(define-syntax-rule (until COND EXPR ...)
-  (let loop ()
-    (unless COND
-      EXPR ...
-      (loop))))
+(define-macro (until COND EXPR ...)
+  #'(let loop ()
+      (unless COND
+        EXPR ...
+        (loop))))
 
-(define-syntax-rule (while COND EXPR ...)
-  (let loop ()
-    (when COND
-      EXPR ...
-      (loop))))
+(define-macro (while COND EXPR ...)
+  #'(let loop ()
+      (when COND
+        EXPR ...
+        (loop))))
 
-(define-syntax (forever stx)
-  (syntax-case stx ()
-    [(_ . EXPRS)
-     ;; todo: would be better with a syntax parameter
-     (with-syntax ([stop (datum->syntax #'EXPRS 'stop)])
-       #'(let/ec stop
-           (while #t
-                  . EXPRS)))]))
+(define-macro (forever . EXPRS)
+  ;; todo: would be better with a syntax parameter
+  (with-pattern
+   ([stop (datum->syntax #'EXPRS 'stop)])
+   #'(let/ec stop
+       (while #t
+              . EXPRS))))
 
 (module+ test
   (require rackunit)
