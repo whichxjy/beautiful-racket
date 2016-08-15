@@ -1,6 +1,6 @@
-#lang br
+#lang br/quicklang
 (require (for-syntax br/syntax racket/string) rackunit racket/file)
-(provide #%top-interaction #%module-begin #%datum #%app (all-defined-out))
+(provide #%module-begin (all-defined-out))
 
 
 (define (print-cell val fmt)

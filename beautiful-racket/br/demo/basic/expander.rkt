@@ -1,4 +1,5 @@
 #lang br
+(require (for-syntax syntax/strip-context))
 (provide #%top-interaction #%app #%datum
          (rename-out [basic-module-begin #%module-begin])
          (rename-out [basic-top #%top])

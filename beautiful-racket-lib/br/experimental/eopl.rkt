@@ -2,7 +2,7 @@
 (require racket/struct (for-syntax br/datum))
 (provide define-datatype cases occurs-free?)
 
-(define-macro (define-datatype BASE-TYPE _base-type-predicate?
+(define-macro (define-datatype BASE-TYPE BASE-TYPE-PREDICATE?
                 (SUBTYPE [FIELD FIELD-PREDICATE?] ...) ...)
   #'(begin
       (struct BASE-TYPE () #:transparent #:mutable)
@@ -34,6 +34,7 @@
        #'(cases _base-type INPUT-VAR
            SUBTYPE-CASE ...
            [else (void)])]))
+
 
 (define-macro-cases cases
   [(_ BASE-TYPE INPUT-VAR

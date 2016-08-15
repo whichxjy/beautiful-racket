@@ -3,11 +3,8 @@
   racket/function
   (for-syntax racket/base
               syntax/parse
-              br/syntax
-              racket/syntax
-              syntax/datum
-              syntax/define
-              racket/string))
+              br/private/syntax-flatten
+              syntax/define))
 (provide (all-defined-out)
          (for-syntax with-shared-id))
 
@@ -26,18 +23,18 @@
 
 
 (begin-for-syntax
-  (define (upcased? str)
-    (equal? (string-upcase str) str))
+  (define (upcased-and-capitalized? str)
+    (and (equal? (string-upcase str) str)
+         (not (equal? (string-downcase (substring str 0 1)) (substring str 0 1)))))
 
   (define (generate-literals pats)
-    ;; generate literals for any symbols that are not ... or _ or _underscore-prefixed
+    ;; generate literals for any symbols that are not ... or _ 
     (define pattern-arg-prefixer "_")
     (for*/list ([pat-arg (in-list (syntax-flatten pats))]
                 [pat-datum (in-value (syntax->datum pat-arg))]
                 #:when (and (symbol? pat-datum)
                             (not (member pat-datum '(... _))) ; exempted from literality
-                            (not (string-prefix? (symbol->string pat-datum) pattern-arg-prefixer))
-                            (not (upcased? (symbol->string pat-datum)))))
+                            (not (upcased-and-capitalized? (symbol->string pat-datum)))))
                pat-arg)))
 
 (begin-for-syntax
@@ -94,11 +91,11 @@
   (require rackunit racket/port)
   (parameterize ([current-output-port (open-output-nowhere)])
     (check-equal? (let ()
-                    (debug-define-macro (foo _X _Y _Z)
-                                        #'(apply + (list _X _Y _Z)))
+                    (debug-define-macro (foo X Y Z)
+                                        #'(apply + (list X Y Z)))
                     (foo 1 2 3)) 6)  
     (check-equal? (let ()
-                    (debug-define-macro (foo _X ...) #'(apply * (list _X ...)))
+                    (debug-define-macro (foo X ...) #'(apply * (list X ...)))
                     (foo 10 11 12)) 1320)))
 
 
@@ -228,7 +225,7 @@
   (zam 'this 'that 42)
   (check-equal? dirty-zam 'got-dirty-zam)
   
-  (define-macro (add _x) #'(+ _x _x))
+  (define-macro (add X) #'(+ X X))
   (check-equal? (add 5) 10)
   (define-macro-cases add-again [(_ X) #'(+ X X)])
   (check-equal? (add-again 5) 10)
@@ -240,7 +237,7 @@
   (define (foo-func) 'got-foo-func)
   (define-macro-cases op
     [(_ "+") #''got-plus]
-    [(_ _ARG) #''got-something-else]
+    [(_ ARG) #''got-something-else]
     [(_) #'(foo-func)]
     [_ #'foo-val])
   
@@ -250,7 +247,7 @@
   (check-equal? op 'got-foo-val)
   
   (define-macro-cases elseop
-    [(_ _arg) #''got-arg]
+    [(_ ARG) #''got-arg]
     [else #''got-else])
   
   (check-equal? (elseop "+") 'got-arg)

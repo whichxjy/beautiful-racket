@@ -103,29 +103,29 @@ base bus:
 
 
 (define-macro-cases define-base-bus
-  [(_macro-name ID THUNK) #'(_macro-name ID THUNK default-bus-width)]
-  [(_macro-name ID THUNK _bus-width-in)
+  [(_ ID THUNK) #'(define-base-bus ID THUNK default-bus-width)]
+  [(_ ID THUNK BUS-WIDTH-IN)
    (with-pattern
-    ([_id-thunk (suffix-id #'ID "-val")]
-     [_bus-type (or (syntax-property caller-stx 'impersonate) #'bus)])
-    #`(splicing-let ([_id-thunk THUNK]
-                     [bus-width _bus-width-in])
+    ([ID-THUNK (suffix-id #'ID "-val")]
+     [BUS-TYPE (or (syntax-property caller-stx 'impersonate) #'bus)])
+    #`(splicing-let ([ID-THUNK THUNK]
+                     [bus-width BUS-WIDTH-IN])
         (define ID
           (begin
             (unless (<= bus-width max-bus-width)
               (raise-argument-error 'id (format "bus width <= max width ~a" max-bus-width) bus-width))
             (impersonate-procedure
              (let ([reader (make-bus-reader 'id bus-width)])
-               (procedure-rename (λ args (apply reader (_id-thunk) args)) (string->symbol (format "~a, a bus of width ~a" 'ID bus-width))))
-             #f _bus-type #t)))
+               (procedure-rename (λ args (apply reader (ID-THUNK) args)) (string->symbol (format "~a, a bus of width ~a" 'ID bus-width))))
+             #f BUS-TYPE #t)))
         #,(when (syntax-property caller-stx 'writer)
             (with-pattern
              ([_id-write (suffix-id #'ID "-write")])
              #'(define _id-write
                  (let ([writer (make-bus-writer 'id-write bus-width)])
                    (λ args
-                     (define result (apply writer (_id-thunk) args))
-                     (set! _id-thunk (λ () result)))))))))])
+                     (define result (apply writer (ID-THUNK) args))
+                     (set! ID-THUNK (λ () result)))))))))])
 
 
 (module+ test
@@ -157,8 +157,8 @@ output bus:
 
 
 
-(define-macro (define-output-bus . _args)
-  (syntax-property #'(define-base-bus . _args) 'impersonate #'output-bus))
+(define-macro (define-output-bus . ARGS)
+  (syntax-property #'(define-base-bus . ARGS) 'impersonate #'output-bus))
 
 (module+ test
   (define-output-bus ob (λ () #b0110) 4)
@@ -188,10 +188,10 @@ input bus:
 
 
 (define-macro-cases define-input-bus
-  [(_macro-name _id)
-   #'(_macro-name _id default-bus-width)]
-  [(_macro-name _id _bus-width)
-   (syntax-property* #'(define-base-bus _id (λ () 0) _bus-width)
+  [(MACRO-NAME ID)
+   #'(MACRO-NAME ID default-bus-width)]
+  [(MACRO-NAME ID BUS-WIDTH)
+   (syntax-property* #'(define-base-bus ID (λ () 0) BUS-WIDTH)
                      ['impersonate #'input-bus]
                      ['writer #t])])
 

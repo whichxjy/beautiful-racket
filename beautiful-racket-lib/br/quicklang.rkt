@@ -3,10 +3,10 @@
 (provide (except-out (all-from-out br) #%module-begin)
          (rename-out [quicklang-mb #%module-begin]))
 
-(define-macro (quicklang-mb . exprs)
+(define-macro (quicklang-mb . EXPRS)
   (define-values
     (kw-pairs other-exprs)
-    (let loop ([kw-pairs null][exprs (syntax->list #'exprs)])
+    (let loop ([kw-pairs null][exprs (syntax->list #'EXPRS)])
       (if (and (pair? exprs) (keyword? (syntax-e (car exprs))))
           (loop (cons (cons (string->symbol (keyword->string (syntax-e (car exprs))))
                             (cadr exprs)) ; leave val in stx form so local binding is preserved
@@ -22,7 +22,7 @@
        (provide PROVIDED-ID ...)
        (provide (rename-out [VAL KW]) ...)
        (provide #%top #%app #%datum #%top-interaction)
-       . #,(datum->syntax #'exprs other-exprs #'exprs))))
+       . #,(datum->syntax #'EXPRS other-exprs #'EXPRS))))
 
 
 (module reader syntax/module-reader

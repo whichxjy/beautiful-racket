@@ -1,6 +1,6 @@
-#lang br
+#lang br/quicklang
 (require "bus.rkt" (for-syntax racket/syntax racket/require-transform br/syntax "bus-properties.rkt"))
-(provide #%top-interaction #%module-begin #%app #%datum (all-defined-out))
+(provide #%module-begin (all-defined-out))
 
 (define-macro (chip-program CHIPNAME
                             (in-spec (IN-BUS IN-WIDTH ...) ...)
