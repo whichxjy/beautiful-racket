@@ -152,7 +152,14 @@
                                       (parameterize ([current-source source])
                                         (parse tokenizer))])))]))
              
-             (define parse (make-rule-parser start-id))))))]))
+             (define parse (make-rule-parser start-id))
+             (provide parse-tree)
+             (define (parse-tree x)
+               (let loop ([x (syntax->datum (parse x))])
+                 (cond
+                   [(list? x) (map loop x)]
+                   [(char? x) (format "~a" x)]
+                   [else x])))))))]))
 
 
 ;; Given a flattened rule, returns a syntax for the code that
@@ -221,7 +228,7 @@
                        ;; ('hide value is handled at the top of this conditional
                        ;; we need to use boolean because a symbol is treated as an identifier.
                        ;; also we'll separate it into its own property for clarity and test for it in "runtime.rkt"
-                        #`(list (syntax-property $X 'splice-rh-id #,(and (syntax-property primitive-pattern 'hide) #t)))]
+                       #`(list (syntax-property $X 'splice-rh-id #,(and (syntax-property primitive-pattern 'hide) #t)))]
                       [(lit val)
                        #'(list (atomic-datum->syntax $X $X-start-pos $X-end-pos))]
                       [(token val)
