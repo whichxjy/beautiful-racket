@@ -11,10 +11,27 @@
                      0)))
 (provide bf-program)
 
+(define-macro-cases op
+  [(op ">") #'gt]
+  [(op "<") #'lt]
+  [(op "+") #'plus]
+  [(op "-") #'minus]
+  [(op ".") #'period]
+  [(op ",") #'comma])
+(provide op)
+
+(define-macro (loop LOOP-ARG ...)
+  #'(lambda (arr ptr)
+      (for/fold ([apl (list arr ptr)])
+                ([i (in-naturals)]
+                 #:break (zero? (apply current-byte apl)))
+        (apply fold-args (list LOOP-ARG ...) apl))))
+(provide loop)
+
 (define (fold-args bf-args arr ptr)
-  (for/fold ([ap (list arr ptr)])
+  (for/fold ([apl (list arr ptr)])
             ([bf-arg (in-list bf-args)])
-    (apply bf-arg ap)))
+    (apply bf-arg apl)))
 
 (define (current-byte arr ptr) (vector-ref arr ptr))
 
@@ -29,19 +46,3 @@
 (define (period arr ptr) (write-byte (current-byte arr ptr)) (list arr ptr))
 (define (comma arr ptr) (list (set-current-byte arr ptr (read-byte)) ptr))
 
-(define-macro-cases op
-  [(op ">") #'gt]
-  [(op "<") #'lt]
-  [(op "+") #'plus]
-  [(op "-") #'minus]
-  [(op ".") #'period]
-  [(op ",") #'comma])
-(provide op)
-
-(define-macro (loop LOOP-ARG ...)
-  #'(lambda (arr ptr)
-      (for/fold ([ap (list arr ptr)])
-                ([i (in-naturals)]
-                 #:break (zero? (apply current-byte ap)))
-        (apply fold-args (list LOOP-ARG ...) ap))))
-(provide loop)

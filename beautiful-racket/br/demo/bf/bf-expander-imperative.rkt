@@ -5,9 +5,23 @@
      PARSE-TREE))
 (provide (rename-out [bf-module-begin #%module-begin]))
 
-(define-macro (bf-program PROGRAM-ARG ...)
-  #'(void PROGRAM-ARG ...))
+(define-macro (bf-program OP-OR-LOOP-ARG ...)
+  #'(void OP-OR-LOOP-ARG ...))
 (provide bf-program)
+
+(define-macro-cases op
+  [(op ">") #'(gt)]
+  [(op "<") #'(lt)]
+  [(op "+") #'(plus)]
+  [(op "-") #'(minus)]
+  [(op ".") #'(period)]
+  [(op ",") #'(comma)])
+(provide op)
+
+(define-macro (loop LOOP-ARG ...)
+  #'(until (zero? (current-byte))
+           LOOP-ARG ...))
+(provide loop)
 
 (define arr (make-vector 30000 0))
 (define ptr 0)
@@ -23,16 +37,3 @@
 (define (period) (write-byte (current-byte)))
 (define (comma) (set-current-byte! (read-byte)))
 
-(define-macro-cases op
-  [(op ">") #'(gt)]
-  [(op "<") #'(lt)]
-  [(op "+") #'(plus)]
-  [(op "-") #'(minus)]
-  [(op ".") #'(period)]
-  [(op ",") #'(comma)])
-(provide op)
-
-(define-macro (loop LOOP-ARG ...)
-  #'(until (zero? (current-byte))
-           LOOP-ARG ...))
-(provide loop)

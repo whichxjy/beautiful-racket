@@ -15,8 +15,8 @@
   (make-parameter
    (lambda (tok-name tok-value offset line col span)
      (raise (exn:fail:parsing
-                (format "Encountered parsing error near token ~e (~e) while parsing ~e [line=~a, column=~a, offset=~a]"
-                        tok-name tok-value
+                (format "Encountered parsing error near ~e (token ~e) while parsing ~e [line=~a, column=~a, offset=~a]"
+                        tok-value tok-name
                         (current-source)
                         line col offset)
                 (current-continuation-marks)
