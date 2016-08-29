@@ -3,7 +3,7 @@
 
 (define (read-syntax path port)
   (define parse-tree (parse path (tokenize port)))
-  (define module-datum `(module bf-mod br/demo/bf/bf-expander-imperative
+  (define module-datum `(module bf-mod br/demo/bf/bf-expander
                           ,parse-tree))
   (datum->syntax #f module-datum))
 (provide read-syntax)

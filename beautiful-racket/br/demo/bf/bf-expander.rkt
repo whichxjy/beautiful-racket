@@ -5,11 +5,23 @@
      PARSE-TREE))
 (provide (rename-out [bf-module-begin #%module-begin]))
 
-(define-macro (bf-program PROGRAM-ARG ...)
-  #'(void (fold-args (list PROGRAM-ARG ...)
-                     (make-vector 30000 0)
-                     0)))
+(define-macro (bf-program OP-OR-LOOP-ARG ...)
+  #'(void (fold-args (list (make-vector 30000 0) 0)
+                     OP-OR-LOOP-ARG ...)))
 (provide bf-program)
+
+(define (fold-args apl . bf-args)
+  (for/fold ([current-apl apl])
+            ([bf-arg (in-list bf-args)])
+    (apply bf-arg current-apl)))
+
+(define-macro (loop "[" OP-OR-LOOP-ARG ... "]")
+  #'(lambda (arr ptr)
+      (for/fold ([current-apl (list arr ptr)])
+                ([i (in-naturals)]
+                 #:break (zero? (apply current-byte apl)))
+        (fold-args current-apl OP-OR-LOOP-ARG ...))))
+(provide loop)
 
 (define-macro-cases op
   [(op ">") #'gt]
@@ -20,19 +32,6 @@
   [(op ",") #'comma])
 (provide op)
 
-(define-macro (loop LOOP-ARG ...)
-  #'(lambda (arr ptr)
-      (for/fold ([apl (list arr ptr)])
-                ([i (in-naturals)]
-                 #:break (zero? (apply current-byte apl)))
-        (apply fold-args (list LOOP-ARG ...) apl))))
-(provide loop)
-
-(define (fold-args bf-args arr ptr)
-  (for/fold ([apl (list arr ptr)])
-            ([bf-arg (in-list bf-args)])
-    (apply bf-arg apl)))
-
 (define (current-byte arr ptr) (vector-ref arr ptr))
 
 (define (set-current-byte arr ptr val)
@@ -41,8 +40,19 @@
 
 (define (gt arr ptr) (list arr (add1 ptr)))
 (define (lt arr ptr) (list arr (sub1 ptr)))
-(define (plus arr ptr) (list (set-current-byte arr ptr (add1 (current-byte arr ptr))) ptr))
-(define (minus arr ptr) (list (set-current-byte arr ptr (sub1 (current-byte arr ptr))) ptr))
-(define (period arr ptr) (write-byte (current-byte arr ptr)) (list arr ptr))
-(define (comma arr ptr) (list (set-current-byte arr ptr (read-byte)) ptr))
+
+(define (plus arr ptr)
+  (list (set-current-byte arr ptr (add1 (current-byte arr ptr)))
+        ptr))
+
+(define (minus arr ptr)
+  (list (set-current-byte arr ptr (sub1 (current-byte arr ptr)))
+        ptr))
+
+(define (period arr ptr)
+  (write-byte (current-byte arr ptr))
+  (list arr ptr))
+
+(define (comma arr ptr)
+  (list (set-current-byte arr ptr (read-byte)) ptr))
 
