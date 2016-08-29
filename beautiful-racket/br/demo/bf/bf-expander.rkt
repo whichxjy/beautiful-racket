@@ -5,32 +5,29 @@
      PARSE-TREE))
 (provide (rename-out [bf-module-begin #%module-begin]))
 
-(define-macro (bf-program OP-OR-LOOP ...)
-  #'(define-values (vec ptr)
-      (run-args (list OP-OR-LOOP ...))))
+(define-macro (bf-program PROGRAM-ARG ...)
+  #'(void (fold-args (list PROGRAM-ARG ...)
+                     (make-vector 30000 0)
+                     0)))
 (provide bf-program)
 
-(define (run-args bf-funcs
-                  [vec-start (make-vector 30000 0)]
-                  [pos-start 0])
-  (for/fold ([vec vec-start]
-             [pos pos-start])
-            ([bf-func (in-list bf-funcs)])
-    (bf-func vec pos)))
+(define (fold-args bf-args arr ptr)
+  (for/fold ([ap (list arr ptr)])
+            ([bf-arg (in-list bf-args)])
+    (apply bf-arg ap)))
 
-(define (vector-set v p val)
-  (vector-set! v p val)
-  v)
+(define (current-byte arr ptr) (vector-ref arr ptr))
 
-(define (vector-update v p func)
-  (vector-set v p (func (vector-ref v p))))
+(define (set-current-byte arr ptr val)
+  (vector-set! arr ptr val)
+  arr)
 
-(define (gt v p) (values v (add1 p)))
-(define (lt v p) (values v (sub1 p)))
-(define (plus v p) (values (vector-update v p add1) p))
-(define (minus v p) (values (vector-update v p sub1) p))
-(define (period v p) (write-byte (vector-ref v p)) (values v p))
-(define (comma v p) (values (vector-set v p (read-byte)) p))
+(define (gt arr ptr) (list arr (add1 ptr)))
+(define (lt arr ptr) (list arr (sub1 ptr)))
+(define (plus arr ptr) (list (set-current-byte arr ptr (add1 (current-byte arr ptr))) ptr))
+(define (minus arr ptr) (list (set-current-byte arr ptr (sub1 (current-byte arr ptr))) ptr))
+(define (period arr ptr) (write-byte (current-byte arr ptr)) (list arr ptr))
+(define (comma arr ptr) (list (set-current-byte arr ptr (read-byte)) ptr))
 
 (define-macro-cases op
   [(op ">") #'gt]
@@ -41,14 +38,10 @@
   [(op ",") #'comma])
 (provide op)
 
-(define (make-looping-func args)
-  (lambda (v p)
-    (for/fold ([vec v]
-               [pos p])
-              ([i (in-naturals)]
-               #:break (zero? (vector-ref vec pos)))
-      (run-args args vec pos))))
-
 (define-macro (loop LOOP-ARG ...)
-  #'(make-looping-func (list LOOP-ARG ...)))
+  #'(lambda (arr ptr)
+      (for/fold ([ap (list arr ptr)])
+                ([i (in-naturals)]
+                 #:break (zero? (apply current-byte ap)))
+        (apply fold-args (list LOOP-ARG ...) ap))))
 (provide loop)
