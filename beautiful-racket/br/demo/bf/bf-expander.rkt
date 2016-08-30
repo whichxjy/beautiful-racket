@@ -5,22 +5,24 @@
      PARSE-TREE))
 (provide (rename-out [bf-module-begin #%module-begin]))
 
-(define-macro (bf-program OP-OR-LOOP-ARG ...)
-  #'(void (fold-args (list (make-vector 30000 0) 0)
-                     OP-OR-LOOP-ARG ...)))
-(provide bf-program)
-
-(define (fold-args apl . bf-args)
+(define (fold-funcs apl bf-funcs)
   (for/fold ([current-apl apl])
-            ([bf-arg (in-list bf-args)])
-    (apply bf-arg current-apl)))
+            ([bf-func (in-list bf-funcs)])
+    (apply bf-func current-apl)))
+
+(define-macro (bf-program OP-OR-LOOP-ARG ...)
+  #'(begin
+      (define first-apl (list (make-vector 30000 0) 0))
+      (void (fold-funcs first-apl (list OP-OR-LOOP-ARG ...)))))
+(provide bf-program)
 
 (define-macro (loop "[" OP-OR-LOOP-ARG ... "]")
   #'(lambda (arr ptr)
       (for/fold ([current-apl (list arr ptr)])
                 ([i (in-naturals)]
-                 #:break (zero? (apply current-byte apl)))
-        (fold-args current-apl OP-OR-LOOP-ARG ...))))
+                 #:break (zero? (apply current-byte
+                                       current-apl)))
+        (fold-funcs current-apl (list OP-OR-LOOP-ARG ...)))))
 (provide loop)
 
 (define-macro-cases op
