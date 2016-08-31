@@ -119,9 +119,7 @@
 
 (begin-for-syntax
   (define-syntax-rule (with-shared-id (id ...) . body)
-    (with-syntax ([id (datum->syntax caller-stx (if (syntax? id)
-                                                    (syntax-e id)
-                                                    id))] ...)
+    (with-syntax ([id (datum->syntax caller-stx 'id)] ...)
       . body)))
 
 
