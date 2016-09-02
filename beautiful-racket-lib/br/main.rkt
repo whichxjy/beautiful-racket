@@ -10,6 +10,12 @@
          
 ;; todo: activate at-exp reader by default
 
+(provide evaluate)
+(define-macro (evaluate DATUM)
+  #'(begin
+      (define-namespace-anchor nsa)
+      (eval DATUM (namespace-anchor->namespace nsa))))
+
 (module reader syntax/module-reader
   #:language 'br
   #:info br-get-info
