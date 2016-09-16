@@ -18,8 +18,9 @@
        [(char-set "[]{}(),;=.") lexeme]
        ["true" (token 'TRUE #t)]
        ["false" (token 'FALSE #f)]
-       [(repetition 1 +inf.0 (char-set "01")) (token 'BINARY-NUMBER (string->number lexeme 2))]
        [(repetition 1 +inf.0 numeric) (token 'NUMBER (string->number lexeme))]
+       ; bugaboo: "10" is ambiguous: number or binary number?
+       [(repetition 1 +inf.0 (char-set "01")) (token 'BINARY-NUMBER (string->number lexeme 2))]
        [(seq (repetition 1 1 alphabetic) (repetition 0 +inf.0 (union alphabetic numeric "-"))) (token 'ID (string->symbol lexeme))]))
     (get-token input-port))  
   next-token)

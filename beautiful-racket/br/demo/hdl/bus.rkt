@@ -33,7 +33,7 @@
   (reverse (for/list ([i (in-range width)])
                      (bitwise-bit-field int i (add1 i)))))
 
-(define max-bus-width 16)
+(define max-bus-width 64)
 (define default-bus-width 1)
 
 
@@ -116,7 +116,7 @@ base bus:
               (raise-argument-error 'id (format "bus width <= max width ~a" max-bus-width) bus-width))
             (impersonate-procedure
              (let ([reader (make-bus-reader 'id bus-width)])
-               (procedure-rename (λ args (apply reader (ID-THUNK) args)) (string->symbol (format "~a, a bus of width ~a" 'ID bus-width))))
+               (procedure-rename (λ args (apply reader (ID-THUNK) args)) (string->symbol (format "~a:~a-bit" 'ID bus-width))))
              #f BUS-TYPE #t)))
         #,(when (syntax-property caller-stx 'writer)
             (with-pattern
