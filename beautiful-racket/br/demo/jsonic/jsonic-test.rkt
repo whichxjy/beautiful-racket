@@ -1,3 +1,3 @@
 #lang br/demo/jsonic
 
-{"id": "file"}
+{"foo": @#(+ 4 2)#}

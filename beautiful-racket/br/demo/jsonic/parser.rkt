@@ -2,17 +2,17 @@
 
 jsonic-program: value*
 
-value: array | object | string | number
+value: array | object | string | number | s-val
 
-object: "{" [kvpair ("," kvpair)*] "}"
+object: /"{" [kvpair (/"," kvpair)*] /"}"
 
-array: "[" [value ("," value)*] "]"
+array: /"[" [value (/"," value)*] /"]"
 
 string: STRING
 
 number: NUMBER
 
-kvpair: STRING ":" value
+kvpair: STRING /":" value
 
 s-val: "@" ("[" STRING "]" | "{" STRING "}" | "#" STRING "#" )
 

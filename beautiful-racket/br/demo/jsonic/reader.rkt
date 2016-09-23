@@ -14,11 +14,13 @@
     (define our-lexer
       (lexer
        [(eof) eof]
-       [(seq (* "\n") (* whitespace) "//" any-string (* "\n")) (next-token)]
-       [whitespace (next-token)]
-       [(char-set ",:[]{}") lexeme]
-       [(seq (* "-") (+ (or numeric "."))) (token 'NUMBER lexeme)] ;; Q: what is grammar for a JS number?
-       [(seq "\"" (complement (seq any-string "\"" any-string)) "\"") (token 'STRING (string-trim lexeme "\""))]))
+       [(or whitespace
+            (seq "//" (complement (seq any-string "\n" any-string)) "\n")) (next-token)]
+       [(char-set ",:[]{}@#") lexeme]
+       [(seq (repetition 0 1 "-") (+ numeric) (repetition 0 1 (seq "." (* numeric))))
+        (token 'NUMBER lexeme)] ;; Q: what is grammar for a JS number?
+       [(seq "\"" (complement (seq any-string "\"" any-string)) "\"") (token 'STRING (string-trim lexeme "\""))]
+       [any-char lexeme]))
     (our-lexer port))  
   next-token)
 
@@ -28,8 +30,7 @@
   (for/list ([token (in-producer token-producer eof)])
             token))
 
-(module+ main
-  (test-tokenize @string-append{
- {"id": "file"
-  // yeah baby
-  }}))
+(test-tokenize #<<HERE
+{"foo": @#(+ 4 2)#}
+HERE
+               )
