@@ -1,18 +1,7 @@
 #lang brag
 
-jsonic-program: value*
+jsonic-program: (char | s-val)*
 
-value: array | object | string | number | s-val
+char: CHAR
 
-object: /"{" [kvpair (/"," kvpair)*] /"}"
-
-array: /"[" [value (/"," value)*] /"]"
-
-string: STRING
-
-number: NUMBER
-
-kvpair: STRING /":" value
-
-s-val: S-EXP
-            
+s-val: /OPEN CHAR* /CLOSE  

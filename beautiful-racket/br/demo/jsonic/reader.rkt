@@ -14,13 +14,10 @@
     (define our-lexer
       (lexer
        [(eof) eof]
-       [(or whitespace
-            (seq "//" (complement (seq any-string "\n" any-string)) "\n")) (next-token)]
-       [(char-set ",:[]{}") lexeme]
-       [(seq "@" "(" any-string ")") (token 'S-EXP (string-trim lexeme "@"))]
-       [(seq (repetition 0 1 "-") (+ numeric) (repetition 0 1 (seq "." (* numeric))))
-        (token 'NUMBER lexeme)] ;; Q: what is grammar for a JS number?
-       [(seq "\"" (complement (seq any-string "\"" any-string)) "\"") (token 'STRING (string-trim lexeme "\""))]))
+       [(or (seq "//" (complement (seq any-string "\n" any-string)) "\n")) (next-token)]
+       [(seq "@$") (token 'OPEN lexeme)]
+       [(seq "$@") (token 'CLOSE lexeme)]
+       [any-char (token 'CHAR lexeme)]))
     (our-lexer port))  
   next-token)
 
