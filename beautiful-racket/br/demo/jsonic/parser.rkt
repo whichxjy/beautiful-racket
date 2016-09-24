@@ -14,6 +14,5 @@ number: NUMBER
 
 kvpair: STRING /":" value
 
-s-val: "@" ("[" STRING "]" | "{" STRING "}" | "#" STRING "#" )
-
+s-val: S-EXP
             
