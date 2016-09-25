@@ -1,4 +1,4 @@
 #lang br/quicklang
 (module reader br/quicklang
-  (require "jsonic/reader.rkt")
-  (provide (all-from-out "jsonic/reader.rkt")))
+  (require (submod "jsonic/main.rkt" reader))
+  (provide (all-from-out (submod "jsonic/main.rkt" reader))))
