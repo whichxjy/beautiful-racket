@@ -56,7 +56,7 @@ nested-word-list: WORD
                 | LEFT-PAREN nested-word-list* RIGHT-PAREN
 }}
 
-What we intend by this notation is this: @racket[nested-word-list] is either a @racket[WORD], or a parenthesized list of @racket[nested-word-list]s. We use the character @litchar{*} to represent zero or more repetitions of the previous thing. We treat the uppercased @racket[LEFT-PAREN], @racket[RIGHT-PAREN], and @racket[WORD] as placeholders for @emph{tokens} (a @deftech{token} being the smallest meaningful item in the parsed string):
+What we intend by this notation is this: @racket[nested-word-list] is either a @racket[WORD], or a parenthesized list of @racket[nested-word-list]s. We use the character @litchar{*} to represent zero or more repetitions of the previous thing. We treat the uppercased @racket[LEFT-PAREN], @racket[RIGHT-PAREN], and @racket[WORD] as placeholders for @emph{tokens} (a @tech{token} being the smallest meaningful item in the parsed string):
 
 Here are a few examples of tokens:
 @interaction[#:eval my-eval
