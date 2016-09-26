@@ -15,6 +15,6 @@
       (lexer
        [(eof) eof]
        [(char-set "><-.,+[]") lexeme]
-       [any-char (token 'COMMENT #:skip? #t)]))
+       [any-char (next-token)]))
     (our-lexer port))  
   next-token)
