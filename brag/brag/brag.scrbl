@@ -122,6 +122,7 @@ What happens if we pass our @racket[parse] function a bigger source of tokens?
        (token 'WORD str)])))
 
 @code:comment{For example:}
+(define token-source (tokenize "(welcome (to (((brag)) ())))"))
 (define v (parse token-source))
 (syntax->datum v)
 ]
