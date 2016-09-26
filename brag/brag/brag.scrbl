@@ -31,7 +31,7 @@
 
 @defmodulelang[brag]
 
-@section{Informal quickstart}
+@section{Quick start}
 
 @(define my-eval (make-base-eval))
 @(my-eval '(require brag/examples/nested-word-list 
@@ -98,7 +98,7 @@ does. What happens if we pass it a sequence of tokens?
                             (token 'RIGHT-PAREN ")"))))
              a-parsed-value]
 
-Those who have messed around with macros will recognize this as a @tech[#:doc '(lib "guide/stx-obj.html")]{syntax object}.
+Those who have messed around with macros will recognize this as a @seclink["stx-obj" #:doc '(lib "scribblings/guide/guide.scrbl")]{syntax object}.
 
 @interaction[#:eval my-eval
 (syntax->datum a-parsed-value)
@@ -136,7 +136,7 @@ Welcome to @tt{brag}.
 
 @section{Introduction}
 
-@tt{brag} is a parsing framework designed to be easy
+@tt{brag} is a parser generator designed to be easy
 to use:
 
 @itemize[
@@ -204,8 +204,7 @@ XXXXXXXXX
 
 @subsection{Syntax and semantics}
 
-We're being somewhat casual with what we mean by the program above, so
-let's try to nail down some meanings. 
+We're being somewhat casual with what we mean by the program above. Let's try to nail down some meanings. 
 
 Each line of the program has a semicolon at the end, and describes the output of several @emph{rows} of the line drawing. Let's look at two of the lines in the example:
 
