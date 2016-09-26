@@ -7,7 +7,7 @@
     (define module-datum `(module bf-mod br/demo/jsonic/expander
                             ,parse-tree))
     (datum->syntax #f module-datum))
-  (provide read-syntax))
+  (provide read-syntax get-info))
 
 (require parser-tools/lex parser-tools/lex-sre brag/support)
 (define (tokenize port)
@@ -23,6 +23,15 @@
        [any-char (token 'CHAR lexeme)]))
     (our-lexer port))  
   next-token)
+
+(define (get-info . _)
+  (λ (key default)
+    (case key
+      [(color-lexer)
+         (dynamic-require 'syntax-color/default-lexer 'default-lexer (λ () #f))]
+      [(drracket:indentation)
+         (dynamic-require 'scribble/private/indentation 'determine-spaces)]
+      [else default])))
 
 (define (test-tokenize str)
   (define ip (open-input-string str))
