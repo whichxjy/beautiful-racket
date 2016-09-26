@@ -27,7 +27,7 @@
 
 
 @title{brag: the Beautiful Racket AST Generator}
-@author["Danny Yoo" "Matthew Butterick"]
+@author["Danny Yoo (95%)" "Matthew Butterick (5%)"]
 
 @defmodulelang[brag]
 
@@ -38,21 +38,17 @@
                           racket/list
                           racket/match))
 
-Salutations!  Let's consider the following scenario: say that we're given the
+Suppose we're given the
 following string:
 @racketblock["(radiant (humble))"]
 
 
-@margin-note{(... and pretend that we don't already know about the built-in
-@racket[read] function.)}  How do we go about turning this kind of string into a
-structured value?  That is, how would we @emph{parse} it?
+How would we turn this string into a structured value?  That is, how would we @emph{parse} it? (Let's also suppose we've never heard of @racket[read].)
 
-We need to first consider the shape of the things we'd like to parse.  The
-string above looks like a deeply nested list of words.  How might we describe
-this formally?  A convenient notation to describe the shape of these things is
-@link["http://en.wikipedia.org/wiki/Backus%E2%80%93Naur_Form"]{Backus-Naur
-Form} (BNF).  So let's try to notate the structure of nested word lists in BNF.
+First, we need to consider the structure of the things we'd like to parse. The
+string above looks like a nested list of words. Good start.
 
+Second, how might we describe this formally — meaning, in a way that a computer could understand? A common notation to describe the structure of these things is @link["http://en.wikipedia.org/wiki/Backus%E2%80%93Naur_Form"]{Backus-Naur Form} (BNF). So let's try to notate the structure of nested word lists in BNF.
 
 @nested[#:style 'code-inset]{
 @verbatim{
@@ -60,12 +56,7 @@ nested-word-list: WORD
                 | LEFT-PAREN nested-word-list* RIGHT-PAREN
 }}
 
-What we intend by this notation is this: @racket[nested-word-list] is either an
-atomic @racket[WORD], or a parenthesized list of any number of
-@racket[nested-word-list]s.  We use the character @litchar{*} to represent zero
-or more repetitions of the previous thing, and we treat the uppercased
-@racket[LEFT-PAREN], @racket[RIGHT-PAREN], and @racket[WORD] as placeholders
-for atomic @emph{tokens}.
+What we intend by this notation is this: @racket[nested-word-list] is either a @racket[WORD], or a parenthesized list of @racket[nested-word-list]s. We use the character @litchar{*} to represent zero or more repetitions of the previous thing. We treat the uppercased @racket[LEFT-PAREN], @racket[RIGHT-PAREN], and @racket[WORD] as placeholders for @emph{tokens} (a @deftech{token} being the smallest meaningful item in the parsed string):
 
 Here are a few examples of tokens:
 @interaction[#:eval my-eval
@@ -74,15 +65,11 @@ Here are a few examples of tokens:
 (token 'WORD "crunchy" #:span 7)
 (token 'RIGHT-PAREN)]
 
+This BNF description is also known as a @deftech{grammar}. Just as it does in a natural language like English or French, a grammar describes something in terms of what elements can fit where.
 
-Have we made progress?  At this point, we only have a BNF description in hand,
-but we're still missing a @emph{parser}, something to take that description and
-use it to make structures out of a sequence of tokens.
+Have we made progress?  We have a valid grammar. But we're still missing a @emph{parser}: a function that can use that description to make structures out of a sequence of tokens.
 
-
-It's clear that we don't yet have a program because there's no @litchar{#lang}
-line.  We should add one.  Put @litchar{#lang brag} at the top of the BNF
-description, and save it as a file called @filepath{nested-word-list.rkt}.
+Meanwhile, it's clear that we don't yet have a valid program because there's no @litchar{#lang} line. Let's add one: put @litchar{#lang brag} at the top of the grammar, and save it as a file called @filepath{nested-word-list.rkt}.
 
 @filebox["nested-word-list.rkt"]{
 @verbatim{
@@ -91,15 +78,15 @@ nested-word-list: WORD
                 | LEFT-PAREN nested-word-list* RIGHT-PAREN
 }}
 
-Now it is a proper program.  But what does it do?
+Now it's a proper program. But what does it do?
 
 @interaction[#:eval my-eval
 @eval:alts[(require "nested-word-list.rkt") (void)]
 parse
 ]
 
-It gives us a @racket[parse] function.  Let's investigate what @racket[parse]
-does for us.  What happens if we pass it a sequence of tokens?
+It gives us a @racket[parse] function. Let's investigate what @racket[parse]
+does. What happens if we pass it a sequence of tokens?
 
 @interaction[#:eval my-eval
              (define a-parsed-value
@@ -111,15 +98,16 @@ does for us.  What happens if we pass it a sequence of tokens?
                             (token 'RIGHT-PAREN ")"))))
              a-parsed-value]
 
-Wait... that looks suspiciously like a syntax object!
+Those who have messed around with macros will recognize this as a @tech[#:doc '(lib "guide/stx-obj.html")]{syntax object}.
+
 @interaction[#:eval my-eval
 (syntax->datum a-parsed-value)
 ]
 
-
 That's @racket[(some [pig])], essentially.
 
-What happens if we pass it a more substantial source of tokens?
+What happens if we pass our @racket[parse] function a bigger source of tokens?
+
 @interaction[#:eval my-eval
 @code:comment{tokenize: string -> (sequenceof token-struct?)}
 @code:comment{Generate tokens from a string:}
@@ -143,39 +131,35 @@ Welcome to @tt{brag}.
 
 
 
-
-
-
 @;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 @;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 @section{Introduction}
 
-@tt{brag} is a parsing framework for Racket with the design goal to be easy
-to use.  It includes the following features:
+@tt{brag} is a parsing framework designed to be easy
+to use:
+
 @itemize[
 
-@item{It provides a @litchar{#lang} for writing extended BNF grammars.
+@item{It provides a @litchar{#lang} for writing BNF grammars.
 A module written in @litchar{#lang brag} automatically generates a
-parser.  The output of this parser tries to follow
+parser. The output of this parser tries to follow
 @link["http://en.wikipedia.org/wiki/How_to_Design_Programs"]{HTDP}
-doctrine; the structure of the grammar informs the structure of the
+guidelines. The structure of the grammar informs the structure of the
 Racket syntax objects it generates.}
 
 @item{The language uses a few conventions to simplify the expression of
-grammars.  The first rule in the grammar is automatically assumed to be the
-starting production.  Identifiers in uppercase are assumed to represent
-terminal tokens, and are otherwise the names of nonterminals.}
+grammars. The first rule in the grammar is assumed to be the
+starting production. Identifiers in @tt{UPPERCASE} are treated as
+terminal tokens. All other identifiers are treated as nonterminals.}
 
-@item{Tokenizers can be developed completely independently of parsers.
+@item{Tokenizers can be developed independently of parsers.
 @tt{brag} takes a liberal view on tokens: they can be strings,
-symbols, or instances constructed with @racket[token].  Furthermore,
-tokens can optionally provide location: if tokens provide location, the
-generated syntax objects will as well.}
+symbols, or instances constructed with @racket[token]. Tokens can optionally provide source location, in which case a syntax object generated by the parser will too.}
 
-@item{The underlying parser should be able to handle ambiguous grammars.}
+@item{The parser can usually handle ambiguous grammars.}
 
-@item{It should integrate with the rest of the Racket
+@item{It integrates with the rest of the Racket
 @link["http://docs.racket-lang.org/guide/languages.html"]{language toolchain}.}
 
 ]
@@ -184,11 +168,12 @@ generated syntax objects will as well.}
 
 @subsection{Example: a small DSL for ASCII diagrams}
 
-@margin-note{This is a
-@link["http://stackoverflow.com/questions/12345647/rewrite-this-script-by-designing-an-interpreter-in-racket"]{restatement
-of a question on Stack Overflow}.}  To motivate @tt{brag}'s design, let's look
-at the following toy problem: we'd like to define a language for
-drawing simple ASCII diagrams.  We'd like to be able write something like this:
+@margin-note{This example is
+@link["http://stackoverflow.com/questions/12345647/rewrite-this-script-by-designing-an-interpreter-in-racket"]{derived from a question}  on Stack Overflow.}  
+
+To understand @tt{brag}'s design, let's look
+at a toy problem. We'd like to define a language for
+drawing simple ASCII diagrams. So if we write something like this:
 
 @nested[#:style 'inset]{
 @verbatim|{
@@ -197,7 +182,7 @@ drawing simple ASCII diagrams.  We'd like to be able write something like this:
 3 9 X;
 }|}
 
-whose interpretation should generate the following picture:
+It should generate the following picture:
 
 @nested[#:style 'inset]{
 @verbatim|{
@@ -218,10 +203,11 @@ XXXXXXXXX
 
 
 @subsection{Syntax and semantics}
-We're being very fast-and-loose with what we mean by the program above, so
-let's try to nail down some meanings.  Each line of the program has a semicolon
-at the end, and describes the output of several @emph{rows} of the line
-drawing.  Let's look at two of the lines in the example:
+
+We're being somewhat casual with what we mean by the program above, so
+let's try to nail down some meanings. 
+
+Each line of the program has a semicolon at the end, and describes the output of several @emph{rows} of the line drawing. Let's look at two of the lines in the example:
 
 @itemize[
 @item{@litchar{3 9 X;}: ``Repeat the following 3 times: print @racket["X"] nine times, followed by
@@ -232,21 +218,14 @@ followed by @racket["X"] three times, followed by @racket[" "] three times, foll
 ]
 
 Then each line consists of a @emph{repeat} number, followed by pairs of
-(number, character) @emph{chunks}.  We will
-assume here that the intent of the lowercased character @litchar{b} is to
-represent the printing of a 1-character whitespace @racket[" "], and for other
-uppercase letters to represent the printing of themselves.
+(number, character) @emph{chunks}. We'll assume here that the intent of the lowercased character @litchar{b} is to represent the printing of a 1-character whitespace @racket[" "], and for other uppercase letters to represent the printing of themselves.
 
-Once we have a better idea of the pieces of each line, we have a better chance
-to capture that meaning in a formal notation.  Once we have each instruction in
-a structured format, we should be able to interpret it with a straighforward
-case analysis.
+By understanding the pieces of each line, we can more easily capture that meaning in a grammar. Once we have each instruction of our ASCII DSL in a structured format, we should be able to parse it.
 
-Here is a first pass at expressing the structure of these line-drawing
-programs.
-
+Here's a first pass at expressing the structure of these line-drawing programs.
 
 @subsection{Parsing the concrete syntax}
+
 @filebox["simple-line-drawing.rkt"]{
 @verbatim|{
 #lang brag
@@ -258,7 +237,7 @@ chunk: INTEGER STRING
 }
 
 @margin-note{@secref{brag-syntax} describes @tt{brag}'s syntax in more detail.}
-We write a @tt{brag} program as an extended BNF grammar, where patterns can be:
+We write a @tt{brag} program as an BNF grammar, where patterns can be:
 @itemize[
 @item{the names of other rules (e.g. @racket[chunk])}
 @item{literal and symbolic token names (e.g. @racket[";"], @racket[INTEGER])}
@@ -282,17 +261,11 @@ Let's exercise this function:
 (syntax->datum stx)
 ]
 
-Tokens can either be: plain strings, symbols, or instances produced by the
-@racket[token] function.  (Plus a few more special cases, one in which we'll describe in a
-moment.)
+A @emph{token} is the smallest meaningful element of a source program. Tokens can be  strings, symbols, or instances of the @racket[token] data structure. (Plus a few other special cases, which we'll discuss later.) Usually, a token holds a single character from the source program. But sometimes it makes sense to package a sequence of characters into a single token, if the sequence has an indivisible meaning.
 
-Preferably, we want to attach each token with auxiliary source location
-information.  The more source location we can provide, the better, as the
-syntax objects produced by @racket[parse] will incorporate them.
+If possible, we also want to attach source location information to each token. Why? Because this informatino will be incorporated into the syntax objects produced by @racket[parse].
 
-Let's write a helper function, a @emph{lexer}, to help us construct tokens more
-easily.  The Racket standard library comes with a module called
-@racketmodname[parser-tools/lex] which can help us write a position-sensitive
+A parser often works in conjunction with a helper function called a @emph{lexer} that converts the raw code of the source program into tokens. The @racketmodname[parser-tools/lex] library can help us write a position-sensitive
 tokenizer:
 
 @interaction[#:eval my-eval
@@ -328,24 +301,19 @@ tokenizer:
 ]
 
 
-There are a few things to note from this lexer example: 
+Note also from this lexer example: 
+
 @itemize[
 
-@item{The @racket[parse] function can consume either sequences of tokens, or a
-function that produces tokens.  Both of these are considered sources of
-tokens.}
+@item{@racket[parse] accepts as input either a sequence of tokens, or a
+function that produces tokens (which @racket[parse] will call repeatedly to get the next token).}
 
-@item{As a special case for acceptable tokens, a token can also be an instance
-of the @racket[position-token] structure of @racketmodname[parser-tools/lex],
-in which case the token will try to derive its position from that of the
-position-token.}
+@item{As an alternative to the basic @racket[token] structure, a token can also be an instance of the @racket[position-token] structure (also found in @racketmodname[parser-tools/lex]). In that case, the token will try to derive its position from that of the position-token.}
 
-@item{The @racket[parse] function will stop reading from a token source if any
-token is @racket[void].}
+@item{@racket[parse] will stop if it gets @racket[void] (or @racket['eof]) as a token.}
 
-@item{The @racket[parse] function will skip over any token with the
-@racket[#:skip?]  attribute. Elements such as whitespace and comments will
-often have @racket[#:skip?] set to @racket[#t].}
+@item{@racket[parse] will skip any token that has
+@racket[#:skip?] attribute set to @racket[#t]. For instance, tokens representing comments often use @racket[#:skip?].}
 
 ]
 
@@ -353,16 +321,16 @@ often have @racket[#:skip?] set to @racket[#t].}
 @subsection{From parsing to interpretation}
 
 We now have a parser for programs written in this simple-line-drawing language.
-Our parser will give us back syntax objects:
+Our parser will return syntax objects:
+
 @interaction[#:eval my-eval
 (define parsed-program
   (parse (tokenize (open-input-string "3 9 X; 6 3 b 3 X 3 b; 3 9 X;"))))
 (syntax->datum parsed-program)
 ]
 
-Moreover, we know that these syntax objects have a regular, predictable
-structure.  Their structure follows the grammar, so we know we'll be looking at
-values of the form:
+Better still, these syntax objects will have a predictable
+structure that follows the grammar:
 
 @racketblock[
     (drawing (rows (repeat <number>)
@@ -374,15 +342,14 @@ where @racket[drawing], @racket[rows], @racket[repeat], and @racket[chunk]
 should be treated literally, and everything else will be numbers or strings.
 
 
-Still, these syntax object values are just inert structures.  How do we
-interpret them, and make them @emph{print}?  We did claim at the beginning of
-this section that these syntax objects should be fairly easy to case-analyze
-and interpret, so let's do it.
+Still, these syntax-object values are just inert structures. How do we
+interpret them, and make them @emph{print}?  We claimed at the beginning of
+this section that these syntax objects should be easy to interpret. So let's do it.
 
 @margin-note{This is a very quick-and-dirty treatment of @racket[syntax-parse].
 See the @racketmodname[syntax/parse] documentation for a gentler guide to its
 features.}  Racket provides a special form called @racket[syntax-parse] in the
-@racketmodname[syntax/parse] library.  @racket[syntax-parse] lets us do a
+@racketmodname[syntax/parse] library. @racket[syntax-parse] lets us do a
 structural case-analysis on syntax objects: we provide it a set of patterns to
 parse and actions to perform when those patterns match.
 
@@ -405,7 +372,7 @@ says @racket[#t] if it's the literal @racket[yes], and @racket[#f] otherwise:
 ]
 
 Here, we use @racket[~literal] to let @racket[syntax-parse] know that
-@racket[yes] should show up literally in the syntax object.  The patterns can
+@racket[yes] should show up literally in the syntax object. The patterns can
 also have some structure to them, such as:
 @racketblock[({~literal drawing} rows-stxs ...)]
 which matches on syntax objects that begin, literally, with @racket[drawing],
@@ -449,11 +416,11 @@ Let's define @racket[interpret-rows] now:
        (newline))]))]
 
 For a @racket[rows], we extract out the @racket[repeat-number] out of the
-syntax object and use it as the range of the @racket[for] loop.  The inner loop
+syntax object and use it as the range of the @racket[for] loop. The inner loop
 walks across each @racket[chunk-stx] and calls @racket[interpret-chunk] on it.
 
 
-Finally, we need to write a definition for @racket[interpret-chunk].  We want
+Finally, we need to write a definition for @racket[interpret-chunk]. We want
 it to extract out the @racket[chunk-size] and @racket[chunk-string] portions,
 and print to standard output:
 
@@ -537,8 +504,8 @@ Now @filepath{letter-i.rkt} is a program.
 
 
 How does this work?  From the previous sections, we've seen how to take the
-contents of a file and interpret it.  What we want to do now is teach Racket
-how to compile programs labeled with this @litchar{#lang} line.  We'll do two
+contents of a file and interpret it. What we want to do now is teach Racket
+how to compile programs labeled with this @litchar{#lang} line. We'll do two
 things:
 
 @itemize[
@@ -552,14 +519,14 @@ earlier whenever it sees a program written with
 
 The second part, the writing of the transformation rules, will look very
 similar to the definitions we wrote for the interpreter, but the transformation
-will happen at compile-time.  (We @emph{could} just resort to simply calling
+will happen at compile-time. (We @emph{could} just resort to simply calling
 into the interpreter we just wrote up, but this section is meant to show that
 compilation is also viable.)
 
 
 We do the first part by defining a @emph{module reader}: a
 @link["http://docs.racket-lang.org/guide/syntax_module-reader.html"]{module
-reader} tells Racket how to parse and compile a file.  Whenever Racket sees a
+reader} tells Racket how to parse and compile a file. Whenever Racket sees a
 @litchar{#lang <name>}, it looks for a corresponding module reader in
 @filepath{<name>/lang/reader}.
 
@@ -586,7 +553,7 @@ brag/examples/simple-line-drawing/semantics
 }
 
 We use a helper module @racketmodname[syntax/module-reader], which provides
-utilities for creating a module reader.  It uses the lexer and
+utilities for creating a module reader. It uses the lexer and
 @tt{brag}-generated parser we defined earlier, and also tells Racket that it should compile the forms in the syntax
 object using a module called @filepath{semantics.rkt}.
 
@@ -652,7 +619,7 @@ compilation:
 The semantics hold definitions for @racket[compile-drawing],
 @racket[compile-rows], and @racket[compile-chunk], similar to what we had for
 interpretation with @racket[interpret-drawing], @racket[interpret-rows], and
-@racket[interpret-chunk].  However, compilation is not the same as
+@racket[interpret-chunk]. However, compilation is not the same as
 interpretation: each definition does not immediately execute the act of
 drawing, but rather returns a syntax object whose evaluation will do the actual
 work.
@@ -668,15 +635,15 @@ write this structured value.}
 
 @item{
 @margin-note{By the way, we can just as easily rewrite the semantics so that
-@racket[compile-rows] does explicitly call @racket[compile-chunk].  Often,
+@racket[compile-rows] does explicitly call @racket[compile-chunk]. Often,
 though, it's easier to write the transformation functions in this piecemeal way
 and depend on the Racket macro expansion system to do the rewriting as it
 encounters each of the forms.}
 Unlike in interpretation, @racket[compile-rows] doesn't
-compile each chunk by directly calling @racket[compile-chunk].  Rather, it
+compile each chunk by directly calling @racket[compile-chunk]. Rather, it
 depends on the Racket macro expander to call each @racket[compile-XXX] function
 as it encounters a @racket[drawing], @racket[rows], or @racket[chunk] in the
-parsed value.  The three statements at the bottom of @filepath{semantics.rkt} inform
+parsed value. The three statements at the bottom of @filepath{semantics.rkt} inform
 the macro expansion system to do this:
 
 @racketblock[
@@ -688,8 +655,8 @@ the macro expansion system to do this:
 
 
 Altogether, @tt{brag}'s intent is to be a parser generator generator for Racket
-that's easy and fun to use.  It's meant to fit naturally with the other tools
-in the Racket language toolchain.  Hopefully, it will reduce the friction in
+that's easy and fun to use. It's meant to fit naturally with the other tools
+in the Racket language toolchain. Hopefully, it will reduce the friction in
 making new languages with alternative concrete syntaxes.
 
 The rest of this document describes the @tt{brag} language and the parsers it
@@ -714,7 +681,7 @@ A @deftech{rule identifier} is an @tech{identifier} that is not in upper case.
 A @deftech{token identifier} is an @tech{identifier} that is in upper case.
 
 An @deftech{identifier} is a character sequence of letters, numbers, and
-characters in @racket["-.!$%&/<=>?^_~@"].  It must not contain
+characters in @racket["-.!$%&/<=>?^_~@"]. It must not contain
 @litchar{*} or @litchar{+}, as those characters are used to denote
 quantification.
 
@@ -746,9 +713,9 @@ object: "world" | WORLD
 }|]
 
 the elements @tt{sentence}, @tt{verb}, @tt{greeting}, and @tt{object} are rule
-identifiers.  The first rule, @litchar{sentence: verb optional-adjective
+identifiers. The first rule, @litchar{sentence: verb optional-adjective
 object}, is a rule whose right side is an implicit pattern sequence of three
-sub-patterns.  The uppercased @tt{WORLD} is a token identifier.  The fourth rule in the program associates @tt{greeting} with a @tech{choice pattern}.
+sub-patterns. The uppercased @tt{WORLD} is a token identifier. The fourth rule in the program associates @tt{greeting} with a @tech{choice pattern}.
 
 
 
@@ -796,7 +763,7 @@ as syntax errors.
 
 @item{has a rule with the same left hand side as any other rule.}
 
-@item{refers to rules that have not been defined.  e.g. the
+@item{refers to rules that have not been defined. e.g. the
 following program:
 @nested[#:style 'code-inset
 @verbatim|{
@@ -812,7 +779,7 @@ should raise an error because @tt{bar} has not been defined, even though
 for internal use by @tt{brag}.}
 
 
-@item{contains a rule that has no finite derivation.  e.g. the following
+@item{contains a rule that has no finite derivation. e.g. the following
 program:
 @nested[#:style 'code-inset
 @verbatim|{
@@ -832,7 +799,7 @@ grammars.
 @declare-exporting[brag/examples/nested-word-list]
 
 A program written in @litchar{#lang brag} produces a module that provides a few
-bindings.  The most important of these is @racket[parse]:
+bindings. The most important of these is @racket[parse]:
 
 @defproc[(parse [source any/c #f] 
                 [token-source (or/c (sequenceof token)
@@ -840,7 +807,7 @@ bindings.  The most important of these is @racket[parse]:
          syntax?]{
 
 Parses the sequence of @tech{tokens} according to the rules in the grammar, using the
-first rule as the start production.  The parse must completely consume
+first rule as the start production. The parse must completely consume
 @racket[token-source].
 
 The @deftech{token source} can either be a sequence, or a 0-arity function that
@@ -860,9 +827,9 @@ A token whose type is either @racket[void] or @racket['EOF] terminates the
 source.
 
 
-If @racket[parse] succeeds, it will return a structured syntax object.  The
+If @racket[parse] succeeds, it will return a structured syntax object. The
 structure of the syntax object follows the overall structure of the rules in
-the BNF.  For each rule @racket[r] and its associated pattern @racket[p],
+the BNF grammar. For each rule @racket[r] and its associated pattern @racket[p],
 @racket[parse] generates a syntax object @racket[#'(r p-value)] where
 @racket[p-value]'s structure follows a case analysis on @racket[p]:
 
@@ -892,7 +859,7 @@ If the parse cannot be performed successfully, or if a token in the
 
 
 It's often convenient to extract a parser for other non-terminal rules in the
-grammar, and not just for the first rule.  A @tt{brag}-generated module also
+grammar, and not just for the first rule. A @tt{brag}-generated module also
 provides a form called @racket[make-rule-parser] to extract a parser for the
 other non-terminals:
 
@@ -957,7 +924,7 @@ all-token-types
 @defmodule[brag/support]
 
 The @racketmodname[brag/support] module provides functions to interact with
-@tt{brag} programs.  The most useful is the @racket[token] function, which
+@tt{brag} programs. The most useful is the @racket[token] function, which
 produces tokens to be parsed.
 
 @defproc[(token [type (or/c string? symbol?)]
