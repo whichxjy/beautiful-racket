@@ -28,7 +28,7 @@
   (λ (key default)
     (case key
       [(color-lexer)
-         (dynamic-require 'syntax-color/default-lexer 'default-lexer (λ () #f))]
+         (dynamic-require 'br/demo/jsonic/drracket-lexer 'default-lexer (λ () #f))]
       [(drracket:indentation)
          (dynamic-require 'scribble/private/indentation 'determine-spaces)]
       [else default])))
