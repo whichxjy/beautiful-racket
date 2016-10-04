@@ -274,8 +274,7 @@ bad-listener
 
 @specsubform[#:literals (define-macro) 
 (define-macro (id pat-arg ...) result-expr ...+)]{
-If the first argument is a @seclink["stx-patterns" #:doc '(lib "scribblings/reference/reference.scrbl")]
-{syntax pattern} starting with @racket[id], then create a syntax transformer for this pattern using @racket[result-expr ...] as the return value. As usual, @racket[result-expr ...] needs to return a @seclink["stx-obj" #:doc '(lib "scribblings/guide/guide.scrbl")]{syntax object} or you'll get an error.
+If the first argument is a @seclink["stx-patterns" #:doc '(lib "scribblings/reference/reference.scrbl")]{syntax pattern} starting with @racket[id], then create a syntax transformer for this pattern using @racket[result-expr ...] as the return value. As usual, @racket[result-expr ...] needs to return a @seclink["stx-obj" #:doc '(lib "scribblings/guide/guide.scrbl")]{syntax object} or you'll get an error.
 
 The syntax-pattern notation is the same as @racket[syntax-case], with one key difference. If a @racket[pat-arg] has a @tt{CAPITALIZED-NAME}, it's treated as a named wildcard (meaning, it will match any expression in that position, and can be subsequently referred to by that name). Otherwise, @racket[pat-arg] is treated as a literal (meaning, it will only match the same expression). 
 
