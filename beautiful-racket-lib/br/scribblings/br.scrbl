@@ -205,7 +205,7 @@ Define a function that behaves differently depending on how many arguments are s
 (define-macro id (syntax other-id)) 
 (define-macro id (lambda (arg-id) result-expr ...+))
 (define-macro id transformer-id)
-(define-macro id (syntax result-expr)) 
+(define-macro id syntax-object) 
 (define-macro (id pat-arg ...) expr ...+) 
 ]]
 Create a macro using one of the subforms above, which are explained below:
