@@ -28,9 +28,9 @@
   (λ (key default)
     (case key
       [(color-lexer)
-         (dynamic-require 'br/demo/jsonic/drracket-lexer 'default-lexer (λ () #f))]
+       (really-dynamic-require 'br/demo/jsonic/drracket-lexer 'drracket-lexer (λ () #f))]
       [(drracket:indentation)
-         (dynamic-require 'scribble/private/indentation 'determine-spaces)]
+       (really-dynamic-require 'br/demo/jsonic/drracket-indenter 'drracket-indenter (λ () #f))]
       [else default])))
 
 (define (test-tokenize str)

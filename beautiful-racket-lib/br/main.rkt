@@ -16,6 +16,11 @@
       (define-namespace-anchor nsa)
       (eval DATUM (namespace-anchor->namespace nsa))))
 
+(provide really-dynamic-require)
+(define-macro (really-dynamic-require . ARGS)
+  #'(parameterize ([current-namespace (make-base-namespace)])
+      (dynamic-require . ARGS)))
+
 (module reader syntax/module-reader
   #:language 'br
   #:info br-get-info
