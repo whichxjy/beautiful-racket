@@ -1,30 +1,24 @@
 #lang br
 (provide indenter)
 
-(define open-braces #f)
 (define indent-width 2)
 
-;; todo: update indenter to work from an arbitrary line in the middle
-;; not just top to bottom.
-
 (define (indenter drr-editor start-pos)
-  (when (zero? start-pos) (set! open-braces 0))
-  (define first-pos-in-this-line
+  (define line-first-pos
     (for*/first ([pos (in-naturals start-pos)]
                  [c (in-value (send drr-editor get-character pos))]
                  #:when (not (char-blank? c)))
                 pos))
-  (define last-pos-in-this-line
-    (send drr-editor find-newline 'forward first-pos-in-this-line))
-  (set! open-braces
-        (+ open-braces
-           (for/sum ([pos (in-range first-pos-in-this-line last-pos-in-this-line)])
-                    (case (send drr-editor get-character pos)
-                      [(#\{) 1]
-                      [(#\}) -1]
-                      [else 0]))))
+  (define line-last-pos
+    (send drr-editor find-newline 'forward line-first-pos))
+  (define open-braces
+    (for/sum ([pos (in-range 0 line-last-pos)])
+             (case (send drr-editor get-character pos)
+               [(#\{) 1]
+               [(#\}) -1]
+               [else 0])))
   (define first-char
-    (send drr-editor get-character first-pos-in-this-line))
+    (send drr-editor get-character line-first-pos))
   (and (positive? open-braces)
        (* indent-width
           (if (first-char . char=? . #\{)
