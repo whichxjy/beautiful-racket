@@ -1,6 +1,14 @@
 #lang at-exp br/quicklang
 (require "parser.rkt")
 
+#|
+Demonstrate:
++ color lexing
++ indentation
++ toolbar buttons
++ pinpoint errors
+|#
+
 (module+ reader
   (define (read-syntax path port)
     (define parse-tree (parse path (tokenize port)))
