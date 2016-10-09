@@ -4,6 +4,9 @@
 (define open-braces #f)
 (define indent-width 2)
 
+;; todo: update indenter to work from an arbitrary line in the middle
+;; not just top to bottom.
+
 (define (indenter drr-editor start-pos)
   (when (zero? start-pos) (set! open-braces 0))
   (define first-pos-in-this-line
