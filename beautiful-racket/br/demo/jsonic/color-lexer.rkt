@@ -1,10 +1,9 @@
 #lang br
-
 (require parser-tools/lex
          syntax-color/racket-lexer
-         (prefix-in : parser-tools/lex-sre))
+         parser-tools/lex-sre)
   
-(provide drracket-lexer)
+(provide color-lexer)
 
 (define in-racket-expr? #f)
 
@@ -16,8 +15,8 @@
   (check-true (at-racket-boundary? (open-input-string "$@foo")))
   (check-false (at-racket-boundary? (open-input-string "foo$@"))))
 
-(define (drracket-lexer input-port)
-  (define this-lexer
+(define (color-lexer input-port)
+  (define jsonic-lexer
     (lexer
      [(eof) (values lexeme 'eof #f #f #f)]
      ["@$" (begin
@@ -26,10 +25,10 @@
      ["$@" (begin
              (set! in-racket-expr? #f)
              (values lexeme 'parenthesis '|)| (position-offset start-pos) (position-offset end-pos)))]
-     [(:seq "//" (:* (char-complement #\newline)))
+     [(seq "//" (* (char-complement #\newline)))
       (values lexeme 'comment #f (position-offset start-pos) (position-offset end-pos))]
      [any-char
       (values lexeme 'string #f (position-offset start-pos) (position-offset end-pos))]))
   (if (and in-racket-expr? (not (at-racket-boundary? input-port)))
       (racket-lexer input-port)
-      (this-lexer input-port)))
+      (jsonic-lexer input-port)))
