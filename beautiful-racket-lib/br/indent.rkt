@@ -53,7 +53,7 @@
   (check-equal? (next-line t 11) #f))
 
 (define (valid-line? text line)
-  (<= 0 line (send text last-line)))
+  (and line (<= 0 line (send text last-line))))
 
 (define (line-start text line)
   (and (valid-line? text line)
