@@ -1,5 +1,5 @@
 #lang racket/base
-(require racket/class)
+(require racket/class racket/gui/base racket/list)
 (provide (all-defined-out))
 
 (module+ test
@@ -10,7 +10,7 @@
 (define indent-width 2)
 
 (define (char text pos)
-  (send text get-character pos))
+  (and pos (send text get-character pos)))
 
 (module+ test
   (check-equal? (char t 0) #\f)
@@ -28,6 +28,19 @@
   (check-equal? (line t 5) 1)
   (check-equal? (line t 10) 2)
   (check-equal? (line t 11) 2))
+
+(define (line-chars text line)
+  (and
+   (valid-line? text line)
+   (for/list ([pos (in-range (line-start text line) (add1 (line-end text line)))])
+             (char text pos))))
+
+(module+ test
+  (check-equal? (line-chars t 0) '(#\f #\o #\o #\newline))
+  (check-equal? (line-chars t 1) '(#\space #\a #\r #\newline))
+  (check-equal? (line-chars t 2) '(#\space #\space #\m #\nul))
+  (check-equal? (line-chars t 3) #f))
+
 
 (define (previous-line text pos)
   (define this-line (line text pos))
@@ -127,3 +140,24 @@
   (check-equal? (count-char t #\o) 2)
   (check-equal? (count-char t #\o 0 1) 1)
   (check-equal? (count-char t #\newline) 2))
+
+
+(define (str->text str)
+  (define t (new text%))
+  (send t insert-port (open-input-string str))
+  t)
+
+(define (map-indenter indenter t)
+  (for/list ([line-idx (in-range (add1 (send t last-line)))])
+            (indenter t (line-start t line-idx))))
+
+(define (test-indenter indenter t-or-str)
+  (define t (if (string? t-or-str) (str->text t-or-str) t-or-str))
+  (list->string
+   (append*
+    (for/list ([line-idx (in-range (add1 (send t last-line)))]
+               [indent (in-list (map-indenter indenter t))])
+              ;; simulate DrR indentation
+              ;; by dropping leading spaces and applying new indent.
+              (append (make-list (or indent 0) #\space)
+                      (dropf (line-chars t line-idx) (λ(x) (x . char=? . #\space))))))))
