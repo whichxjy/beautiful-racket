@@ -1,24 +1,19 @@
 #lang br
+(require br/indent)
 (provide indenter)
-
 (define indent-width 2)
 
-(define (indenter drr-editor start-pos)
-  (define line-first-pos
-    (for*/first ([pos (in-naturals start-pos)]
-                 [c (in-value (send drr-editor get-character pos))]
-                 #:when (not (char-blank? c)))
-                pos))
-  (define line-last-pos
-    (send drr-editor find-newline 'forward line-first-pos))
+(define (indenter text start-pos)
+  ;; if line begins with }:
+  ;; outdent to the matching {
+  ;; indent to match the previous line
+  (define the-line (line text start-pos))
+  (define line-last-pos (line-end text the-line))
   (define open-braces
-    (for/sum ([pos (in-range 0 line-last-pos)])
-             (case (send drr-editor get-character pos)
-               [(#\{) 1]
-               [(#\}) -1]
-               [else 0])))
-  (define first-char
-    (send drr-editor get-character line-first-pos))
+    (- (count-char text #\{ 0 line-last-pos)
+       (count-char text #\} 0 line-last-pos)))
+  (define line-first-pos (line-start text the-line))
+  (define first-char (char text line-first-pos))
   (and (positive? open-braces)
        (* indent-width
           (if (first-char . char=? . #\{)
