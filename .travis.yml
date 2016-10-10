@@ -5,6 +5,12 @@
 language: c
 sudo: false
 
+addons:
+  apt:
+    packages:
+    # for testing racket/gui/base
+    - libgtk-3-dev
+
 env:
   global:
     - RACKET_DIR=~/racket
