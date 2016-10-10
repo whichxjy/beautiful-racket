@@ -1,11 +1,16 @@
 #lang racket/base
-(require racket/class racket/gui/base racket/list)
+(require racket/class
+         racket/gui/base
+         racket/list
+         racket/string)
 (provide (all-defined-out))
 
 (module+ test
+  ;; todo: fix this so it can be tested on travis
   (require racket/gui/base rackunit)
   (define t (new text%))
-  (define result (send t insert-port (open-input-string "foo\n ar\n  m"))))
+  (define t-str "foo\n ar\n  m")
+  (define result (send t insert-port (open-input-string t-str))))
 
 (define indent-width 2)
 
@@ -147,17 +152,28 @@
   (send t insert-port (open-input-string str))
   t)
 
-(define (map-indenter indenter t)
-  (for/list ([line-idx (in-range (add1 (send t last-line)))])
-            (indenter t (line-start t line-idx))))
+(define space-char? (λ(x) (x . char=? . #\space)))
 
 (define (test-indenter indenter t-or-str)
   (define t (if (string? t-or-str) (str->text t-or-str) t-or-str))
-  (list->string
-   (append*
-    (for/list ([line-idx (in-range (add1 (send t last-line)))]
-               [indent (in-list (map-indenter indenter t))])
-              ;; simulate DrR indentation
-              ;; by dropping leading spaces and applying new indent.
-              (append (make-list (or indent 0) #\space)
-                      (dropf (line-chars t line-idx) (λ(x) (x . char=? . #\space))))))))
+  (define indented-t
+    (for/fold ([t-acc t])
+              ([line-idx (in-range (add1 (send t last-line)))])
+      ;; simulate DrR indentation
+      ;; by dropping leading spaces and applying new indent.
+      (define line-start-pos (line-start t-acc line-idx))
+      (define new-indent (indenter t-acc line-start-pos))
+      (define new-line-str
+        (list->string (append (make-list (or new-indent 0) #\space)
+                              (dropf (line-chars t-acc line-idx) space-char?))))
+      (send t-acc delete line-start-pos (add1 (line-end t-acc line-idx))) ; add1 to grab ending newline too
+      (send t-acc insert new-line-str line-start-pos)
+      t-acc))
+  (send indented-t get-text))
+
+(define (str->indents str)
+  (for/list ([line (in-list (string-split str "\n"))])
+            (length (takef (string->list line) space-char?))))
+
+(module+ test
+  (check-equal? (str->indents t-str) '(0 1 2)))

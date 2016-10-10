@@ -23,7 +23,8 @@
     [(string? result) (format "~v" result)]
     [(list? result) (format "[~a]" (string-join (map stringify result) ", "))]
     [(hash? result) (format "{~a}" (string-join (for/list ([(k v) (in-hash result)])
-                                                          (format "~a: ~a" (stringify k) (stringify v))) ", "))]))
+                                                          (format "~a: ~a" (stringify k) (stringify v))) ", "))]
+    [else ""]))
 
 (define-macro (s-val STR ...)
   (define s-exp-string

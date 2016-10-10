@@ -2,15 +2,19 @@
 (require (for-syntax racket/base br/syntax) br/define)
 (provide (except-out (all-defined-out) string->datum))
 
+(define (blank? str)
+  (or (zero? (string-length str))
+      (andmap char-blank? (string->list str))))
+
 ;; read "foo bar" the same way as "(foo bar)" 
 ;; otherwise "bar" is dropped, which is too astonishing
 (define (string->datum str)
-  (if (positive? (string-length str))
+  (if (blank? str)
+      (void)
       (let ([result (read (open-input-string (format "(~a)" str)))])
         (if (= (length result) 1)
             (car result)
-            result))
-      (void)))
+            result))))
 
 (define (datum? x)
   (or (list? x) (symbol? x)))
@@ -34,5 +38,7 @@
   (check-equal? (format-datum '(~a-bar-~a) #'foo #'zam) '(foo-bar-zam))
   (check-equal? (format-datum (datum (~a-bar-~a)) "foo" "zam") '(foo-bar-zam))
   (check-equal? (format-datum '~a "foo") 'foo)
-  (check-equal? (format-datum (datum ~a) "foo") 'foo)
+  (check-equal? (format-datum '~a "foo") 'foo)
+  (check-equal? (format-datum '~a "") (void))
+  (check-equal? (format-datum '~a "   ") (void))
   (check-equal? (format-datums '(put ~a) '("foo" "zam")) '((put foo) (put zam))))
