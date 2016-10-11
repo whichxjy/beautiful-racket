@@ -7,6 +7,7 @@ Demonstrate:
 + indentation
 + toolbar buttons
 + pinpoint errors
++ unit tests
 |#
 
 (module+ reader
