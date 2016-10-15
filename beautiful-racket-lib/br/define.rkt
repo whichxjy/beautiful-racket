@@ -23,9 +23,12 @@
 
 
 (begin-for-syntax
-  (define (upcased-and-capitalized? str)
+  (define (upcased-and-capitalized? sym)
+    (define str (symbol->string sym))
     (and (equal? (string-upcase str) str)
-         (not (equal? (string-downcase (substring str 0 1)) (substring str 0 1)))))
+         (let ([first-letter (substring str 0 1)])
+           (or (and (string->number first-letter) #t) ; leading digit OK
+               (not (equal? (string-downcase first-letter) first-letter))))))
 
   (define (generate-literals pats)
     ;; generate literals for any symbols that are not ... or _ 
@@ -34,7 +37,7 @@
                 [pat-datum (in-value (syntax->datum pat-arg))]
                 #:when (and (symbol? pat-datum)
                             (not (member pat-datum '(... _))) ; exempted from literality
-                            (not (upcased-and-capitalized? (symbol->string pat-datum)))))
+                            (not (upcased-and-capitalized? pat-datum))))
                pat-arg)))
 
 (begin-for-syntax
@@ -225,6 +228,8 @@
   
   (define-macro (add X) #'(+ X X))
   (check-equal? (add 5) 10)
+  (define-macro (add-b 9X) #'(+ 9X 9X))
+  (check-equal? (add-b 5) 10)
   (define-macro-cases add-again [(_ X) #'(+ X X)])
   (check-equal? (add-again 5) 10)
   (define-macro-cases add-3rd [(_ X) #'(+ X X)])
