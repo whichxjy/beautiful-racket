@@ -202,75 +202,13 @@ Define a function that behaves differently depending on how many arguments are s
 @defform*[
 #:literals (syntax lambda stx)
 [
+(define-macro (id pat-arg ...) result-expr ...+) 
 (define-macro id (syntax other-id)) 
 (define-macro id (lambda (arg-id) result-expr ...+))
 (define-macro id transformer-id)
 (define-macro id syntax-object) 
-(define-macro (id pat-arg ...) expr ...+) 
 ]]
 Create a macro using one of the subforms above, which are explained below:
-
-@specsubform[#:literals (define-macro syntax lambda stx) 
-(define-macro id (syntax other-id))]{
-If the first argument is an identifier @racket[id] and the second a syntaxed identifier that looks like @racket[(syntax other-id)], create a rename transformer, which is a fancy term for ``macro that replaces @racket[id] with @racket[other-id].'' (This subform is equivalent to @racket[make-rename-transformer].)
-
-Why do we need rename transformers? Because an ordinary macro operates on its whole calling expression (which it receives as input) like @racket[(macro-name this-arg that-arg . and-so-on)]. By contrast, a rename transformer operates only on the identifier itself (regardless of where that identifier appears in the code). It's like making one identifier into an alias for another identifier.
-
-Below, notice how the rename transformer, operating in the macro realm, approximates the behavior of a run-time assignment. 
-
-@examples[#:eval my-eval
-(define foo 'foo-value)
-(define bar foo)
-bar
-(define-macro zam-macro #'foo)
-zam-macro
-(define add +)
-(add 20 22)
-(define-macro sum-macro #'+)
-(sum-macro 20 22)
-]
-}
-
-
-@specsubform[#:literals (define-macro lambda stx) 
-(define-macro id (lambda (arg-id) result-expr ...+))]{
-If the first argument is an @racket[id] and the second a single-argument function, create a macro called @racket[id] that uses the function as a syntax transformer. This function must return a @seclink["stx-obj" #:doc '(lib "scribblings/guide/guide.scrbl")]{syntax object}, otherwise you'll trigger an error. Beyond that, the function can do whatever you like. (This subform is equivalent to @racket[define-syntax].)
-
-@examples[#:eval my-eval
-(define-macro nice-sum (lambda (stx) #'(+ 2 2)))
-nice-sum
-(define-macro not-nice (lambda (stx) '(+ 2 2)))
-not-nice
-]
-}
-
-@specsubform[#:literals (define-macro lambda stx) 
-(define-macro id transformer-id)]{
-Similar to the previous subform, but @racket[transformer-id] holds an existing transformer function. Note that @racket[transformer-id] needs to be visible during compile time (aka @italic{phase 1}), so use @racket[define-for-syntax] or equivalent.
-
-@examples[#:eval my-eval
-(define-for-syntax summer-compile-time (lambda (stx) #'(+ 2 2)))
-(define-macro nice-summer summer-compile-time)
-nice-summer
-(define summer-run-time (lambda (stx) #'(+ 2 2)))
-(define-macro not-nice-summer summer-run-time)
-]
-}
-
-@specsubform[#:literals (define-macro) 
-(define-macro id syntax-object)
-#:contracts ([syntax-object syntax?])]{
-If the first argument is an @racket[id] and the second a @racket[syntax-object], create a syntax transformer that returns @racket[syntax-object]. This is just alternate notation for the previous subform, wrapping @racket[syntax-object] inside a function body. The effect is to create a macro from @racket[id] that always returns @racket[syntax-object], regardless of how it's invoked. Not especially useful within programs. Mostly handy for making quick macros at the REPL.
-
-@examples[#:eval my-eval
-(define-macro bad-listener #'"what?")
-bad-listener
-(bad-listener)
-(bad-listener "hello")
-(bad-listener 1 2 3 4)
-]
-
-}
 
 @specsubform[#:literals (define-macro) 
 (define-macro (id pat-arg ...) result-expr ...+)]{
@@ -344,6 +282,71 @@ This subform of @racket[define-macro] is useful for macros that have one calling
 }
 
 
+@specsubform[#:literals (define-macro syntax lambda stx) 
+(define-macro id (syntax other-id))]{
+If the first argument is an identifier @racket[id] and the second a syntaxed identifier that looks like @racket[(syntax other-id)], create a rename transformer, which is a fancy term for ``macro that replaces @racket[id] with @racket[other-id].'' (This subform is equivalent to @racket[make-rename-transformer].)
+
+Why do we need rename transformers? Because an ordinary macro operates on its whole calling expression (which it receives as input) like @racket[(macro-name this-arg that-arg . and-so-on)]. By contrast, a rename transformer operates only on the identifier itself (regardless of where that identifier appears in the code). It's like making one identifier into an alias for another identifier.
+
+Below, notice how the rename transformer, operating in the macro realm, approximates the behavior of a run-time assignment. 
+
+@examples[#:eval my-eval
+(define foo 'foo-value)
+(define bar foo)
+bar
+(define-macro zam-macro #'foo)
+zam-macro
+(define add +)
+(add 20 22)
+(define-macro sum-macro #'+)
+(sum-macro 20 22)
+]
+}
+
+
+@specsubform[#:literals (define-macro lambda stx) 
+(define-macro id (lambda (arg-id) result-expr ...+))]{
+If the first argument is an @racket[id] and the second a single-argument function, create a macro called @racket[id] that uses the function as a syntax transformer. This function must return a @seclink["stx-obj" #:doc '(lib "scribblings/guide/guide.scrbl")]{syntax object}, otherwise you'll trigger an error. Beyond that, the function can do whatever you like. (This subform is equivalent to @racket[define-syntax].)
+
+@examples[#:eval my-eval
+(define-macro nice-sum (lambda (stx) #'(+ 2 2)))
+nice-sum
+(define-macro not-nice (lambda (stx) '(+ 2 2)))
+not-nice
+]
+}
+
+@specsubform[#:literals (define-macro lambda stx) 
+(define-macro id transformer-id)]{
+Similar to the previous subform, but @racket[transformer-id] holds an existing transformer function. Note that @racket[transformer-id] needs to be visible during compile time (aka @italic{phase 1}), so use @racket[define-for-syntax] or equivalent.
+
+@examples[#:eval my-eval
+(define-for-syntax summer-compile-time (lambda (stx) #'(+ 2 2)))
+(define-macro nice-summer summer-compile-time)
+nice-summer
+(define summer-run-time (lambda (stx) #'(+ 2 2)))
+(define-macro not-nice-summer summer-run-time)
+]
+}
+
+@specsubform[#:literals (define-macro) 
+(define-macro id syntax-object)
+#:contracts ([syntax-object syntax?])]{
+If the first argument is an @racket[id] and the second a @racket[syntax-object], create a syntax transformer that returns @racket[syntax-object]. This is just alternate notation for the previous subform, wrapping @racket[syntax-object] inside a function body. The effect is to create a macro from @racket[id] that always returns @racket[syntax-object], regardless of how it's invoked. Not especially useful within programs. Mostly handy for making quick macros at the REPL.
+
+@examples[#:eval my-eval
+(define-macro bad-listener #'"what?")
+bad-listener
+(bad-listener)
+(bad-listener "hello")
+(bad-listener 1 2 3 4)
+]
+
+}
+
+
+
+
 @defform[
 (define-macro-cases id 
   [pattern result-expr ...+] ...+) 
@@ -407,10 +410,19 @@ The generated @racket[read] function takes one argument, an input port. It calls
 
 }
 
-@;{
+
 @section{Syntax}
 
 @defmodule[br/syntax]
 
-TK
+@defform[(with-pattern ([stx-pattern stx-expr] ...) body ...+)]{
+Bind pattern variables within each @racket[stx-pattern] by matching the pattern to its respective @racket[stx-expr]. These pattern variables can be used in later pattern–expression clauses, or in @racket[body].
+
+@examples[#:eval my-eval
+(define-macro (m ARG)
+  (with-pattern ([(1ST 2ND 3RD) #'ARG]
+                 [(LEFT RIGHT) #'2ND])
+    #'LEFT))
+(m ((1 2) (3 4) (5 6)))
+]
 }
