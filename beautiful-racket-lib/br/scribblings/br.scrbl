@@ -250,7 +250,7 @@ The capitalization requirement for a wildcard @racket[pat-arg] makes it easy to 
 (bad-squarer +10i)
 ]
 
-The error is cleared when the argument is capitalized, thus making it a wilcard:
+The error is cleared when the argument is capitalized, thus making it a wildcard:
 
 @examples[#:eval my-eval
 (define-macro (good-squarer ANY-NUMBER)
@@ -258,21 +258,18 @@ The error is cleared when the argument is capitalized, thus making it a wilcard:
 (good-squarer +10i)
 ]
 
-@;{You can use the special identifier @racket[caller-stx] — available only within the body of @racket[define-macro] — to access the original input argument to the macro.}
+You can use the special variable @racket[caller-stx] — available only within the body of @racket[define-macro] — to access the original input argument to the macro.
 
 @;{todo: fix this example. complains that caller-stx is unbound}
-@;{
 @examples[#:eval my-eval
-(require (for-syntax br))
 (define-macro (inspect ARG ...)
-  #`(displayln
-     (let ([calling-pattern '#,(syntax->datum caller-stx)])
-     (format "Called as ~a with ~a args"
-             calling-pattern
-             (length (cdr calling-pattern))))))
-
+  (with-pattern ([CALLER-STX (syntax->datum caller-stx)])
+    #`(displayln
+       (let ([calling-pattern 'CALLER-STX])
+         (format "Called as ~a with ~a args"
+                 calling-pattern
+                 (length (cdr calling-pattern)))))))
 (inspect)
-(inspect 42)
 (inspect "foo" "bar")
 (inspect #t #f #f #t)
 ]
