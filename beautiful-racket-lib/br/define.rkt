@@ -265,3 +265,8 @@
   (define-macro-cases no-else-macro
     [(_ ARG) #''got-arg])
   (check-exn exn:fail:syntax? (λ _ (expand-once #'(no-else-macro 'arg1 'arg2)))))
+
+(define-macro (define-unhygienic-macro (ID PAT ...) BODY ... STX-OBJECT)
+  #'(define-macro (ID PAT ...)
+      BODY ...
+      (datum->syntax caller-stx (syntax->datum STX-OBJECT))))

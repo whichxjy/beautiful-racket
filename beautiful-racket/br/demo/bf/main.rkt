@@ -1,5 +1,5 @@
 #lang br
 
 (module reader br
-  (require "bf-reader.rkt")
+  (require "reader.rkt")
   (provide read-syntax))

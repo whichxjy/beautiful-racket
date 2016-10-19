@@ -4,7 +4,7 @@
 @(require scribble/eval)
 
 @(define my-eval (make-base-eval))
-@(my-eval `(require br racket/stxparam))
+@(my-eval `(require br racket/stxparam (for-syntax br)))
 
 
 @title[#:style 'toc]{Beautiful Racket}
@@ -424,5 +424,29 @@ Bind pattern variables within each @racket[stx-pattern] by matching the pattern 
                  [(LEFT RIGHT) #'2ND])
     #'LEFT))
 (m ((1 2) (3 4) (5 6)))
+]
+}
+
+@defform[(prefix-id prefix id)]{
+Create a new identifier within the lexical context of @racket[id] with the same name, but prefixed with @racket[prefix].
+
+@examples[#:eval my-eval
+(define-macro ($-define ID VAL)
+  (with-pattern ([PREFIXED-ID (prefix-id '$ #'ID)]) 
+    #'(define PREFIXED-ID VAL)))
+($-define foo 42)
+$foo
+]
+}
+
+@defform[(suffix-id id suffix)]{
+Create a new identifier within the lexical context of @racket[id] with the same name, but suffixed with @racket[suffix].
+
+@examples[#:eval my-eval
+(define-macro (define-% ID VAL)
+  (with-pattern ([ID-SUFFIXED (suffix-id #'ID '%)]) 
+    #'(define ID-SUFFIXED VAL)))
+(define-% foo 42)
+foo%
 ]
 }
