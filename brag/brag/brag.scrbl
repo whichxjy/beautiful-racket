@@ -4,6 +4,7 @@
           file/md5
           (for-label racket
                      brag/support
+                     brag/lexer-support
                      brag/examples/nested-word-list
                      (only-in parser-tools/lex lexer-src-pos)
                      (only-in syntax/parse syntax-parse ~literal)))
@@ -972,7 +973,70 @@ The exception raised when parsing fails.
 property, so if this exception reaches DrRacket's default error handler,
 DrRacket should highlight the offending locations in the source.}
 
+@section{Lexer support API}
 
+@defmodule[brag/lexer-support]
+
+The @racketmodname[brag/lexer-support] module provides everything from @racketmodname[brag/support], everything from @racketmodname[parser-tools/lex], and everything from @racketmodname[parser-tools/lex-sre], but with a @racket[:] prefix.
+
+@defform[(:* re ...)]{
+
+Repetition of @racket[re] sequence 0 or more times.}
+
+@defform[(:+ re ...)]{
+
+Repetition of @racket[re] sequence 1 or more times.}
+
+@defform[(:? re ...)]{
+
+Zero or one occurrence of @racket[re] sequence.}
+
+@defform[(:= n re ...)]{
+
+Exactly @racket[n] occurrences of @racket[re] sequence, where
+@racket[n] must be a literal exact, non-negative number.}
+
+@defform[(:>= n re ...)]{
+
+At least @racket[n] occurrences of @racket[re] sequence, where
+@racket[n] must be a literal exact, non-negative number.}
+
+@defform[(:** n m re ...)]{
+
+Between @racket[n] and @racket[m] (inclusive) occurrences of
+@racket[re] sequence, where @racket[n] must be a literal exact,
+non-negative number, and @racket[m] must be literally either
+@racket[#f], @racket[+inf.0], or an exact, non-negative number; a
+@racket[#f] value for @racket[m] is the same as @racket[+inf.0].}
+
+@defform[(:or re ...)]{
+
+Same as @racket[(union re ...)].}
+
+@deftogether[(
+@defform[(:: re ...)]
+@defform[(:seq re ...)]
+)]{
+
+Both forms concatenate the @racket[re]s.}
+
+@defform[(:& re ...)]{
+
+Intersects the @racket[re]s.}
+
+@defform[(:- re ...)]{
+
+The set difference of the @racket[re]s.}
+
+@defform[(:~ re ...)]{
+
+Character-set complement, which each @racket[re] must match exactly
+one character.}
+
+@defform[(:/ char-or-string ...)]{
+
+Character ranges, matching characters between successive pairs of
+characters.}
 
 
 @close-eval[my-eval]
