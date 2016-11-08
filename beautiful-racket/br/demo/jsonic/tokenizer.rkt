@@ -5,8 +5,6 @@
     (define our-lexer
       (lexer
        [(eof) eof]
-       ;; (char-complement "\n") means any char but "\n"
-       ;; (complement "\n") means any whole string except "\n"
        [(:seq "//" (:* (char-complement "\n"))) (next-token)]
        ["@$" (token 'OPEN)]
        ["$@" (token 'CLOSE)]
@@ -14,3 +12,7 @@
     (our-lexer port))  
   next-token)
 (provide tokenize)
+
+
+;; (char-complement "\n") means any char but "\n"
+;; (complement "\n") means any whole string except "\n"

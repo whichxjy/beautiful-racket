@@ -858,16 +858,18 @@ If the parse cannot be performed successfully, or if a token in the
 @racket[parse] raises an instance of @racket[exn:fail:parsing].}
 
 
+@defproc[(parse-tree [source any/c #f] 
+                [token-source (or/c (sequenceof token)
+                                    (-> token))])
+         list?]{
+Same as @racket[parse], but the result is converted into a visible parse tree. Useful for testing or debugging a parser.
+}
 
-It's often convenient to extract a parser for other non-terminal rules in the
-grammar, and not just for the first rule. A @tt{brag}-generated module also
-provides a form called @racket[make-rule-parser] to extract a parser for the
-other non-terminals:
 
 @defform[#:id make-rule-parser
          (make-rule-parser name)]{
 Constructs a parser for the @racket[name] of one of the non-terminals
-in the grammar.
+in the grammar. 
 
 For example, given the @tt{brag} program
 @filepath{simple-arithmetic-grammar.rkt}:
@@ -902,8 +904,6 @@ the following interaction shows how to extract a parser for @racket[term]s.
 }
 
 
-Finally, the module provides a set of all the used token types in the grammar
-in @racket[all-token-types]:
 @defthing[all-token-types (setof symbol?)]{
 A set of all the token types used in a grammar.
 
@@ -977,7 +977,14 @@ DrRacket should highlight the offending locations in the source.}
 
 @defmodule[brag/lexer-support]
 
-The @racketmodname[brag/lexer-support] module provides everything from @racketmodname[brag/support], everything from @racketmodname[parser-tools/lex], and everything from @racketmodname[parser-tools/lex-sre], but with a @racket[:] prefix.
+In addition to the exports shown below, the @racketmodname[brag/lexer-support] module also provides everything from @racketmodname[brag/support], and everything from @racketmodname[parser-tools/lex].
+
+@defproc[(apply-tokenizer [tokenizer procedure?] 
+                [source-string (or/c string?
+                                    input-port?)])
+         list?]{
+Repeatedly apply @racket[tokenizer] to @racket[source-string], gathering the resulting tokens into a list. Useful for testing or debugging a tokenizer.
+}
 
 @defform[(:* re ...)]{
 
