@@ -1,4 +1,4 @@
 #lang brag
-jsonic-program: (char | s-val)*
-char: CHAR
-s-val: /OPEN CHAR* /CLOSE
+jsonic-program: (other-char | s-exp)*
+other-char: CHAR
+s-exp: /OPEN CHAR* /CLOSE

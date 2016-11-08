@@ -2,8 +2,8 @@
 (require json (for-syntax br/datum racket/string))
 (provide (rename-out [jsonic-mb #%module-begin])
          jsonic-program
-         char
-         s-val)
+         other-char
+         s-exp)
  
 (define-macro (jsonic-mb PARSE-TREE)
   #'(#%module-begin
@@ -14,7 +14,7 @@
 (define-macro (jsonic-program STR ...)
   #'(string-append STR ...))
 
-(define-macro (char STR)
+(define-macro (other-char STR)
   #'STR)
 
 (define (stringify result)
@@ -26,7 +26,7 @@
                                                           (format "~a: ~a" (stringify k) (stringify v))) ", "))]
     [else ""]))
 
-(define-macro (s-val STR ...)
+(define-macro (s-exp STR ...)
   (define s-exp-string
     (string-join (map syntax->datum (syntax->list #'(STR ...))) ""))
   (with-pattern ([DATUM (format-datum '~a s-exp-string)])
