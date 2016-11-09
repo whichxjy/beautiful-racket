@@ -1,21 +1,20 @@
 #lang br/quicklang
-(require json (for-syntax br/datum racket/string))
-(provide (rename-out [jsonic-mb #%module-begin])
-         jsonic-program
-         other-char
-         s-exp)
- 
+
+(require json)
 (define-macro (jsonic-mb PARSE-TREE)
   #'(#%module-begin
-     (define json-string (string-trim PARSE-TREE))
+     (define json-string PARSE-TREE)
      (when (string->jsexpr json-string)
        (display json-string))))
+(provide (rename-out [jsonic-mb #%module-begin]))
 
-(define-macro (jsonic-program STR ...)
-  #'(string-append STR ...))
+(define-macro (jsonic-program TOK ...)
+  #'(string-trim (string-append TOK ...)))
+(provide jsonic-program)
 
-(define-macro (other-char STR)
-  #'STR)
+(define-macro (json-char TOK)
+  #'TOK)
+(provide json-char)
 
 (define (stringify result)
   (cond
@@ -26,8 +25,10 @@
                                                           (format "~a: ~a" (stringify k) (stringify v))) ", "))]
     [else ""]))
 
-(define-macro (s-exp STR ...)
+(require (for-syntax br/datum racket/string))
+(define-macro (s-exp TOK ...)
   (define s-exp-string
-    (string-join (map syntax->datum (syntax->list #'(STR ...))) ""))
+    (string-join (map syntax->datum (syntax->list #'(TOK ...))) ""))
   (with-pattern ([DATUM (format-datum '~a s-exp-string)])
     #'(stringify DATUM)))
+(provide s-exp)
