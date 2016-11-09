@@ -1,34 +1,37 @@
 #lang br/quicklang
-
 (require json)
-(define-macro (jsonic-mb PARSE-TREE)
+(define-macro (js-module-begin PARSE-TREE)
   #'(#%module-begin
-     (define json-string PARSE-TREE)
-     (when (string->jsexpr json-string)
-       (display json-string))))
-(provide (rename-out [jsonic-mb #%module-begin]))
+     (define result-string PARSE-TREE)
+     (when (string->jsexpr result-string)
+       (display result-string))))
+(provide (rename-out [js-module-begin #%module-begin]))
 
-(define-macro (jsonic-program TOK ...)
-  #'(string-trim (string-append TOK ...)))
+(define-macro (jsonic-program S-EXP-OR-JSON-CHAR ...)
+  #'(string-trim (string-append S-EXP-OR-JSON-CHAR ...)))
 (provide jsonic-program)
 
-(define-macro (json-char TOK)
-  #'TOK)
+(define-macro (json-char TOKEN)
+  #'TOKEN)
 (provide json-char)
 
-(define (stringify result)
-  (cond
-    [(number? result) (number->string result)]
-    [(string? result) (format "~v" result)]
-    [(list? result) (format "[~a]" (string-join (map stringify result) ", "))]
-    [(hash? result) (format "{~a}" (string-join (for/list ([(k v) (in-hash result)])
-                                                          (format "~a: ~a" (stringify k) (stringify v))) ", "))]
-    [else ""]))
-
-(require (for-syntax br/datum racket/string))
-(define-macro (s-exp TOK ...)
-  (define s-exp-string
-    (string-join (map syntax->datum (syntax->list #'(TOK ...))) ""))
-  (with-pattern ([DATUM (format-datum '~a s-exp-string)])
-    #'(stringify DATUM)))
+(define-macro (s-exp TOKEN ...)
+  (define token-stxs (syntax->list #'(TOKEN ...)))
+  (define token-strs (map syntax->datum token-stxs))
+  (define s-exp-str (apply string-append token-strs))
+  (with-pattern ([S-EXP-DATUM (format-datum '~a s-exp-str)])
+    #'(->json S-EXP-DATUM)))
 (provide s-exp)
+
+(define (->json x)
+  (cond
+    [(number? x) (number->string x)]
+    [(string? x) (format "~v" x)]
+    [(list? x)
+     (format "[~a]" (string-join (map ->json x) ", "))]
+    [(hash? x)
+     (define pair-strs (for/list ([(k v) (in-hash x)])
+                             (format "~a: ~a"
+                                     (->json k) (->json v))))
+     (format "{~a}" (string-join pair-strs ", "))]
+    [else ""]))
