@@ -5,14 +5,10 @@
     (define our-lexer
       (lexer
        [(eof) eof]
-       [(:seq "//" (:* (char-complement "\n"))) (next-token)]
-       ["@$" (token 'OPEN)]
-       ["$@" (token 'CLOSE)]
-       [any-char (token 'CHAR lexeme)]))
+       [(delimited-by "//" "\n") (next-token)]
+       [(delimited-by "@$" "$@")
+        (token 'SEXP-TOK (trim-delimiters "@$" lexeme "$@"))]
+       [any-char (token 'CHAR-TOK lexeme)]))
     (our-lexer port))  
   next-token)
 (provide tokenize)
-
-
-;; (char-complement "\n") means any char but "\n"
-;; (complement "\n") means any whole string except "\n"
