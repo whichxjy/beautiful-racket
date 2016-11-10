@@ -4,7 +4,6 @@
           file/md5
           (for-label racket
                      brag/support
-                     brag/lexer-support
                      brag/examples/nested-word-list
                      (only-in parser-tools/lex lexer-src-pos)
                      (only-in syntax/parse syntax-parse ~literal)))
