@@ -986,6 +986,15 @@ In addition to the exports shown below, the @racketmodname[brag/lexer-support] m
 Repeatedly apply @racket[tokenizer] to @racket[source-string], gathering the resulting tokens into a list. Useful for testing or debugging a tokenizer.
 }
 
+
+@defproc[(trim-delimiters [left-delimiter string?]
+[str string?]
+[right-delimiter string?])
+         string?]{
+Remove @racket[left-delimiter] from the left side of @racket[str], and @racket[right-delimiter] from its right side. Intended as a helper function for @racket[delimited-by].
+}
+
+
 @defform[(:* re ...)]{
 
 Repetition of @racket[re] sequence 0 or more times.}
@@ -1044,6 +1053,10 @@ one character.}
 
 Character ranges, matching characters between successive pairs of
 characters.}
+
+@defform[(delimited-by open close)]{
+
+A string that is bounded by the @racket[open] and @racket[close] delimiters. Matching is non-greedy (meaning, it stops at the first occurence of @racket[close]). The resulting lexeme includes the delimiters. To remove them, see @racket[trim-delimiters].}
 
 
 @close-eval[my-eval]
