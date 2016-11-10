@@ -7,7 +7,7 @@
        [(eof) eof]
        [(between "//" "\n") (next-token)]
        [(between "@$" "$@")
-        (token 'SEXP-TOK (trim-delimiters "@$" lexeme "$@"))]
+        (token 'SEXP-TOK (trim-ends "@$" lexeme "$@"))]
        [any-char (token 'CHAR-TOK lexeme)]))
     (our-lexer port))  
   next-token)

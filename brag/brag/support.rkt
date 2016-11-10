@@ -9,8 +9,8 @@
          token
          [struct-out exn:fail:parsing]
          apply-tokenizer
-         trim-delimiters
-         delimited-by)
+         trim-ends
+         between)
 
 
 (struct token-struct (type val offset line column span skip?) 
@@ -50,10 +50,10 @@
     (for/list ([token (in-producer token-producer eof)])
               token))
 
-(define (trim-delimiters left lexeme right)
+(define (trim-ends left lexeme right)
   (string-trim (string-trim lexeme left #:right? #f) right #:left? #f))
 
-(define-lex-trans delimited-by
+(define-lex-trans between
   (λ(stx)
     (syntax-case stx ()
       [(_ OPEN CLOSE)
