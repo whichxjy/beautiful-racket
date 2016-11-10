@@ -918,8 +918,6 @@ all-token-types
 
 
 
-
-
 @section{Support API}
 
 @defmodule[brag/support]
@@ -927,6 +925,9 @@ all-token-types
 The @racketmodname[brag/support] module provides functions to interact with
 @tt{brag} programs. The most useful is the @racket[token] function, which
 produces tokens to be parsed.
+
+In addition to the exports shown below, the @racketmodname[brag/support] module also provides everything from @racketmodname[brag/support], and everything from @racketmodname[parser-tools/lex].
+
 
 @defproc[(token [type (or/c string? symbol?)]
                 [val any/c #f]
@@ -973,11 +974,7 @@ The exception raised when parsing fails.
 property, so if this exception reaches DrRacket's default error handler,
 DrRacket should highlight the offending locations in the source.}
 
-@section{Lexer support API}
 
-@defmodule[brag/lexer-support]
-
-In addition to the exports shown below, the @racketmodname[brag/lexer-support] module also provides everything from @racketmodname[brag/support], and everything from @racketmodname[parser-tools/lex].
 
 @defproc[(apply-tokenizer [tokenizer procedure?] 
                 [source-string (or/c string?
