@@ -4,14 +4,15 @@
   #'(#%module-begin
      (define result-string PARSE-TREE)
      (define validated-jsexpr (string->jsexpr result-string))
-     (display (jsexpr->string validated-jsexpr))))
+     (display result-string)))
 (provide (rename-out [js-module-begin #%module-begin]))
 
-(define-macro (jsonic-program S-EXP-OR-JSON-CHAR ...)
-  #'(string-append S-EXP-OR-JSON-CHAR ...))
+(define-macro (jsonic-program SEXP-OR-JSON-STR ...)
+  #'(string-trim (string-append SEXP-OR-JSON-STR ...)))
 (provide jsonic-program)
 
-(define-macro (json-char CHAR-STR) #'CHAR-STR)
+(define-macro (json-char CHAR-STR)
+  #'CHAR-STR)
 (provide json-char)
 
 (define-macro (s-exp SEXP-STR)

@@ -987,7 +987,7 @@ Repeatedly apply @racket[tokenizer] to @racket[source-string], gathering the res
 [str string?]
 [right-str string?])
          string?]{
-Remove @racket[left-str] from the left side of @racket[str], and @racket[right-str] from its right side. Intended as a helper function for @racket[between].
+Remove @racket[left-str] from the left side of @racket[str], and @racket[right-str] from its right side. Intended as a helper function for @racket[from/to].
 }
 
 
@@ -1050,7 +1050,7 @@ one character.}
 Character ranges, matching characters between successive pairs of
 characters.}
 
-@defform[(between open close)]{
+@defform[(from/to open close)]{
 
 A string that is bounded by @racket[open] and @racket[close]. Matching is non-greedy (meaning, it stops at the first occurence of @racket[close]). The resulting lexeme includes @racket[open] and @racket[close]. To remove them, see @racket[trim-ends].}
 

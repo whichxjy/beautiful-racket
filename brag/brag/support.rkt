@@ -10,7 +10,7 @@
          [struct-out exn:fail:parsing]
          apply-tokenizer
          trim-ends
-         between)
+         from/to)
 
 
 (struct token-struct (type val offset line column span skip?) 
@@ -53,7 +53,7 @@
 (define (trim-ends left lexeme right)
   (string-trim (string-trim lexeme left #:right? #f) right #:left? #f))
 
-(define-lex-trans between
+(define-lex-trans from/to
   (λ(stx)
     (syntax-case stx ()
       [(_ OPEN CLOSE)

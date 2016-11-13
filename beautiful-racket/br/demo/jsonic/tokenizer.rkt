@@ -5,8 +5,8 @@
     (define our-lexer
       (lexer
        [(eof) eof]
-       [(between "//" "\n") (next-token)]
-       [(between "@$" "$@")
+       [(from/to "//" "\n") (next-token)]
+       [(from/to "@$" "$@")
         (token 'SEXP-TOK (trim-ends "@$" lexeme "$@"))]
        [any-char (token 'CHAR-TOK lexeme)]))
     (our-lexer port))  
