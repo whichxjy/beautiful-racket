@@ -2,10 +2,12 @@
 (require (for-syntax racket/base racket/syntax)
          racket/list
          racket/syntax
+         syntax/strip-context
          br/define
          br/private/syntax-flatten)
 (provide (all-defined-out)
-         syntax-flatten)
+         syntax-flatten
+         (all-from-out syntax/strip-context))
 
 (module+ test
   (require rackunit))
