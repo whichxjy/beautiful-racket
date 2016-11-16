@@ -447,3 +447,14 @@ Create a new identifier within the lexical context of @racket[id] with the same 
 foo%
 ]
 }
+
+@(require (for-label syntax/strip-context))
+@defproc[(strip-bindings [stx syntax?]) syntax?]{
+
+Removes all bindings from @racket[stx], but preserves
+source-location information and properties. An alias for @racket[strip-context].}
+
+@defproc[(replace-bindings [stx-source (or/c syntax? #f)] [stx-target syntax?]) syntax?]{
+
+Uses the bindings from @racket[stx-source] to replace the bindings of all parts of @racket[stx-target], while preserving source-location
+information and properties. An alias for @racket[replace-context].}

@@ -7,7 +7,8 @@
          br/private/syntax-flatten)
 (provide (all-defined-out)
          syntax-flatten
-         (all-from-out syntax/strip-context))
+         (rename-out [strip-context strip-bindings]
+                     [replace-context replace-bindings]))
 
 (module+ test
   (require rackunit))
