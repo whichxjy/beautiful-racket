@@ -36,7 +36,7 @@
           num-or-wire
           (hash-ref! val-cache num-or-wire num-or-wire)))))
 
-(define (mod-16bit x) (modulo x 65535))
+(define (mod-16bit x) (modulo x 65536))
 (define-macro (define-16bit ID PROC-ID)
   #'(define ID (compose1 mod-16bit PROC-ID)))
 
