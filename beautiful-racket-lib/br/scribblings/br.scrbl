@@ -375,6 +375,16 @@ As with @racket[define-macro], wildcards in each syntax pattern must be @tt{CAPI
 
 @defmodule[br/reader-utils]
 
+
+@defproc[
+(test-reader
+[read-syntax-proc procedure?]
+[source-str string?])
+datum?]{
+Applies @racket[read-syntax-proc] to @racket[source-str] as if it were being read in from a source file. 
+}
+
+
 @defform[
 (define-read-and-read-syntax (path-id port-id) 
   reader-result-expr ...+)

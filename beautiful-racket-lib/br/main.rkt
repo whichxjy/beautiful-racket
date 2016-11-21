@@ -1,10 +1,10 @@
 #lang racket/base
 (require racket/provide racket/list racket/string racket/format racket/match racket/port
-         br/define br/syntax br/datum br/debug br/cond racket/class racket/vector
+         br/define br/syntax br/datum br/debug br/cond racket/class racket/vector br/reader-utils
          (for-syntax racket/base racket/syntax br/syntax br/debug br/define br/datum))
 (provide (all-from-out racket/base)
          (all-from-out racket/list racket/string racket/format racket/match racket/port
-                       br/syntax br/datum br/debug br/cond racket/class racket/vector br/define)
+                       br/syntax br/datum br/debug br/cond racket/class racket/vector br/define br/reader-utils)
          (for-syntax (all-from-out racket/base racket/syntax br/syntax br/debug br/datum))
          (for-syntax caller-stx with-shared-id)) ; from br/define
          
@@ -20,6 +20,7 @@
 (define-macro (really-dynamic-require . ARGS)
   #'(parameterize ([current-namespace (make-base-namespace)])
       (dynamic-require . ARGS)))
+
 
 (module reader syntax/module-reader
   #:language 'br

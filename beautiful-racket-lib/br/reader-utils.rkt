@@ -1,6 +1,9 @@
 #lang racket/base
 (require (for-syntax racket/base racket/syntax br/syntax) br/define syntax/strip-context)
-(provide define-read-and-read-syntax)
+(provide define-read-and-read-syntax test-reader)
+
+(define (test-reader read-syntax-proc str)
+  (syntax->datum (read-syntax-proc #f (open-input-string str))))
 
 ;; `define-read-functions` simplifies support for the standard reading API,
 ;; which asks for `read` and `read-syntax`.

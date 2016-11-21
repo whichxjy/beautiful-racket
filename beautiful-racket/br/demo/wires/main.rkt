@@ -1,6 +1,4 @@
 #lang br/quicklang
-(provide #%module-begin wire
-         AND OR LSHIFT RSHIFT NOT)
 
 (module+ reader
   (provide read-syntax))
@@ -8,19 +6,22 @@
 (define (read-syntax path port)
   (define wire-datums
     (for/list ([wire-str (in-lines port)])
-              (format-datum '(wire ~a) wire-str)))
-  (strip-context
+      (format-datum '(wire ~a) wire-str)))
+  (strip-bindings
    #`(module wires-mod br/demo/wires/main
        #,@wire-datums)))
 
+(provide #%module-begin)
+
 (define-macro-cases wire
-  [(wire ARG -> ID) #'(define/display (ID)
-                        (val ARG))]
-  [(wire OP ARG -> ID) #'(define/display (ID)
-                           (OP (val ARG)))]
-  [(wire ARG1 OP ARG2 -> ID) #'(define/display (ID)
-                                 (OP (val ARG1) (val ARG2)))]
+  [(wire ARG -> WIRE) #'(define/display (WIRE)
+                          (val ARG))]
+  [(wire OP ARG -> WIRE) #'(define/display (WIRE)
+                             (OP (val ARG)))]
+  [(wire ARG1 OP ARG2 -> WIRE) #'(define/display (WIRE)
+                                   (OP (val ARG1) (val ARG2)))]
   [else #'(void)])
+(provide wire)
 
 (define-macro (define/display (ID) BODY)
   #'(begin
@@ -29,18 +30,19 @@
         (displayln (format "~a: ~a" 'ID (ID))))))
 
 (define val
-  (let ([wire-cache (make-hash)])
-    (λ (num-or-wire)
+  (let ([val-cache (make-hash)])
+    (lambda (num-or-wire)
       (if (number? num-or-wire)
           num-or-wire
-          (hash-ref! wire-cache num-or-wire num-or-wire)))))
+          (hash-ref! val-cache num-or-wire num-or-wire)))))
 
-(define 16bit-max (expt 2 16))
-(define-macro (define-16bit ID+ARGS BODY)
-  #'(define ID+ARGS (modulo BODY 16bit-max)))
+(define (mod-16bit x) (modulo x 65535))
+(define-macro (define-16bit ID PROC-ID)
+  #'(define ID (compose1 mod-16bit PROC-ID)))
 
-(define-16bit (AND x y) (bitwise-and x y))
-(define-16bit (OR x y) (bitwise-ior x y))
-(define-16bit (LSHIFT x y) (arithmetic-shift x y))
-(define-16bit (RSHIFT x y) (LSHIFT x (- y)))
-(define-16bit (NOT arg) (bitwise-not arg))
+(define-16bit AND bitwise-and)
+(define-16bit OR bitwise-ior)
+(define-16bit NOT bitwise-not)
+(define-16bit LSHIFT arithmetic-shift)
+(define (RSHIFT x y) (LSHIFT x (- y)))
+(provide AND OR NOT LSHIFT RSHIFT)
