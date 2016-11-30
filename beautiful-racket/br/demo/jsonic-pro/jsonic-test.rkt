@@ -1,9 +1,13 @@
-#lang br/demo/jsonic
-42
-"string"
-["array", "of", "strings"]
-{
-  "key": 42,
-  25: "value", 
-  [1, 2, 3]: {"subkey": 21}
-}
+#lang br/demo/jsonic-pro
+// a line comment
+[
+ @$ 'null $@,
+    @$ #f $@,
+    @$ #t $@,
+    @$ (* 6 7) $@,
+    @$ "string" $@,
+    @$ (list "array" "of" "strings") $@,
+    @$ (hash 'key-1 42
+             'key-2 "value"
+             'key-3 (hash 'subkey 21)) $@
+                                       ]

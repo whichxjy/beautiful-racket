@@ -1,37 +1,22 @@
-#lang at-exp br/quicklang
-(require "parser.rkt")
+#lang br/quicklang
+(module reader br
+  (require br/demo/jsonic/reader)
+  (provide (all-from-out br/demo/jsonic/reader)))
+
+(require br/demo/jsonic/expander)
+(provide (all-from-out br/demo/jsonic/expander))
 
 #|
 Demonstrate:
++ contracts
++ unit tests
 + color lexing
 + indentation
 + toolbar buttons
-+ pinpoint errors
-+ unit tests
++ docs
++ info.rkt
 |#
 
-(module+ reader
-  (define (read-syntax path port)
-    (define parse-tree (parse path (tokenize port)))
-    (define module-datum `(module bf-mod br/demo/jsonic-pro/expander
-                            ,parse-tree))
-    (datum->syntax #f module-datum))
-  (provide read-syntax get-info))
-
-(require parser-tools/lex parser-tools/lex-sre brag/support)
-(define (tokenize port)
-  (define (next-token)
-    (define our-lexer
-      (lexer
-       [(eof) eof]
-       ;; (char-complement "\n") means any char but "\n"
-       ;; (complement "\n") means any whole string except "\n"
-       [(seq "//" (* (char-complement "\n"))) (next-token)]
-       ["@$" (token 'OPEN lexeme)]
-       ["$@" (token 'CLOSE lexeme)]
-       [any-char (token 'CHAR lexeme)]))
-    (our-lexer port))  
-  next-token)
 
 (define (get-info . _)
   (λ (key default)
@@ -43,9 +28,3 @@ Demonstrate:
       [(drracket:toolbar-buttons)
        (dynamic-require 'br/demo/jsonic/toolbar 'buttons (λ () #f))]
       [else default])))
-
-(define (test-tokenize str)
-  (define ip (open-input-string str))
-  (define token-producer (tokenize ip))
-  (for/list ([token (in-producer token-producer eof)])
-            token))
