@@ -1,10 +1,7 @@
 #lang br/quicklang
 (module reader br
-  (require br/demo/jsonic/reader)
-  (provide (all-from-out br/demo/jsonic/reader)))
-
-(require br/demo/jsonic/expander)
-(provide (all-from-out br/demo/jsonic/expander))
+  (require "reader.rkt")
+  (provide read-syntax))
 
 #|
 Demonstrate:
