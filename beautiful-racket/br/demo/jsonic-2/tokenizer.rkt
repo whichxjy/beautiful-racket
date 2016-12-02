@@ -1,7 +1,13 @@
 #lang br/quicklang
 (require brag/support)
-(define (tokenize port)
-  (define (next-token)
+
+(define (token? x)
+  (or (eof-object? x) (string? x) (token-struct? x)))
+
+(define/contract (tokenize port)
+  (input-port? . -> . (-> token?))
+  (define/contract (next-token)
+    (-> token?)
     (define our-lexer
       (lexer
        [(eof) eof]
