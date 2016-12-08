@@ -15,6 +15,7 @@
 
 (define/contract (tokenize port)
   (input-port? . -> . (-> token?))
+  (port-count-lines! port)
   (define/contract (next-token)
     (-> token?)
     (define our-lexer
@@ -22,18 +23,40 @@
        [(eof) eof]
        [(from/to "//" "\n") (next-token)]
        [(from/to "@$" "$@")
-        (token 'SEXP-TOK (trim-ends "@$" lexeme "$@"))]
-       [any-char (token 'CHAR-TOK lexeme)]))
+        (token 'SEXP-TOK (trim-ends "@$" lexeme "$@")
+                 #:line (line lexeme-start)
+                 #:column (+ (column lexeme-start) 2)
+                 #:position (+ (position lexeme-start) 2)
+                 #:span (- (span lexeme-start lexeme-end) 4))]
+       [any-char (token 'CHAR-TOK lexeme
+                        #:line (line lexeme-start)
+                        #:column (column lexeme-start)
+                        #:position (position lexeme-start)
+                        #:span (- (position lexeme-end)
+                                  (position lexeme-start)))]))
     (our-lexer port))  
   next-token)
 (provide tokenize)
+
 
 (module+ test
   (check-equal? (apply-tokenizer tokenize "// comment\n") empty)
   (check-equal?
    (apply-tokenizer tokenize "@$ (+ 6 7) $@")
-   (list (token-struct 'SEXP-TOK " (+ 6 7) " #f #f #f #f #f)))
+   (list (token 'SEXP-TOK " (+ 6 7) "
+                #:line 1
+                #:column 2
+                #:position 3
+                #:span 9)))
   (check-equal?
    (apply-tokenizer tokenize "hi")
-   (list (token-struct 'CHAR-TOK "h" #f #f #f #f #f)
-         (token-struct 'CHAR-TOK "i" #f #f #f #f #f))))
+   (list (token 'CHAR-TOK "h"
+                #:line 1
+                #:column 0
+                #:position 1
+                #:span 1)
+         (token 'CHAR-TOK "i"
+                #:line 1
+                #:column 1
+                #:position 2
+                #:span 1))))
