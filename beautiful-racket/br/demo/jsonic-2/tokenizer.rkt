@@ -24,10 +24,11 @@
        [(from/to "//" "\n") (next-token)]
        [(from/to "@$" "$@")
         (token 'SEXP-TOK (trim-ends "@$" lexeme "$@")
-                 #:line (line lexeme-start)
-                 #:column (+ (col lexeme-start) 2)
-                 #:position (+ (pos lexeme-start) 2)
-                 #:span (- (span lexeme-start lexeme-end) 4))]
+               #:line (line lexeme-start)
+               #:column (+ (col lexeme-start) 2)
+               #:position (+ (pos lexeme-start) 2)
+               #:span (- (pos lexeme-end)
+                         (pos lexeme-start) 4))]
        [any-char (token 'CHAR-TOK lexeme
                         #:line (line lexeme-start)
                         #:column (col lexeme-start)
