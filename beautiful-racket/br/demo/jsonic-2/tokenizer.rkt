@@ -25,15 +25,15 @@
        [(from/to "@$" "$@")
         (token 'SEXP-TOK (trim-ends "@$" lexeme "$@")
                  #:line (line lexeme-start)
-                 #:column (+ (column lexeme-start) 2)
-                 #:position (+ (position lexeme-start) 2)
+                 #:column (+ (col lexeme-start) 2)
+                 #:position (+ (pos lexeme-start) 2)
                  #:span (- (span lexeme-start lexeme-end) 4))]
        [any-char (token 'CHAR-TOK lexeme
                         #:line (line lexeme-start)
-                        #:column (column lexeme-start)
-                        #:position (position lexeme-start)
-                        #:span (- (position lexeme-end)
-                                  (position lexeme-start)))]))
+                        #:column (col lexeme-start)
+                        #:position (pos lexeme-start)
+                        #:span (- (pos lexeme-end)
+                                  (pos lexeme-start)))]))
     (our-lexer port))  
   next-token)
 (provide tokenize)
@@ -44,7 +44,7 @@
   (check-equal?
    (apply-tokenizer tokenize "@$ (+ 6 7) $@")
    (list (token 'SEXP-TOK " (+ 6 7) "
-                #:line 1
+                #:line 11
                 #:column 2
                 #:position 3
                 #:span 9)))
