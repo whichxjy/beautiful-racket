@@ -1,6 +1,7 @@
 #lang racket/base
 (require parser-tools/lex
          racket/string
+         racket/struct
          (prefix-in : parser-tools/lex-sre)
          (for-syntax racket/base))
 (provide (all-from-out parser-tools/lex)
@@ -10,8 +11,22 @@
          [struct-out exn:fail:parsing])
 
 
-(struct token-struct (type val offset line column span skip?) 
-  #:transparent)
+(struct token-struct (type val offset line column span skip?)
+  #:auto-value #f
+  #:transparent
+  #:methods gen:custom-write
+  [(define write-proc
+     (make-constructor-style-printer
+      (lambda (obj) 'token)
+      (lambda (obj) (map (λ(proc) (proc obj))
+                         (list
+                          token-struct-type
+                          token-struct-val
+                          token-struct-line
+                          token-struct-column
+                          token-struct-offset
+                          token-struct-span
+                          token-struct-skip?)))))])
 
 
 ;; Token constructor.
@@ -64,22 +79,23 @@
 
 ;; change names of lexer abbreviations to be consistent with Racket srcloc conventions
 
-(provide start-loc)
-(define-syntax start-loc (make-rename-transformer #'start-pos))
+(provide lexeme-start)
+(define-syntax lexeme-start (make-rename-transformer #'start-pos))
 
-(provide end-loc)
-(define-syntax end-loc (make-rename-transformer #'end-pos))
+(provide lexeme-end)
+(define-syntax lexeme-end (make-rename-transformer #'end-pos))
 
-(provide loc-line)
-(define-syntax loc-line (make-rename-transformer #'position-line))
+(provide line)
+(define-syntax line (make-rename-transformer #'position-line))
 
-(provide loc-column)
-(define-syntax loc-column (make-rename-transformer #'position-col))
+(provide column)
+(define-syntax column (make-rename-transformer #'position-col))
 
-(provide loc-position)
-(define-syntax loc-position (make-rename-transformer #'position-offset))
+(provide position)
+(define-syntax position (make-rename-transformer #'position-offset))
 
-(provide loc-span)
-(define (loc-span start-loc end-loc)
-  (- (loc-position end-loc)
-     (loc-position start-loc)))
+(provide span)
+(define (span lexeme-start lexeme-end)
+  (abs ; thus same result in reverse order
+   (- (position lexeme-end)
+      (position lexeme-start))))
