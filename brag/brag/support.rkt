@@ -47,7 +47,11 @@
                            (open-input-string in)
                            in))
     (define token-producer (tokenize input-port))
-    (for/list ([token (in-producer token-producer eof)])
+    (for/list ([token (in-producer token-producer (λ(token)
+                                                    ;; position-tokens are produced by lexer-src-pos
+                                                    (eq? eof (if (position-token? token)
+                                                                 (position-token-token token)
+                                                                 token))))])
               token))
 
 (define (trim-ends left lexeme right)
