@@ -932,7 +932,7 @@ In addition to the exports shown below, the @racketmodname[brag/support] module 
                 [val any/c #f]
                 [#:line line (or/c positive-integer? #f) #f]
                 [#:column column (or/c natural-number? #f) #f]
-                [#:offset offset (or/c positive-integer? #f) #f]
+                [#:position position (or/c positive-integer? #f) #f]
                 [#:span span (or/c natural-number? #f) #f]
                 [#:skip? skip? boolean? #f]
                 )
@@ -948,7 +948,7 @@ parse.}
 
 @defstruct[token-struct ([type symbol?]
                          [val any/c]
-                         [offset (or/c positive-integer? #f)]
+                         [position (or/c positive-integer? #f)]
                          [line (or/c natural-number? #f)]
                          [column (or/c positive-integer? #f)]
                          [span (or/c natural-number? #f)]
