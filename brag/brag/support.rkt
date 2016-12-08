@@ -11,22 +11,24 @@
          [struct-out exn:fail:parsing])
 
 
+
+(define (token-print token port mode)
+  (write-string (format "~a"
+                        (cons 'token-struct
+                              (map (λ(proc) (format "~v" (proc token)))
+                                   (list
+                                    token-struct-type
+                                    token-struct-val
+                                    token-struct-line
+                                    token-struct-column
+                                    token-struct-offset
+                                    token-struct-span
+                                    token-struct-skip?)))) port))
+
+
 (struct token-struct (type val offset line column span skip?)
   #:auto-value #f
-  #:transparent
-  #:methods gen:custom-write
-  [(define write-proc
-     (make-constructor-style-printer
-      (lambda (obj) 'token)
-      (lambda (obj) (map (λ(proc) (proc obj))
-                         (list
-                          token-struct-type
-                          token-struct-val
-                          token-struct-line
-                          token-struct-column
-                          token-struct-offset
-                          token-struct-span
-                          token-struct-skip?)))))])
+  #:transparent)
 
 
 ;; Token constructor.
@@ -59,11 +61,11 @@
                          (open-input-string in)
                          in))
   (define token-producer (tokenize input-port))
-  (for/list ([token (in-producer token-producer (λ(token)
+  (for/list ([token (in-producer token-producer (λ(tok)
                                                   ;; position-tokens are produced by lexer-src-pos
-                                                  (eq? eof (if (position-token? token)
-                                                               (position-token-token token)
-                                                               token))))])
+                                                  (eq? eof (if (position-token? tok)
+                                                               (position-token-token tok)
+                                                               tok))))])
             token))
 
 (provide trim-ends)
