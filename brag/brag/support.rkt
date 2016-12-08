@@ -79,23 +79,19 @@
 
 ;; change names of lexer abbreviations to be consistent with Racket srcloc conventions
 
-(provide lexeme-start)
-(define-syntax lexeme-start (make-rename-transformer #'start-pos))
+(define-syntax-rule (dprt ID-IN ID-OUT)
+  (begin
+    (provide ID-IN)
+    (define-syntax ID-IN (make-rename-transformer (syntax ID-OUT)))))
 
-(provide lexeme-end)
-(define-syntax lexeme-end (make-rename-transformer #'end-pos))
-
-(provide line)
-(define-syntax line (make-rename-transformer #'position-line))
-
-(provide column)
-(define-syntax column (make-rename-transformer #'position-col))
-
-(provide position)
-(define-syntax position (make-rename-transformer #'position-offset))
+(dprt lexeme-start start-pos)
+(dprt lexeme-end end-pos)
+(dprt line position-line)
+(dprt col position-col)
+(dprt pos position-offset)
 
 (provide span)
 (define (span lexeme-start lexeme-end)
   (abs ; thus same result in reverse order
-   (- (position lexeme-end)
-      (position lexeme-start))))
+   (- (pos lexeme-end)
+      (pos lexeme-start))))
