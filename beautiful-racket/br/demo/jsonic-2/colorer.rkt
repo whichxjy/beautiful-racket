@@ -3,7 +3,7 @@
          syntax-color/racket-lexer
          parser-tools/lex-sre)
   
-(provide color-lexer)
+(provide color-jsonic)
 
 (define in-racket-expr? #f)
 
@@ -15,7 +15,7 @@
   (check-true (at-racket-boundary? (open-input-string "$@foo")))
   (check-false (at-racket-boundary? (open-input-string "foo$@"))))
 
-(define (color-lexer input-port)
+(define (color-jsonic input-port)
   (define jsonic-lexer
     (lexer
      [(eof) (values lexeme 'eof #f #f #f)]

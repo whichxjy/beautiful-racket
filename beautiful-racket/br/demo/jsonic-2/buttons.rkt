@@ -1,8 +1,8 @@
 #lang br
 (require racket/draw)
-(provide buttons)
+(provide make-jsonic-buttons)
 
-(define buttons
+(define make-jsonic-buttons
   (list (let ([label "Insert expression"]
               [bitmap (make-object bitmap% 16 16)]
               [callback (λ (drr-frame)

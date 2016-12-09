@@ -1,10 +1,10 @@
 #lang at-exp br
 (require br/indent)
-(provide indenter)
+(provide indent-jsonic)
 
 (define indent-width 2)
 
-(define (indenter tb [this-pos 0])
+(define (indent-jsonic tb [this-pos 0])
   (define this-line (line tb this-pos))
   (define prev-line (previous-line tb this-pos))
   (define prev-indent (or (line-indent tb prev-line) 0))
@@ -34,6 +34,5 @@
 }
 here
     )
-  (displayln (test-indenter indenter test-str))
-  (check-equal? (str->indents (test-indenter indenter test-str))
+  (check-equal? (str->indents (test-indenter indent-jsonic test-str))
                 (map (λ(x) (* x indent-width)) '(0 0 1 1 2 2 1 1 0))))
