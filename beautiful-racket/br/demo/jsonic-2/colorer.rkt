@@ -20,7 +20,8 @@
       (values lexeme 'comment #f (pos lexeme-start) (pos lexeme-end))]
      [any-char
       (values lexeme 'string #f (pos lexeme-start) (pos lexeme-end))]))
-  (if (and in-racket-expr? (not (equal? (peek-string 2 0 port) "$@")))
+  (if (and in-racket-expr?
+           (not (equal? (peek-string 2 0 port) "$@")))
       (racket-lexer port)
       (jsonic-lexer port)))
 (provide color-jsonic)
