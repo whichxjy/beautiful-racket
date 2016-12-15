@@ -2,7 +2,8 @@
 (require racket/class
          racket/gui/base
          racket/list
-         racket/string)
+         racket/string
+         racket/contract)
 (provide (all-defined-out))
 
 (module+ test
@@ -14,7 +15,8 @@
 
 (define indent-width 2)
 
-(define (char text pos)
+(define/contract (char text pos)
+  ((is-a?/c text%) exact-nonnegative-integer? . -> . char?)
   (and pos (send text get-character pos)))
 
 (module+ test
@@ -24,7 +26,8 @@
   (check-equal? (char t 10) #\m)
   (check-equal? (char t 11) #\nul))
 
-(define (line text pos)
+(define/contract (line text pos)
+  ((is-a?/c text%) exact-nonnegative-integer? . -> . exact-nonnegative-integer?)
   (send text position-line pos))
 
 (module+ test
@@ -34,7 +37,8 @@
   (check-equal? (line t 10) 2)
   (check-equal? (line t 11) 2))
 
-(define (line-chars text line)
+(define/contract (line-chars text line)
+  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c (listof char?) #f))
   (and
    (valid-line? text line)
    (for/list ([pos (in-range (line-start text line) (add1 (line-end text line)))])
@@ -47,7 +51,8 @@
   (check-equal? (line-chars t 3) #f))
 
 
-(define (previous-line text pos)
+(define/contract (previous-line text pos)
+  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c exact-nonnegative-integer? #f))
   (define this-line (line text pos))
   (and (this-line . > . 0) (sub1 this-line)))
 
@@ -58,7 +63,8 @@
   (check-equal? (previous-line t 10) 1)
   (check-equal? (previous-line t 11) 1))
 
-(define (next-line text pos)
+(define/contract (next-line text pos)
+  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c exact-nonnegative-integer? #f))
   (define last (send text last-line))
   (define this-line (line text pos))
   (and (this-line . < . last) (add1 this-line)))
@@ -70,10 +76,12 @@
   (check-equal? (next-line t 10) #f)
   (check-equal? (next-line t 11) #f))
 
-(define (valid-line? text line)
+(define/contract (valid-line? text line)
+  ((is-a?/c text%) exact-nonnegative-integer? . -> . boolean?)
   (and line (<= 0 line (send text last-line))))
 
-(define (line-start text line)
+(define/contract (line-start text line)
+  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c exact-nonnegative-integer? #f))
   (and (valid-line? text line)
        (send text line-start-position line)))
 
@@ -83,7 +91,8 @@
   (check-equal? (line-start t 2) 8)
   (check-equal? (line-start t 3) #f))
   
-(define (line-end text line)
+(define/contract (line-end text line)
+  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c exact-nonnegative-integer? #f))
   (and (valid-line? text line)
        (send text line-end-position line)))
 
@@ -100,7 +109,8 @@
                #:when (not (char-blank? c)))
               pos))
 
-(define (line-start-visible text line)
+(define/contract (line-start-visible text line)
+  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c exact-nonnegative-integer? #f))
   (define start (line-start text line))
   (define end (line-end text line))
   (and start end (first-visible-char-pos text start end)))
@@ -111,7 +121,8 @@
   (check-equal? (line-start-visible t 2) 10)
   (check-equal? (line-start-visible t 3) #f))
 
-(define (line-end-visible text line)
+(define/contract (line-end-visible text line)
+  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c exact-nonnegative-integer? #f))
   (define start+1 (line-end text line)) ; start before newline
   (define end+1 (line-start text line))
   (and start+1 end+1 (first-visible-char-pos text (sub1 start+1) (sub1 end+1))))
@@ -122,7 +133,8 @@
   (check-equal? (line-end-visible t 2) 10)
   (check-equal? (line-end-visible t 3) #f))
 
-(define (line-indent text line)
+(define/contract (line-indent text line)
+  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c exact-nonnegative-integer? #f))
   (and (valid-line? text line)
        (let ([lsv (line-start-visible text line)])
          (and lsv ; could be #f
@@ -152,9 +164,10 @@
   (send t insert-port (open-input-string str))
   t)
 
-(define space-char? (λ(x) (x . char=? . #\space)))
+(define (space-char? x) (char=? x #\space))
 
-(define (test-indenter indenter t-or-str)
+(define/contract (apply-indenter indenter t-or-str)
+  (procedure? (or/c (is-a?/c text%) string?) . -> . string?)
   (define t (if (string? t-or-str) (str->text t-or-str) t-or-str))
   (define indented-t
     (for/fold ([t-acc t])
@@ -171,9 +184,10 @@
       t-acc))
   (send indented-t get-text))
 
-(define (str->indents str)
+(define/contract (string-indents str)
+  (string? . -> . (listof exact-nonnegative-integer?))
   (for/list ([line (in-list (string-split str "\n"))])
             (length (takef (string->list line) space-char?))))
 
 (module+ test
-  (check-equal? (str->indents t-str) '(0 1 2)))
+  (check-equal? (string-indents t-str) '(0 1 2)))

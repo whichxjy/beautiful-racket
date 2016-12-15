@@ -1,28 +1,25 @@
-#lang at-exp br
+#lang br
 (require br/indent)
 (provide indent-jsonic)
 
 (define indent-width 2)
 
-(define (left-bracket? c)
-   (and c (or (char=? c #\{) (char=? c #\[))))
+(define (left-bracket? c) (member c '(#\{ #\[)))
+(define (right-bracket? c) (member c '(#\} #\])))
 
-(define (right-bracket? c)
-   (and c (or (char=? c #\}) (char=? c #\]))))
-
-(define (indent-jsonic tb [this-pos 0])
-  (define this-line (line tb this-pos))
-  (define prev-line (previous-line tb this-pos))
-  (define prev-indent (or (line-indent tb prev-line) 0))
+;; if this line begins with } or ], outdent.
+;; if last line begins with { or [, indent.
+;; otherwise use previous indent
+(define (indent-jsonic textbox [pos 0])
+  (define this-line (line textbox pos))
+  (define prev-line (previous-line textbox pos))
+  (define prev-indent (or (line-indent textbox prev-line) 0))
   (define this-indent
     (cond
-      ;; if this line begins with }, outdent.
-      [(right-bracket? (char tb (line-start-visible tb this-line)))
-       (- prev-indent indent-width)]
-      ;; if last line begins with {, indent.
-      [(left-bracket? (char tb (line-start-visible tb prev-line)))
+      [(left-bracket? (char textbox (line-start-visible textbox prev-line)))
        (+ prev-indent indent-width)]
-      ;; otherwise use previous indent
+      [(right-bracket? (char textbox (line-start-visible textbox this-line)))
+       (- prev-indent indent-width)]
       [else prev-indent]))
   (and (exact-positive-integer? this-indent) this-indent))
 
@@ -40,5 +37,5 @@
 }
 here
     )
-  (check-equal? (str->indents (test-indenter indent-jsonic test-str))
+  (check-equal? (string-indents (apply-indenter indent-jsonic test-str))
                 (map (λ(x) (* x indent-width)) '(0 0 1 1 2 2 1 1 0))))
