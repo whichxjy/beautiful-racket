@@ -21,6 +21,9 @@
   #'(parameterize ([current-namespace (make-base-namespace)])
       (dynamic-require . ARGS)))
 
+(provide values->list)
+(define-macro (values->list EXPR)
+  #'(call-with-values (λ () EXPR) list))
 
 (module reader syntax/module-reader
   #:language 'br

@@ -468,3 +468,17 @@ source-location information and properties. An alias for @racket[strip-context].
 
 Uses the bindings from @racket[stx-source] to replace the bindings of all parts of @racket[stx-target], while preserving source-location
 information and properties. An alias for @racket[replace-context].}
+
+
+@section{Other helpers}
+
+@defmodule[br/main]
+
+@defform[(values->list values)]{
+Convert @racket[values] to a simple list.
+
+@examples[#:eval my-eval
+(split-at '(a b c d e f) 3)
+(values->list (split-at '(a b c d e f) 3))
+]
+}

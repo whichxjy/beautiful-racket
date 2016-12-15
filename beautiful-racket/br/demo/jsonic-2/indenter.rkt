@@ -4,6 +4,12 @@
 
 (define indent-width 2)
 
+(define (left-bracket? c)
+   (and c (or (char=? c #\{) (char=? c #\[))))
+
+(define (right-bracket? c)
+   (and c (or (char=? c #\}) (char=? c #\]))))
+
 (define (indent-jsonic tb [this-pos 0])
   (define this-line (line tb this-pos))
   (define prev-line (previous-line tb this-pos))
@@ -11,10 +17,10 @@
   (define this-indent
     (cond
       ;; if this line begins with }, outdent.
-      [((char tb (line-start-visible tb this-line)) . char=? . #\})
+      [(right-bracket? (char tb (line-start-visible tb this-line)))
        (- prev-indent indent-width)]
       ;; if last line begins with {, indent.
-      [((char tb (line-start-visible tb prev-line)) . char=? . #\{)
+      [(left-bracket? (char tb (line-start-visible tb prev-line)))
        (+ prev-indent indent-width)]
       ;; otherwise use previous indent
       [else prev-indent]))

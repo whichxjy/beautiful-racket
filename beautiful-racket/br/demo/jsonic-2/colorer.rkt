@@ -4,7 +4,13 @@
 
 (define in-racket-expr? #f)
 
-(define (color-jsonic port)
+(define/contract (color-jsonic port)
+  (input-port? . -> .
+               (values (or/c string? eof-object?)
+                       symbol?
+                       (or/c symbol? #f)
+                       (or/c exact-positive-integer? #f)
+                       (or/c exact-positive-integer? #f)))
   (define jsonic-lexer
     (lexer
      [(eof) (values lexeme 'eof #f #f #f)]
@@ -25,3 +31,8 @@
       (racket-lexer port)
       (jsonic-lexer port)))
 (provide color-jsonic)
+
+(module+ test
+  (require rackunit)
+  (check-equal? (values->list (color-jsonic (open-input-string "x")))
+                (list "x" 'string #f 1 2)))
