@@ -32,14 +32,21 @@
 (define lex/1
   (lexer-src-pos
    ;; handle whitespace chars within quotes as literal tokens: "\n" "\t" '\n' '\t'
+   ;; by matching the escaped version, and then unescaping them before they become token-LITs
    [(:: "'"
         (:* (:or "\\'" "\\n" "\\t" (:~ "'" "\\")))
         "'")
-    (token-LIT lexeme)]
+    (token-LIT (case lexeme
+                 [("'\\n'") "'\n'"]
+                 [("'\\t'") "'\t'"]
+                 [else lexeme]))]
    [(:: "\""
         (:* (:or "\\\"" "\\n" "\\t" (:~ "\"" "\\")))
         "\"")
-    (token-LIT lexeme)]
+    (token-LIT (case lexeme
+                 [("\"\\n\"") "\"\n\""]
+                 [("\"\\t\"") "\"\t\""]
+                 [else lexeme]))]
    ["("
     (token-LPAREN lexeme)]
    ["["
