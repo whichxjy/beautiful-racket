@@ -80,7 +80,10 @@
          (lookup (string->symbol next-token) next-token no-position no-position)]
         
         [(? char?)
-         (lookup (string->symbol (string next-token)) next-token no-position no-position)]
+         (lookup (cond
+                   [(eqv? #\newline next-token) '|\n|] ; supports handling whitespace char
+                   [(eqv? #\tab next-token) '|\t|] ; as literal token
+                   [else (string->symbol (string next-token))]) next-token no-position no-position)]
         
         ;; Compatibility 
         [(? lex:token?)

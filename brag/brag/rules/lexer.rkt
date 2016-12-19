@@ -31,12 +31,13 @@
 
 (define lex/1
   (lexer-src-pos
+   ;; handle whitespace chars within quotes as literal tokens: "\n" "\t" '\n' '\t'
    [(:: "'"
-        (:* (:or "\\'" (:~ "'" "\\")))
+        (:* (:or "\\'" "\\n" "\\t" (:~ "'" "\\")))
         "'")
     (token-LIT lexeme)]
    [(:: "\""
-        (:* (:or "\\\"" (:~ "\"" "\\")))
+        (:* (:or "\\\"" "\\n" "\\t" (:~ "\"" "\\")))
         "\"")
     (token-LIT lexeme)]
    ["("
