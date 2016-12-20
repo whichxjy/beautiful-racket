@@ -258,7 +258,7 @@ The error is cleared when the argument is capitalized, thus making it a wildcard
 (good-squarer +10i)
 ]
 
-You can use the special variable @racket[caller-stx] — available only within the body of @racket[define-macro] — to access the original input argument to the macro.
+You can use the special variable @racketfont{caller-stx} — available only within the body of @racket[define-macro] — to access the original input argument to the macro.
 
 @;{todo: fix this example. complains that caller-stx is unbound}
 @examples[#:eval my-eval
@@ -480,5 +480,18 @@ Convert @racket[values] to a simple list.
 @examples[#:eval my-eval
 (split-at '(a b c d e f) 3)
 (values->list (split-at '(a b c d e f) 3))
+]
+}
+
+
+@defmodule[br/datum]
+
+@defproc[(datum? [x any/c]) boolean?]{
+Return @racket[#t] if @racket[x] is a @racket[list?] or a @racket[symbol?].
+
+ @examples[#:eval my-eval
+(datum? '(a b c d e f))
+(datum? 'a)
+(datum? "a")
 ]
 }
