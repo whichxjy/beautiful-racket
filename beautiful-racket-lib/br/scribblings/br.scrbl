@@ -1,5 +1,5 @@
 #lang scribble/manual
-@(require (for-label racket/base racket/contract br))
+@(require (for-label racket/base racket/gui/base racket/contract br br/indent))
 
 @(require scribble/eval)
 
@@ -468,6 +468,109 @@ source-location information and properties. An alias for @racket[strip-context].
 
 Uses the bindings from @racket[stx-source] to replace the bindings of all parts of @racket[stx-target], while preserving source-location
 information and properties. An alias for @racket[replace-context].}
+
+@section{Indentation}
+
+@defmodule[br/indent]
+
+Helper functions for DrRacket language indenters.
+
+@defproc[(char 
+[textbox (is-a?/c text%)]
+[position (or/c exact-nonnegative-integer? #f)])
+(or/c char? #f)]{
+Get the character in @racket[textbox] that lives at @racket[position].
+
+@;{
+can't get this example to work without racket/gui/base instantiation error
+@examples[#:eval my-eval
+(define tb (new text%))
+(send tb insert "foobar")
+(char tb 4)
+]
+}
+
+}
+
+
+@defproc[(line 
+[textbox (is-a?/c text%)]
+[position (or/c exact-nonnegative-integer? #f)])
+exact-nonnegative-integer?]{
+Get the line index in @racket[textbox] that contains @racket[position].
+}
+
+@defproc[(prev-line 
+[textbox (is-a?/c text%)]
+[position (or/c exact-nonnegative-integer? #f)])
+exact-nonnegative-integer?]{
+Get the line index in @racket[textbox] of the line before the one that contains @racket[position].
+}
+
+@defproc[(next-line 
+[textbox (is-a?/c text%)]
+[position (or/c exact-nonnegative-integer? #f)])
+exact-nonnegative-integer?]{
+Get the line index in @racket[textbox] of the line after the one that contains @racket[position].
+}
+
+@defproc[(line-chars 
+[textbox (is-a?/c text%)]
+[line-idx (or/c exact-nonnegative-integer? #f)])
+(or/c (listof char?) #f)]{
+Get the chars in @racket[textbox] on line @racket[line-idx].
+}
+
+@defproc[(line-start 
+[textbox (is-a?/c text%)]
+[line-idx (or/c exact-nonnegative-integer? #f)])
+(or/c exact-nonnegative-integer? #f)]{
+Get the starting character position in @racket[textbox] of line @racket[line-idx] (or @racket[#f] if there is no such line).
+}
+
+
+
+@defproc[(line-end
+[textbox (is-a?/c text%)]
+[line-idx (or/c exact-nonnegative-integer? #f)])
+(or/c exact-nonnegative-integer? #f)]{
+Get the ending character position in @racket[textbox] of line @racket[line-idx] (or @racket[#f] if there is no such line).
+}
+
+@deftogether[(
+@defproc[(line-start-visible 
+[textbox (is-a?/c text%)]
+[line-idx (or/c exact-nonnegative-integer? #f)])
+(or/c exact-nonnegative-integer? #f)]
+@defproc[(line-end-visible 
+[textbox (is-a?/c text%)]
+[line-idx (or/c exact-nonnegative-integer? #f)])
+(or/c exact-nonnegative-integer? #f)]
+)]{
+Like @racket[line-start] and @racket[line-end], but skips whitespace characters.
+}
+
+@defproc[(line-indent
+[textbox (is-a?/c text%)]
+[line-idx (or/c exact-nonnegative-integer? #f)])
+(or/c exact-nonnegative-integer? #f)]{
+Get the length of the indent of line @racket[line-idx] in @racket[textbox] (or @racket[#f] the line has no indent).
+}
+
+
+@defproc[(apply-indenter
+[indenter-proc procedure?]
+[textbox-or-str (or/c (is-a?/c text%) string?)])
+string?]{
+Apply @racket[indenter-proc] to the text in @racket[textbox-or-str] and return an indented string. Useful for unit testing.
+}
+
+
+@defproc[(string-indents
+[str string?])
+(listof (or/c exact-positive-integer? #f))]{
+Lists the indents at the beginning of each line in @racket[str]. Useful for unit testing.
+}
 
 
 @section{Other helpers}

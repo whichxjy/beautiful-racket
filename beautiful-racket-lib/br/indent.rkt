@@ -27,7 +27,7 @@
   (check-equal? (char t 11) #\nul))
 
 (define/contract (line text pos)
-  ((is-a?/c text%) exact-nonnegative-integer? . -> . exact-nonnegative-integer?)
+  ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . exact-nonnegative-integer?)
   (send text position-line pos))
 
 (module+ test
@@ -155,10 +155,9 @@
   (check-equal? (line-indent t 3) #f))
 
 (define (count-char text c [start 0] [end (send text last-position)])
-  (for*/sum ([pos (in-range start (add1 end))])
-            (if ((char text pos) . char=? . c)
-                1
-                0)))
+  (for/sum ([pos (in-range start (add1 end))]
+            #:when ((char text pos) . char=? . c))
+           1))
 
 (module+ test
   (check-equal? (count-char t #\f) 1)
