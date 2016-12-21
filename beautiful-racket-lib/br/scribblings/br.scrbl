@@ -500,7 +500,7 @@ exact-nonnegative-integer?]{
 Get the line index in @racket[textbox] that contains @racket[position].
 }
 
-@defproc[(prev-line 
+@defproc[(previous-line 
 [textbox (is-a?/c text%)]
 [position (or/c exact-nonnegative-integer? #f)])
 exact-nonnegative-integer?]{
@@ -525,7 +525,7 @@ Get the chars in @racket[textbox] on line @racket[line-idx].
 [textbox (is-a?/c text%)]
 [line-idx (or/c exact-nonnegative-integer? #f)])
 (or/c exact-nonnegative-integer? #f)]{
-Get the starting character position in @racket[textbox] of line @racket[line-idx] (or @racket[#f] if there is no such line).
+Get the starting character position in @racket[textbox] of line @racket[line-idx] (or @racket[#f] if there is no such line). To get the actual character, pass the return value to @racket[char].
 }
 
 
@@ -534,7 +534,7 @@ Get the starting character position in @racket[textbox] of line @racket[line-idx
 [textbox (is-a?/c text%)]
 [line-idx (or/c exact-nonnegative-integer? #f)])
 (or/c exact-nonnegative-integer? #f)]{
-Get the ending character position in @racket[textbox] of line @racket[line-idx] (or @racket[#f] if there is no such line).
+Get the ending character position in @racket[textbox] of line @racket[line-idx] (or @racket[#f] if there is no such line). To get the actual character, pass the return value to @racket[char].
 }
 
 @deftogether[(
@@ -547,7 +547,21 @@ Get the ending character position in @racket[textbox] of line @racket[line-idx] 
 [line-idx (or/c exact-nonnegative-integer? #f)])
 (or/c exact-nonnegative-integer? #f)]
 )]{
-Like @racket[line-start] and @racket[line-end], but skips whitespace characters.
+Like @racket[line-start] and @racket[line-end], but skips whitespace characters. To get the actual character, pass the return value to @racket[char], or use @racket[line-first-visible-char] and @racket[line-last-visible-char].
+}
+
+@defproc[(line-first-visible-char 
+[textbox (is-a?/c text%)]
+[line-idx (or/c exact-nonnegative-integer? #f)])
+(or/c char? #f)]{
+Convenient notation for @racket[(char textbox (line-start-visible textbox line-idx))].
+}
+
+@defproc[(line-last-visible-char 
+[textbox (is-a?/c text%)]
+[line-idx (or/c exact-nonnegative-integer? #f)])
+(or/c char? #f)]{
+Convenient notation for @racket[(char textbox (line-end-visible textbox line-idx))].
 }
 
 @defproc[(line-indent
