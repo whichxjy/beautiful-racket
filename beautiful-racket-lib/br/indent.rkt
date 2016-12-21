@@ -16,7 +16,7 @@
 (define indent-width 2)
 
 (define/contract (char text pos)
-  ((is-a?/c text%) exact-nonnegative-integer? . -> . char?)
+  ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . (or/c char? #f))
   (and pos (send text get-character pos)))
 
 (module+ test
@@ -77,11 +77,11 @@
   (check-equal? (next-line t 11) #f))
 
 (define/contract (valid-line? text line)
-  ((is-a?/c text%) exact-nonnegative-integer? . -> . boolean?)
+  ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . boolean?)
   (and line (<= 0 line (send text last-line))))
 
 (define/contract (line-start text line)
-  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c exact-nonnegative-integer? #f))
+  ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . (or/c exact-nonnegative-integer? #f))
   (and (valid-line? text line)
        (send text line-start-position line)))
 
@@ -92,7 +92,7 @@
   (check-equal? (line-start t 3) #f))
   
 (define/contract (line-end text line)
-  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c exact-nonnegative-integer? #f))
+  ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . (or/c exact-nonnegative-integer? #f))
   (and (valid-line? text line)
        (send text line-end-position line)))
 
@@ -110,7 +110,7 @@
               pos))
 
 (define/contract (line-start-visible text line)
-  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c exact-nonnegative-integer? #f))
+  ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . (or/c exact-nonnegative-integer? #f))
   (define start (line-start text line))
   (define end (line-end text line))
   (and start end (first-visible-char-pos text start end)))
@@ -122,7 +122,7 @@
   (check-equal? (line-start-visible t 3) #f))
 
 (define/contract (line-end-visible text line)
-  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c exact-nonnegative-integer? #f))
+  ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . (or/c exact-nonnegative-integer? #f))
   (define start+1 (line-end text line)) ; start before newline
   (define end+1 (line-start text line))
   (and start+1 end+1 (first-visible-char-pos text (sub1 start+1) (sub1 end+1))))
@@ -134,7 +134,7 @@
   (check-equal? (line-end-visible t 3) #f))
 
 (define/contract (line-indent text line)
-  ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c exact-nonnegative-integer? #f))
+  ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . (or/c exact-nonnegative-integer? #f))
   (and (valid-line? text line)
        (let ([lsv (line-start-visible text line)])
          (and lsv ; could be #f

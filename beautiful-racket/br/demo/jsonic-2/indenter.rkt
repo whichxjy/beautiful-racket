@@ -1,5 +1,5 @@
 #lang br
-(require br/indent)
+(require br/indent racket/gui/base)
 (provide indent-jsonic)
 
 (define indent-width 2)
@@ -10,9 +10,11 @@
 ;; if this line begins with } or ], outdent.
 ;; if last line begins with { or [, indent.
 ;; otherwise use previous indent
-(define (indent-jsonic textbox [pos 0])
-  (define this-line (line textbox pos))
-  (define prev-line (previous-line textbox pos))
+(define/contract (indent-jsonic textbox [tbpos 0])
+  ((is-a?/c text%) exact-nonnegative-integer?  . -> .
+                   (or/c exact-nonnegative-integer? #f))
+  (define this-line (line textbox tbpos))
+  (define prev-line (previous-line textbox tbpos))
   (define prev-indent (or (line-indent textbox prev-line) 0))
   (define this-indent
     (cond
@@ -28,14 +30,16 @@
   (define test-str #<<here
 #lang br/demo/jsonic
 {
-"string": @$(string-append "foo" "bar")$@,
+"value",
+"string":
+[
 {
 "array": @$(range 5)$@,
-"object": @$(hash "k1" "valstring" (format "~a" 42) (hash "k1" (range 10) "k2" 42))$@
+"object": @$(hash 'k1 "valstring")$@
 }
-// "bar" :
+]
+// "bar"
 }
 here
     )
-  (check-equal? (string-indents (apply-indenter indent-jsonic test-str))
-                (map (λ(x) (* x indent-width)) '(0 0 1 1 2 2 1 1 0))))
+  (display (apply-indenter indent-jsonic test-str)))
