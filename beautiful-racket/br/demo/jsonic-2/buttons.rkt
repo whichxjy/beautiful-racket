@@ -1,18 +1,15 @@
 #lang br
-(require racket/draw)
-(provide make-button)
+(require br/drracket)
+         
+(define (button-func drr-window)
+  (define expr-string "@$  $@")
+  (define editor (send drr-window get-definitions-text))
+  (send editor begin-edit-sequence)
+  (send editor insert expr-string)
+  (send editor end-edit-sequence)
+  (define pos (send editor get-end-position))
+  (send editor set-position (- pos (/ (string-length expr-string) 2))))
 
-(define label "Insert expression")
-(define bitmap (make-object bitmap% 16 16))
-(define (callback drr-frame)
-  (define drr-editor (send drr-frame get-definitions-text))
-  (define block-string "@$  $@")
-  (send drr-editor begin-edit-sequence)
-  (send drr-editor insert block-string)
-  (send drr-editor end-edit-sequence)
-  (define pos (send drr-editor get-end-position))
-  (send drr-editor set-position (- pos (/ (string-length block-string) 2))))
-(define number 98)
-
-(define make-button
-  (list (list label bitmap callback number)))
+(define button-list
+  (list (make-drracket-button "Insert expression" button-func)))
+(provide button-list)

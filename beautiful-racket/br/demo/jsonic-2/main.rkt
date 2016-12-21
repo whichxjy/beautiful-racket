@@ -10,7 +10,7 @@
         [(drracket:indentation)
          (dynamic-require 'br/demo/jsonic-2/indenter 'indent-jsonic)]
         [(drracket:toolbar-buttons)
-         (dynamic-require 'br/demo/jsonic-2/buttons 'make-button)]
+         (dynamic-require 'br/demo/jsonic-2/buttons 'button-list)]
         [else default]))
     handle-query))
 
