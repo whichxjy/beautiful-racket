@@ -121,6 +121,14 @@
   (check-equal? (line-start-visible t 2) 10)
   (check-equal? (line-start-visible t 3) #f))
 
+(define/contract (line-first-visible-char text line)
+  ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . (or/c char? #f))
+  (char text (line-start-visible text line)))
+
+(define/contract (line-last-visible-char text line)
+  ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . (or/c char? #f))
+  (char text (line-end-visible text line)))  
+
 (define/contract (line-end-visible text line)
   ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . (or/c exact-nonnegative-integer? #f))
   (define start+1 (line-end text line)) ; start before newline
@@ -185,9 +193,10 @@
   (send indented-t get-text))
 
 (define/contract (string-indents str)
-  (string? . -> . (listof exact-nonnegative-integer?))
+  (string? . -> . (listof (or/c exact-positive-integer? #f)))
   (for/list ([line (in-list (string-split str "\n"))])
-            (length (takef (string->list line) space-char?))))
+            (define len (length (takef (string->list line) space-char?)))
+            (and (exact-positive-integer? len) len)))
 
 (module+ test
-  (check-equal? (string-indents t-str) '(0 1 2)))
+  (check-equal? (string-indents t-str) '(#f 1 2)))

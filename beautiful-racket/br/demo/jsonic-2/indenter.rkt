@@ -3,32 +3,33 @@
 (provide indent-jsonic)
 
 (define indent-width 2)
-
-(define (left-bracket? c) (member c '(#\{ #\[)))
-(define (right-bracket? c) (member c '(#\} #\])))
+(define (left-bracket? c) (member c (list #\{ #\[)))
+(define (right-bracket? c) (member c (list #\} #\])))
 
 ;; if this line begins with } or ], outdent.
 ;; if last line begins with { or [, indent.
 ;; otherwise use previous indent
-(define/contract (indent-jsonic textbox [tbpos 0])
+(define/contract (indent-jsonic tbox [posn 0])
   ((is-a?/c text%) exact-nonnegative-integer?  . -> .
                    (or/c exact-nonnegative-integer? #f))
-  (define this-line (line textbox tbpos))
-  (define prev-line (previous-line textbox tbpos))
-  (define prev-indent (or (line-indent textbox prev-line) 0))
-  (define this-indent
+  (define prev-line (previous-line tbox posn))
+  (define current-line (line tbox posn))
+  (define prev-indent (or (line-indent tbox prev-line) 0))
+  (define current-indent
     (cond
-      [(left-bracket? (char textbox (line-start-visible textbox prev-line)))
+      [(left-bracket?
+        (line-first-visible-char tbox prev-line))
        (+ prev-indent indent-width)]
-      [(right-bracket? (char textbox (line-start-visible textbox this-line)))
+      [(right-bracket?
+        (line-first-visible-char tbox current-line))
        (- prev-indent indent-width)]
       [else prev-indent]))
-  (and (exact-positive-integer? this-indent) this-indent))
+  (and (exact-positive-integer? current-indent) current-indent))
 
 (module+ test
   (require rackunit)
-  (define test-str #<<here
-#lang br/demo/jsonic
+  (define test-str #<<HERE
+#lang jsonic
 {
 "value",
 "string":
@@ -40,6 +41,9 @@
 ]
 // "bar"
 }
-here
+HERE
     )
-  (display (apply-indenter indent-jsonic test-str)))
+  (check-equal?
+   (string-indents (apply-indenter indent-jsonic test-str))
+   '(#f #f 2 2 2 4 6 6 4 2 2 #f)))
+  
