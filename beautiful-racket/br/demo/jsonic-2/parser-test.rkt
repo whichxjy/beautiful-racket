@@ -1,8 +1,6 @@
 #lang br
-(require br/demo/jsonic-2/parser
-         br/demo/jsonic-2/tokenizer
-         brag/support
-         rackunit)
+(require "parser.rkt" "tokenizer.rkt"
+         brag/support rackunit)
 
 (check-equal?
  (parse-tree (apply-tokenizer tokenize "// line commment\n"))

@@ -1,4 +1,4 @@
 #lang brag
-jsonic-program: (s-exp | json-char)*
-s-exp: SEXP-TOK
+jsonic-program: (json-char | s-exp)*
 json-char: CHAR-TOK
+s-exp: SEXP-TOK
