@@ -1,15 +1,21 @@
 #lang br
-(require br/drracket)
-         
+(require racket/draw)
+
 (define (button-func drr-window)
   (define expr-string "@$  $@")
   (define editor (send drr-window get-definitions-text))
-  (send editor begin-edit-sequence)
   (send editor insert expr-string)
-  (send editor end-edit-sequence)
-  (define pos (send editor get-end-position))
-  (send editor set-position (- pos (/ (string-length expr-string) 2))))
+  (define pos (send editor get-start-position))
+  (send editor set-position (- pos 3)))
 
-(define button-list
-  (list (make-drracket-button "Insert expression" button-func)))
+(define our-jsonic-button
+  (list
+   "Insert expression"
+   (make-object bitmap% 16 16)
+   button-func
+   #f))
+
 (provide button-list)
+(define button-list (list our-jsonic-button))         
+
+
