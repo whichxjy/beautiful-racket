@@ -1,4 +1,8 @@
 #lang info
+;; the subdirectories here are suffixed with -demo
+;; so they don't collide in the #lang namespace
+;; with the test projects that readers will be making themselves
+
 (define collection 'multi)
 
 (define version "0.01")
