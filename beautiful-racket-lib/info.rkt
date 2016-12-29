@@ -4,5 +4,6 @@
 (define version "0.01")
 (define deps '("base"
                "sugar"
-               "gui-lib"))
-(define build-deps '("racket-doc" "rackunit-lib" "scribble-lib"))
+               "gui-lib"
+               "draw-lib"))
+(define build-deps '("racket-doc" "gui-doc" "rackunit-lib" "scribble-lib"))
