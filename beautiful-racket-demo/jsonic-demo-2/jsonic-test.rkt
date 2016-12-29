@@ -1,4 +1,4 @@
-#lang br/demo/jsonic-2
+#lang jsonic-demo-2
 // a line comment
 [
   @$ 'null $@,

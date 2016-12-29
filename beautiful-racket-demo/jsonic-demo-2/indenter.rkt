@@ -1,14 +1,11 @@
 #lang br
-(require br/indent racket/gui/base)
+(require br/indent racket/gui/base racket/contract)
 (provide indent-jsonic)
 
 (define indent-width 2)
 (define (left-bracket? c) (member c (list #\{ #\[)))
 (define (right-bracket? c) (member c (list #\} #\])))
 
-;; if this line begins with } or ], outdent.
-;; if last line begins with { or [, indent.
-;; otherwise use previous indent
 (define/contract (indent-jsonic tbox [posn 0])
   ((is-a?/c text%) exact-nonnegative-integer?  . -> .
                    (or/c exact-nonnegative-integer? #f))

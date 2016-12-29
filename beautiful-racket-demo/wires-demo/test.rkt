@@ -1,4 +1,4 @@
-#lang br/demo/wires
+#lang wires-demo
 x AND y -> d
 x OR y -> e
 x LSHIFT 2 -> f

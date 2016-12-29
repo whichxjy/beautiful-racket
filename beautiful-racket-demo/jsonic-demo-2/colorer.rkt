@@ -1,12 +1,11 @@
 #lang br
-(require brag/support
-         syntax-color/racket-lexer)
+(require brag/support syntax-color/racket-lexer racket/contract)
 
 (define in-racket-expr? #f)
 
 (define/contract (color-jsonic port)
-  (input-port? . -> .
-               (values (or/c string? eof-object?)
+  (input-port? . -> . (values
+                       (or/c string? eof-object?)
                        symbol?
                        (or/c symbol? #f)
                        (or/c exact-positive-integer? #f)
@@ -23,9 +22,11 @@
              (values lexeme 'parenthesis '|)|
                      (pos lexeme-start) (pos lexeme-end)))]
      [(from/to "//" "\n")
-      (values lexeme 'comment #f (pos lexeme-start) (pos lexeme-end))]
+      (values lexeme 'comment #f
+              (pos lexeme-start) (pos lexeme-end))]
      [any-char
-      (values lexeme 'string #f (pos lexeme-start) (pos lexeme-end))]))
+      (values lexeme 'string #f
+              (pos lexeme-start) (pos lexeme-end))]))
   (if (and in-racket-expr?
            (not (equal? (peek-string 2 0 port) "$@")))
       (racket-lexer port)
@@ -34,5 +35,6 @@
 
 (module+ test
   (require rackunit)
-  (check-equal? (values->list (color-jsonic (open-input-string "x")))
+  (check-equal? (values->list
+                 (color-jsonic (open-input-string "x")))
                 (list "x" 'string #f 1 2)))

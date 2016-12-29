@@ -6,11 +6,11 @@
     (define (handle-query key default)
       (case key
         [(color-lexer)
-         (dynamic-require 'br/demo/jsonic-2/colorer 'color-jsonic)]
+         (dynamic-require 'jsonic-demo-2/colorer 'color-jsonic)]
         [(drracket:indentation)
-         (dynamic-require 'br/demo/jsonic-2/indenter 'indent-jsonic)]
+         (dynamic-require 'jsonic-demo-2/indenter 'indent-jsonic)]
         [(drracket:toolbar-buttons)
-         (dynamic-require 'br/demo/jsonic-2/buttons 'button-list)]
+         (dynamic-require 'jsonic-demo-2/buttons 'button-list)]
         [else default]))
     handle-query))
 

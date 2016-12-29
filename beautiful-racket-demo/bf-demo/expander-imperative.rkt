@@ -27,7 +27,6 @@
 (define ptr 0)
 
 (define (current-byte) (vector-ref arr ptr))
-
 (define (set-current-byte! val) (vector-set! arr ptr val))
 
 (define (gt) (set! ptr (add1 ptr)))

@@ -1,6 +1,5 @@
 #lang br
-(require "parser.rkt" "tokenizer.rkt"
-         brag/support rackunit)
+(require "parser.rkt" "tokenizer.rkt" brag/support rackunit)
 
 (check-equal?
  (parse-tree (apply-tokenizer tokenize "// line commment\n"))

@@ -1,5 +1,5 @@
 #lang br/quicklang
-(require brag/support)
+(require brag/support racket/contract)
 
 (module+ test
   (require rackunit))

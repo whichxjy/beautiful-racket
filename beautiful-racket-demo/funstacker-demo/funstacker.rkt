@@ -3,7 +3,7 @@
 (define (read-syntax path port)
   (define args (port->lines port))
   (define arg-datums (format-datums '~a args))
-  (define module-datum `(module stacker-mod br/demo/funstacker
+  (define module-datum `(module stacker-mod "funstacker.rkt"
                           (handle-args ,@arg-datums)))
   (datum->syntax #f module-datum))
 (provide read-syntax)
@@ -25,7 +25,3 @@
 (provide handle-args)
 
 (provide + *)
-
-(module+ test 
-  (require rackunit)
-  (check-equal? (with-output-to-string (λ () (dynamic-require "funstacker-test.rkt" #f))) "36"))

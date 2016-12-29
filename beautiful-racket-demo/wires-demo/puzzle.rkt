@@ -1,4 +1,4 @@
-#lang br/demo/wires
+#lang wires-demo
 bn RSHIFT 2 -> bo
 lf RSHIFT 1 -> ly
 fo RSHIFT 3 -> fq

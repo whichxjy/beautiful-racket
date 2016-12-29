@@ -8,7 +8,7 @@
     (for/list ([wire-str (in-lines port)])
       (format-datum '(wire ~a) wire-str)))
   (strip-bindings
-   #`(module wires-mod br/demo/wires/main
+   #`(module wires-mod wires-demo/main
        #,@wire-datums)))
 
 (provide #%module-begin)

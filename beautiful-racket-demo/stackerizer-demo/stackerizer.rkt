@@ -15,13 +15,3 @@
       ...))
 
 (define-ops + *)
-
-(module+ test 
-  (require rackunit)
-  (check-equal? (with-output-to-string (λ () (dynamic-require "stackerizer-test.rkt" #f)))
-                "4
-8
-+
-3
-*
-"))

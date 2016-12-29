@@ -1,5 +1,6 @@
 #lang br/quicklang
 (require brag/support)
+
 (define (tokenize port)
   (define (next-token)
     (define our-lexer

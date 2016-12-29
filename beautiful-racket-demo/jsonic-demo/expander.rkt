@@ -1,5 +1,6 @@
 #lang br/quicklang
 (require json)
+
 (define-macro (js-module-begin PARSE-TREE)
   #'(#%module-begin
      (define result-string PARSE-TREE)
