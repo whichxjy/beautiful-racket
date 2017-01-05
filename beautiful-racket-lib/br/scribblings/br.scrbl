@@ -589,7 +589,7 @@ Lists the indents at the beginning of each line in @racket[str]. Useful for unit
 
 @section{Other helpers}
 
-@defmodule[br/main]
+@defmodule[br/list]
 
 @defform[(values->list values)]{
 Convert @racket[values] to a simple list.
