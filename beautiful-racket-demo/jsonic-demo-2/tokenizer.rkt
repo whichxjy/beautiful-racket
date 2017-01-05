@@ -13,11 +13,9 @@
   (check-true (token? (token 'A-TOKEN-STRUCT "hi")))
   (check-false (token? 42)))
 
-(define/contract (tokenize port)
-  (input-port? . -> . (-> token?))
+(define (tokenize port)
   (port-count-lines! port)
-  (define/contract (next-token)
-    (-> token?)
+  (define (next-token)
     (define our-lexer
       (lexer
        [(eof) eof]
@@ -37,7 +35,8 @@
                                   (pos lexeme-start)))]))
     (our-lexer port))
   next-token)
-(provide tokenize)
+(provide (contract-out
+          [tokenize (input-port? . -> . (-> token?))]))
 
 (module+ test
   (check-equal? (apply-tokenizer tokenize "// comment\n") empty)

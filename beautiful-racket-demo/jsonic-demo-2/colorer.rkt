@@ -3,13 +3,7 @@
 
 (define in-racket-expr? #f)
 
-(define/contract (color-jsonic port)
-  (input-port? . -> . (values
-                       (or/c string? eof-object?)
-                       symbol?
-                       (or/c symbol? #f)
-                       (or/c exact-positive-integer? #f)
-                       (or/c exact-positive-integer? #f)))
+(define (color-jsonic port)
   (define jsonic-lexer
     (lexer
      [(eof) (values lexeme 'eof #f #f #f)]
@@ -31,7 +25,15 @@
            (not (equal? (peek-string 2 0 port) "$@")))
       (racket-lexer port)
       (jsonic-lexer port)))
-(provide color-jsonic)
+(provide
+ (contract-out
+  [color-jsonic
+   (input-port? . -> . (values
+                        (or/c string? eof-object?)
+                        symbol?
+                        (or/c symbol? #f)
+                        (or/c exact-positive-integer? #f)
+                        (or/c exact-positive-integer? #f)))]))
 
 (module+ test
   (require rackunit)

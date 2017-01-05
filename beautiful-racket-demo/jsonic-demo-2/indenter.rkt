@@ -1,14 +1,11 @@
 #lang br
-(require br/indent racket/gui/base racket/contract)
-(provide indent-jsonic)
+(require br/indent racket/contract racket/gui/base)
 
 (define indent-width 2)
 (define (left-bracket? c) (member c (list #\{ #\[)))
 (define (right-bracket? c) (member c (list #\} #\])))
 
-(define/contract (indent-jsonic tbox [posn 0])
-  ((is-a?/c text%) exact-nonnegative-integer?  . -> .
-                   (or/c exact-nonnegative-integer? #f))
+(define (indent-jsonic tbox [posn 0])
   (define prev-line (previous-line tbox posn))
   (define current-line (line tbox posn))
   (define prev-indent (or (line-indent tbox prev-line) 0))
@@ -22,6 +19,11 @@
        (- prev-indent indent-width)]
       [else prev-indent]))
   (and (exact-positive-integer? current-indent) current-indent))
+(provide
+ (contract-out
+  [indent-jsonic (((is-a?/c text%)) 
+                  (exact-nonnegative-integer?) . ->* .
+                  (or/c exact-nonnegative-integer? #f))]))
 
 (module+ test
   (require rackunit)
