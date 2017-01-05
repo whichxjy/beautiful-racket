@@ -1,4 +1,4 @@
-#lang br/demo/hdl
+#lang hdl-demo
 
 CHIP Not {
           IN in;

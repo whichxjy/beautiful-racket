@@ -1,4 +1,4 @@
-#lang br/demo/basic
+#lang basic-demo
 
 1 PRINT TAB(32);"3D PLOT"
 2 PRINT TAB(15);"CREATIVE COMPUTING  MORRISTOWN, NEW JERSEY"

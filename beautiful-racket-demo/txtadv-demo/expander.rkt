@@ -21,9 +21,9 @@
 ;; ============================================================
 ;; Overall module:
 
-(define-macro (module-begin _lines ...)
+(define-macro (module-begin LINES ...)
   #'(#%module-begin
-     _lines ...
+     LINES ...
      
      (provide do-verb do-place)
      (module+ main

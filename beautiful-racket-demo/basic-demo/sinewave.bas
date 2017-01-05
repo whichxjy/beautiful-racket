@@ -1,4 +1,4 @@
-#lang br/demo/basic
+#lang basic-demo
 
 10 PRINT TAB(30);"SINE WAVE"
 20 PRINT TAB(15);"CREATIVE COMPUTING  MORRISTOWN, NEW JERSEY"

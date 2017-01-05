@@ -1,4 +1,4 @@
-#lang br/demo/basic
+#lang basic-demo
 
 5 print 30; "foo"
 10 PRINT TAB(10);"*";

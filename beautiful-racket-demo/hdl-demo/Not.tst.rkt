@@ -1,4 +1,4 @@
-#lang br/demo/hdl-tst
+#lang hdl-tst-demo
 
 load Not.hdl,
 output-file Not.out,

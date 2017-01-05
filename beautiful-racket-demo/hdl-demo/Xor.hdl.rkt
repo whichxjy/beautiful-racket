@@ -1,4 +1,4 @@
-#lang br/demo/hdl
+#lang hdl-demo
 
 /* Xor (exclusive or) gate:
 If a<>b out=1 else out=0. */

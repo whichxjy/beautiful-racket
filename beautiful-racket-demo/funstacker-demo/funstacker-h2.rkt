@@ -3,7 +3,7 @@
 (define (read-syntax path port)
   (define args (port->lines port))
   (define arg-datums (filter-not void? (format-datums '~a args)))
-  (define module-datum `(module stacker-mod br/demo/funstacker
+  (define module-datum `(module stacker-mod funstacker-demo
                           (nestify null ,@arg-datums)))
   (datum->syntax #f module-datum))
 (provide read-syntax)

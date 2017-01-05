@@ -1,4 +1,4 @@
-#lang s-exp br/demo/hdl/expander
+#lang s-exp hdl-demo/expander
 
 #|
 CHIP Not {

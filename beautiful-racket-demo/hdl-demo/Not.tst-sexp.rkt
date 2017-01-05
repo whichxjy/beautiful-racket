@@ -1,4 +1,4 @@
-#lang s-exp br/demo/hdl-tst/expander
+#lang s-exp hdl-tst-demo/expander
 
 
 #|
@@ -15,7 +15,7 @@ output;
 
 |#
 
-(require br/demo/hdl-tst/hdlprint rackunit racket/file)
+(require hdl-demo-tst/hdlprint rackunit racket/file)
 (require "Not.hdl.rkt") ; load Not.hdl,
 (define of (open-output-file "Not.out" #:mode 'text #:exists 'replace)) ; output-file Not.out,
 (define (output in out) ; output-list in%B3.1.3 out%B3.1.3;

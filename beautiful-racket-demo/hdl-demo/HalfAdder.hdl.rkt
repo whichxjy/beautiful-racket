@@ -1,4 +1,4 @@
-#lang br/demo/hdl
+#lang hdl-demo
 
 CHIP HalfAdder {
     IN a, b;    // 1-bit inputs

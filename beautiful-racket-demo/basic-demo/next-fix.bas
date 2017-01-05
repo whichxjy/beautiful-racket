@@ -1,4 +1,4 @@
-#lang br/demo/basic
+#lang basic-demo
 
 
 300 B=INT(RND(3*2))

@@ -1,4 +1,4 @@
-#lang br/demo/basic
+#lang basic-demo
 
 10 PRINT TAB(33);"BOUNCE"
 20 PRINT TAB(15);"CREATIVE COMPUTING  MORRISTOWN, NEW JERSEY"

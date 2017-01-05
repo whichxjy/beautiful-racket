@@ -1,4 +1,4 @@
-#lang br/demo/basic
+#lang basic-demo
 10 X = 3
 20 on X gosub 210, 220, 230
 21 print "yay"

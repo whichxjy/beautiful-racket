@@ -1,4 +1,4 @@
-#lang br/demo/basic
+#lang basic-demo
 10 GOSUB 50
 15 PRINT "2 of 3"
 17 GOSUB 30

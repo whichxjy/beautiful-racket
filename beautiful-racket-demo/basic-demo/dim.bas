@@ -1,4 +1,4 @@
-#lang br/demo/basic
+#lang basic-demo
 
 5 A=5
 10 DIM A(A)

@@ -1,4 +1,4 @@
-#lang br/demo/basic
+#lang basic-demo
 
 3 print TAB(33);"Chemist"
 6 print TAB(15);"Creative Computing | Morristown, New Jersey"
