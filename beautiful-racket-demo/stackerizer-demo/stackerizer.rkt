@@ -3,7 +3,8 @@
 
 (define-macro (stackerizer-mb EXPR ...)
   #'(#%module-begin
-     (for-each displayln (reverse (flatten EXPR ...)))))
+     (for-each displayln
+               (reverse (flatten (list EXPR ...))))))
 (provide (rename-out [stackerizer-mb #%module-begin]))
 
 (define-macro (define-ops OP ...)
