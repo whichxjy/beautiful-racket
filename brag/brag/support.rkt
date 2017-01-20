@@ -79,6 +79,15 @@
       [(_ OPEN CLOSE)
        #'(:seq OPEN (complement (:seq any-string CLOSE any-string)) CLOSE)])))
 
+(provide uc+lc)
+(define-lex-trans uc+lc
+  (λ(stx)
+    (syntax-case stx ()
+      [(_ . STRS)
+       (with-syntax ([(UCSTR ...) (map (compose1 string-upcase syntax->datum) (syntax->list #'STRS))]
+                     [(LCSTR ...) (map (compose1 string-downcase syntax->datum) (syntax->list #'STRS))])
+       #'(union (union UCSTR ...) (union LCSTR ...)))])))
+
 ;; change names of lexer abbreviations to be consistent with Racket srcloc conventions
 
 (define-syntax-rule (dprt ID-IN ID-OUT)
