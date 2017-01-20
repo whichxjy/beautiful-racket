@@ -30,16 +30,13 @@ product : [product ("*" | "/")] power
 
 power : value [/"^" value]
 
-@value : id-val
+@value : maybe-negative-val
 | id-expr
 | /"(" expr /")"
-| number
 | STRING
 
 id-expr : id [/"(" expr [/"," expr]* /")"]
 
 @id : ID
 
-id-val : ["-"] id-expr
-
-number : ["-"] NUMBER
+maybe-negative-val : ["-"] (id-expr | NUMBER)

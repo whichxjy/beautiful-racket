@@ -1,8 +1,7 @@
-#lang br
+#lang br/quicklang
 (require (for-syntax syntax/strip-context))
 (provide #%top-interaction #%app #%datum
          (rename-out [basic-module-begin #%module-begin])
-         (rename-out [basic-top #%top])
          (all-defined-out))
 
 ; BASIC implementation details
@@ -20,13 +19,9 @@
     #'(#%module-begin
        (define UNIQUE-ID 0) ...
        (provide UNIQUE-ID ...)
-       (run PROGRAM-LINE ... (line #f (statement "end"))))))
+       (run (sort (cons (line +inf.0 (statement "end"))
+                        (list PROGRAM-LINE ...)) #:key $line-number <)))))
 
-; #%app and #%datum have to be present to make #%top work
-(define-macro (basic-top . ID)
-  #'(begin
-      (displayln (format "got unbound identifier: ~a" 'ID))
-      (procedure-rename (λ xs (cons 'ID xs)) (string->symbol (format "undefined:~a" 'ID)))))
 
 (struct exn:line-not-found exn:fail ())
 (define (raise-line-not-found-error ln)
@@ -43,13 +38,13 @@
 (define (raise-end-line-signal)
   (raise (end-line-signal "" (current-continuation-marks))))
 
-(define (run . line-list)
+(define (run line-list)
   (define lines (list->vector line-list))
   (define (find-index ln)
     (or
      (for/or ([idx (in-range (vector-length lines))])
-             (and (= ($line-number (vector-ref lines idx)) ln)
-                  idx))
+       (and (= ($line-number (vector-ref lines idx)) ln)
+            idx))
      (raise-line-not-found-error ln)))
   (void
    (with-handlers ([end-program-signal? void])
@@ -61,15 +56,15 @@
              (find-index maybe-line-number)
              (add1 program-counter)))))))
 
-(define return-stack empty)
+(define current-return-stack (make-parameter empty))
 
 (define (basic:gosub where)
   (let/cc return-k
-    (set! return-stack (cons return-k return-stack))
+    (current-return-stack (cons return-k (current-return-stack)))
     (basic:goto where)))
 
 (define current-line (make-parameter #f))
-(struct $line (number thunk))
+(struct $line (number thunk) #:transparent)
 (define-macro (line NUMBER . STATEMENTS)
   #'($line NUMBER (λ ()
                     (current-line NUMBER)
@@ -89,9 +84,7 @@
 
 (define-macro-cases basic:let
   [(_ (id-expr ID) EXPR)
-   #'(begin
-       #;(displayln (format "setting ~a = ~a in ~a" 'ID EXPR (current-line)))
-       (set! ID EXPR))]
+   #'(set! ID EXPR)]
   [(_ (id-expr ID DIM-IDX ...) EXPR)
    #'(array-set! ID DIM-IDX ... EXPR)])
 
@@ -151,11 +144,7 @@
   [(_ BASE) #'BASE]
   [(_ BASE POWER) #'(expt BASE POWER)])
 
-(define-macro-cases number
-  [(_ "-" NUM) #'(- NUM)]
-  [(_ NUM) #'NUM])
-
-(define-macro-cases id-val
+(define-macro-cases maybe-negative-val
   [(_ "-" ID) #'(- ID)]
   [(_ ID) #'ID])
 
@@ -165,11 +154,11 @@
   (define (println [x ""])
     (define xstr (format "~a" x))
     (displayln xstr)
-    (set! current-print-position 0))
+    (current-print-position 0))
   (define (print x)
     (define xstr (format "~a" x))
     (display xstr)
-    (set! current-print-position (+ current-print-position (string-length xstr))))
+    (current-print-position (+ (current-print-position) (string-length xstr))))
   
   (match args
     [#f (println)]
@@ -186,8 +175,8 @@
     [(list print-list-items ...)
      (for-each println print-list-items)]))
 
-(define current-print-position 0)
-(define (TAB num) (make-string (max 0 (INT (- num current-print-position))) #\space))
+(define current-print-position (make-parameter 0))
+(define (TAB num) (make-string (max 0 (INT (- num (current-print-position)))) #\space))
 (define (INT num) (inexact->exact (truncate num)))
 (define (SIN num) (sin num))
 (define (ABS num) (inexact->exact (abs num)))
@@ -215,8 +204,8 @@
 
 
 (define (basic:return)
-  (define return-k (car return-stack))
-  (set! return-stack (cdr return-stack))
+  (define return-k (car (current-return-stack)))
+  (current-return-stack (cdr (current-return-stack)))
   (return-k #f))
 
 (define (basic:stop) (basic:end))
@@ -228,13 +217,13 @@
   #'(begin
       (set! ID (make-array (apply shape (append (list 0 (add1 EXPR)) ...)))) ...))
 
-(define for-stack empty)
+(define current-for-stack (make-parameter empty))
 
 (define (push-for-stack thunk)
-  (set! for-stack (cons thunk for-stack)))
+  (current-for-stack (cons thunk (current-for-stack))))
 
 (define (pop-for-stack)
-  (set! for-stack (cdr for-stack)))
+  (current-for-stack (cdr (current-for-stack))))
 
 (define (in-closed-interval? x left right)
   (define cmp (if (< left right) <= >=))
@@ -258,10 +247,10 @@
          #f))]) ; return value for first visit to line
 
 (define (handle-next [which #f])
-  (unless (pair? for-stack) (error 'next "for-stack is empty"))
+  (unless (pair? (current-for-stack)) (error 'next "for-stack is empty"))
   (define for-thunk (cdr (if which
-                             (assq which for-stack)
-                             (car for-stack))))
+                             (assq which (current-for-stack))
+                             (car (current-for-stack)))))
   (for-thunk))
 
 (define-macro (basic:next VAR ...)

@@ -1,34 +1,46 @@
 #lang br
-(require parser-tools/lex parser-tools/lex-sre
-         brag/support
-         racket/string)
+(require parser-tools/lex (prefix-in : parser-tools/lex-sre)
+         brag/support racket/string)
 (provide tokenize)
 
 (define-lex-abbrevs
-  (natural (repetition 1 +inf.0 numeric))
-;; don't lex the leading "-": muddles "-X" and "Y-X"
-  (number (union (seq natural)
-                 (seq (? natural) (seq "." natural))))
-  (quoted-string (seq "\"" (repetition 0 +inf.0 (char-complement "\"")) "\"")))
+  (positive-integer (:+ numeric))
+  ;; don't lex the leading "-": muddles "-X" and "Y-X"
+  (positive-number (:or positive-integer (:seq (:? positive-integer) (:seq "." positive-integer)))))
 
-(define (tokenize input-port)
+(define (tokenize ip)
+  (port-count-lines! ip)
   (define (next-token)
     (define get-token
       (lexer-src-pos
        [(eof) eof]
-       [(seq "/*" (complement (seq any-string "*/" any-string)) "*/") (get-token input-port)]
-       [(union #\tab #\space #\newline
-               (seq number " REM" (repetition 0 +inf.0 (char-complement #\newline)) #\newline)) (get-token input-port)]
-       [(union "PRINT" "print" "FOR" "for" "TO" "to" "STEP" "step" "IF" "if"
-               "GOTO" "goto" "INPUT" "input" "LET" "let" "NEXT" "next"
-               "RETURN" "return" "CLEAR" "clear" "LIST" "list" "RUN" "run"
-               "END" "end" "THEN" "then" "ELSE" "else" "GOSUB" "gosub"
-               "AND" "and" "OR" "or" "STOP" "stop" "LET" "let" "DEF" "def" "DIM" "dim" "ON" "on"
-               ";" "=" "(" ")" "+" "-" "*" "/" "^"
-               "<=" ">=" "<>" "<" ">" "=" ":" ",") (string-downcase lexeme)]
-       [number (token 'NUMBER (string->number lexeme))]
-       [(seq upper-case (repetition 0 +inf.0 (or upper-case numeric)) (? "$")) (token 'ID (string->symbol lexeme))]
-       [quoted-string (token 'STRING (string-trim lexeme "\""))]))
-    (get-token input-port))  
+       [whitespace (next-token)]
+       [(from/to "/*" "*/") (next-token)]
+       [(:: positive-number (:+ whitespace) (from/to (uc+lc "rem") "\n")) (next-token)]
+       [(:or (uc+lc "print" "for" "to" "step" "if"
+                   "goto" "input" "let" "next"
+                   "return" "clear" "list" "run"
+                   "end" "then" "else" "gosub"
+                   "and" "or" "stop" "let" "def" "dim" "on")
+            ";" "=" "(" ")" "+" "-" "*" "/" "^"
+            "<=" ">=" "<>" "<" ">" "=" ":" ",") (string-downcase lexeme)]
+       [positive-number (token 'NUMBER (string->number lexeme)
+                               #:position (pos lexeme-start)
+                               #:line (line lexeme-start)
+                               #:column (col lexeme-start)
+                               #:span (- (pos lexeme-end)
+                                         (pos lexeme-start)))]
+       [(:: alphabetic (:* (:or alphabetic numeric)) (:? "$")) (token 'ID (string->symbol lexeme)
+                                                                  #:position (pos lexeme-start)
+                                                                  #:line (line lexeme-start)
+                                                                  #:column (col lexeme-start)
+                                                                  #:span (- (pos lexeme-end)
+                                                                            (pos lexeme-start)))]
+       [(from/to "\"" "\"") (token 'STRING (trim-ends  "\"" lexeme  "\"")
+                                   #:position (+ (pos lexeme-start) 1)
+                                   #:line (line lexeme-start)
+                                   #:column (+ (col lexeme-start) 1)
+                                   #:span (- (pos lexeme-end)
+                                             (pos lexeme-start) 2))]))
+    (get-token ip))  
   next-token)
-
