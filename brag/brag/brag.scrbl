@@ -144,10 +144,7 @@ to use:
 
 @item{It provides a @litchar{#lang} for writing BNF grammars.
 A module written in @litchar{#lang brag} automatically generates a
-parser. The output of this parser tries to follow
-@link["http://en.wikipedia.org/wiki/How_to_Design_Programs"]{HTDP}
-guidelines. The structure of the grammar informs the structure of the
-Racket syntax objects it generates.}
+parser. The grammar controls the structure of the @tech{syntax objects} it generates.}
 
 @item{The language uses a few conventions to simplify the expression of
 grammars. The first rule in the grammar is assumed to be the
@@ -169,11 +166,7 @@ symbols, or instances constructed with @racket[token]. Tokens can optionally pro
 
 @subsection{Example: a small DSL for ASCII diagrams}
 
-@margin-note{This example is
-@link["http://stackoverflow.com/questions/12345647/rewrite-this-script-by-designing-an-interpreter-in-racket"]{derived from a question}  on Stack Overflow.}  
-
-To understand @tt{brag}'s design, let's look
-at a toy problem. We'd like to define a language for
+Suppose we'd like to define a language for
 drawing simple ASCII diagrams. So if we write something like this:
 
 @nested[#:style 'inset]{
@@ -202,10 +195,7 @@ XXXXXXXXX
 }|}
 
 
-
-@subsection{Syntax and semantics}
-
-We're being somewhat casual with what we mean by the program above. Let's try to nail down some meanings. 
+This makes sense in a casual way. But let's be more precise about how the language works.
 
 Each line of the program has a semicolon at the end, and describes the output of several @emph{rows} of the line drawing. Let's look at two of the lines in the example:
 
@@ -246,7 +236,8 @@ We write a @tt{brag} program as an BNF grammar, where patterns can be:
 The result of a @tt{brag} program is a module with a @racket[parse] function
 that can parse tokens and produce a syntax object as a result.
 
-Let's exercise this function:
+Let's try this function:
+
 @interaction[#:eval my-eval
 (require brag/support)
 @eval:alts[(require "simple-line-drawing.rkt") 
@@ -455,8 +446,8 @@ And now we've got an interpreter!
 
 @subsection{From interpretation to compilation}
 
-@margin-note{For a gentler tutorial on writing @litchar{#lang} extensions, see:
-@link["http://hashcollision.org/brainfudge"]{F*dging up a Racket}.}  (Just as a
+@margin-note{For a gentler tutorial on writing @litchar{#lang}-based languages, see
+@link["http://beautifulracket.com"]{Beautiful Racket}.}  (Just as a
 warning: the following material is slightly more advanced, but shows how
 writing a compiler for the line-drawing language reuses the ideas for the
 interpreter.)
@@ -557,10 +548,6 @@ utilities for creating a module reader. It uses the lexer and
 @tt{brag}-generated parser we defined earlier, and also tells Racket that it should compile the forms in the syntax
 object using a module called @filepath{semantics.rkt}.
 
-@margin-note{For a systematic treatment on capturing the semantics of
-a language, see @link["http://cs.brown.edu/~sk/Publications/Books/ProgLangs/"]{Programming Languages: Application and
-Interpretation}.}
-
 Let's look into @filepath{semantics.rkt} and see what's involved in
 compilation:
 @filebox["brag/examples/simple-line-drawing/semantics.rkt"]{
@@ -626,6 +613,13 @@ work.
 
 There are a few things to note:
 
+@margin-note{By the way, we can just as easily rewrite the semantics so that
+@racket[compile-rows] does explicitly call @racket[compile-chunk]. Often,
+though, it's easier to write the transformation functions in this piecemeal way
+and depend on the Racket macro expansion system to do the rewriting as it
+encounters each of the forms.}
+
+
 @itemize[
 
 @item{@tt{brag}'s native data structure is the syntax object because the
@@ -633,13 +627,7 @@ majority of Racket's language-processing infrastructure knows how to read and
 write this structured value.}
 
 
-@item{
-@margin-note{By the way, we can just as easily rewrite the semantics so that
-@racket[compile-rows] does explicitly call @racket[compile-chunk]. Often,
-though, it's easier to write the transformation functions in this piecemeal way
-and depend on the Racket macro expansion system to do the rewriting as it
-encounters each of the forms.}
-Unlike in interpretation, @racket[compile-rows] doesn't
+@item{Unlike in interpretation, @racket[compile-rows] doesn't
 compile each chunk by directly calling @racket[compile-chunk]. Rather, it
 depends on the Racket macro expander to call each @racket[compile-XXX] function
 as it encounters a @racket[drawing], @racket[rows], or @racket[chunk] in the
@@ -654,7 +642,7 @@ the macro expansion system to do this:
 ]
 
 
-Altogether, @tt{brag}'s intent is to be a parser generator generator for Racket
+Altogether, @tt{brag}'s intent is to be a parser generator for Racket
 that's easy and fun to use. It's meant to fit naturally with the other tools
 in the Racket language toolchain. Hopefully, it will reduce the friction in
 making new languages with alternative concrete syntaxes.
@@ -678,7 +666,7 @@ A @deftech{rule} is a sequence consisting of: a @tech{rule identifier}, a colon
 
 A @deftech{rule identifier} is an @tech{identifier} that is not in upper case.
 
-A @deftech{token identifier} is an @tech{identifier} that is in upper case.
+A @deftech{symbolic token identifier} is an @tech{identifier} that is in upper case.
 
 An @deftech{identifier} is a character sequence of letters, numbers, and
 characters in @racket["-.!$%&/<=>?^_~@"]. It must not contain
@@ -689,7 +677,12 @@ quantification.
 A @deftech{pattern} is one of the following:
 @itemize[
 @item{an implicit sequence of @tech{pattern}s separated by whitespace}
-@item{a terminal: either a literal string or a @tech{token identifier}}
+@item{a terminal: either a literal string or a @tech{symbolic token identifier}. 
+
+When used in a pattern, both these terminals will match the same set of inputs. A literal string can match the string itself, or a @racket[token] whose type field contains that string (or its symbol form). So @racket["FOO"] would  match @racket["FOO"], @racket[(token "FOO" "bar")], or @racket[(token 'FOO "bar")]. A symbolic token identifier can also match the string version of the identifier, or a @racket[token] whose type field is the symbol or string form of the identifier. So @racket[FOO] would also match @racket["FOO"], @racket[(token 'FOO "bar")], or @racket[(token "FOO" "bar")]. (In every case, the value of a token, like @racket["bar"], can be anything, and may or may not be the same as its type.)
+
+Because their underlying meanings are the same, the symbolic token identifier ends up being a notational convenience for readability inside a grammar pattern. Typically, the literal string @racket["FOO"] is used to connote ``match the string @racket["FOO"] exactly'' and the symbolic token identifier @racket[FOO] specially connotes ``match any token of type @racket['FOO]''.}
+
 @item{a @tech{rule identifier}}
 @item{a @deftech{choice pattern}: a sequence of @tech{pattern}s delimited with @litchar{|} characters.}
 @item{a @deftech{quantifed pattern}: a @tech{pattern} followed by either @litchar{*} (``zero or more'') or @litchar{+} (``one or more'')}
@@ -715,7 +708,7 @@ object: "world" | WORLD
 the elements @tt{sentence}, @tt{verb}, @tt{greeting}, and @tt{object} are rule
 identifiers. The first rule, @litchar{sentence: verb optional-adjective
 object}, is a rule whose right side is an implicit pattern sequence of three
-sub-patterns. The uppercased @tt{WORLD} is a token identifier. The fourth rule in the program associates @tt{greeting} with a @tech{choice pattern}.
+sub-patterns. The uppercased @tt{WORLD} is a symbolic token identifier. The fourth rule in the program associates @tt{greeting} with a @tech{choice pattern}.
 
 
 
@@ -837,7 +830,7 @@ the BNF grammar. For each rule @racket[r] and its associated pattern @racket[p],
 @item{For implicit and explicit sequences of @tech{pattern}s @racket[p1],
       @racket[p2], ..., the corresponding values, spliced into the
       structure.}
-@item{For terminals, the value associated to the token.}
+@item{For terminals, the value of the token.}
 @item{For @tech{rule identifier}s: the associated parse value for the rule.}
 @item{For @tech{choice pattern}s: the associated parse value for one of the matching subpatterns.}
 @item{For @tech{quantifed pattern}s and @tech{optional pattern}s: the corresponding values, spliced into the structure.}
@@ -848,8 +841,7 @@ pattern that informs the parser to introduces nested structure into the syntax
 object.
 
 
-If the grammar has ambiguity, @tt{brag} will choose and return a parse, though
-it does not guarantee which one it chooses.
+If the grammar is ambiguous, @tt{brag} will choose one of the possible parse results, though it doesn't guarantee which.
 
 
 If the parse cannot be performed successfully, or if a token in the
