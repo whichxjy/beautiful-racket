@@ -1,7 +1,7 @@
 #lang br/quicklang
 (require "parser.rkt" "tokenizer.rkt")
 
-(module+ reader (provide read-syntax))
+(module+ reader (provide read-syntax get-info))
 
 (define (read-syntax path port)
   (define-values (line col pos) (port-next-location port))
@@ -12,3 +12,15 @@
   (strip-bindings
    #`(module basic-mod basic-demo/expander
        #,parse-tree)))
+
+(define (get-info port mod line col pos)
+    (define (handle-query key default)
+      (case key
+        [(color-lexer)
+         (dynamic-require 'basic-demo/colorer 'color-basic)]
+        #;[(drracket:indentation)
+         (dynamic-require 'basic-demo/indenter 'indent-jsonic)]
+        #;[(drracket:toolbar-buttons)
+         (dynamic-require 'basic-demo/buttons 'button-list)]
+        [else default]))
+    handle-query)
