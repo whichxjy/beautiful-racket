@@ -13,7 +13,7 @@
   (define (next-token)
     (define get-token
       (lexer-src-pos
-       [(eof) (token 'EOF)]
+       [(eof) eof]
        [whitespace (token 'WHITE lexeme #:skip? #t)]
        [(from/to "/*" "*/") (token 'COMMENT lexeme #:skip? #t)]
        [(:: positive-number (:+ whitespace) (from/to (uc+lc "rem") "\n")) (token 'COMMENT lexeme #:skip? #t)]

@@ -2,17 +2,15 @@
 (require brag/support syntax-color/racket-lexer racket/contract
          basic-demo/tokenizer sugar/coerce)
 
-;(values lexeme 'parenthesis '|(| (pos lexeme-start) (pos lexeme-end))
-
 (define (color-basic ip)
   (define postok ((tokenize ip)))
-  (define tok-or-str (position-token-token postok))
-  (define type (if (string? tok-or-str)
-                   'string
-                   (token-struct-type tok-or-str)))
-  (define val (if (string? tok-or-str)
-                  tok-or-str
-                  (->string (or (token-struct-val tok-or-str) ""))))
+  (define tok (position-token-token postok))
+  (define-values (type val)
+    (cond
+      [(eof-object? tok) (values 'eof "")]
+      [(string? tok) (values 'string tok)]
+      [else (values (token-struct-type tok)
+                    (format "~a" (token-struct-val tok)))]))
   (values val
           (caseq type
                  [(WHITE) 'white-space]
