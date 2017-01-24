@@ -158,7 +158,7 @@
                (let loop ([x (syntax->datum (parse x))])
                  (cond
                    [(list? x) (map loop x)]
-                   [(char? x) (format "~a" x)]
+                   [(char? x) (string x)]
                    [else x])))))))]))
 
 
