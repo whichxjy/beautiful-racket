@@ -1,4 +1,4 @@
-#lang basic-demo
+#lang basic-demo-nth
 10 for A=1 to 3 
 20 print A
 21 for B=5 to 8

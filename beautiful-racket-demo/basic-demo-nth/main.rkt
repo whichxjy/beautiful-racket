@@ -10,7 +10,7 @@
   (set-port-next-location! port+newline line col pos)
   (define parse-tree (parse path (tokenize port+newline)))
   (strip-bindings
-   #`(module basic-mod basic-demo/expander
+   #`(module basic-mod basic-demo-nth/expander
        #,parse-tree)))
 
 (define (get-info port mod line col pos)

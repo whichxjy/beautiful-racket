@@ -1,4 +1,4 @@
-#lang basic-demo
+#lang basic-demo-nth
 10 X = 3
 20 on X gosub 210, 220, 230
 21 print "yay"
