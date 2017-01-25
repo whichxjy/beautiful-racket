@@ -1,6 +1,4 @@
 #lang br/quicklang
-(provide (rename-out [b-module-begin #%module-begin])
-         (all-defined-out))
 
 (define-exn-srcloc duplicate-line-number exn:fail)
 
@@ -11,6 +9,7 @@
        (raise-duplicate-line-number
         ($line-srcloc (check-duplicates lines = #:key $line-number))))
      (run lines)))
+(provide (rename-out [b-module-begin #%module-begin]))
 
 (struct $line (number thunk srcloc) #:transparent)
 
@@ -18,15 +17,15 @@
   (with-pattern ([SRCLOC (syntax-srcloc caller-stx)])
     #'($line LINE-NUMBER (thunk STATEMENT) SRCLOC)))
 
-(define-macro (b-statement (PROC-NAME ARG ...))
-  #'(begin (PROC-NAME ARG ...)))
-
+(define (b-statement stmt) stmt)
 (define (b-rem str) #f)
 (define (b-print str) (displayln str))
 (define (b-goto line-number) line-number)
 
 (define-exn end-program-signal exn:fail)
 (define (b-end) (raise-end-program-signal))
+
+(provide b-line b-statement b-rem b-print b-goto b-end)
 
 (define-exn-srcloc line-not-found exn:fail)
 
