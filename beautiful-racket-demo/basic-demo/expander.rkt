@@ -14,8 +14,8 @@
 (struct $line (number thunk srcloc) #:transparent)
 
 (define-macro (b-line LINE-NUMBER STATEMENT)
-  (with-pattern ([SRCLOC (syntax-srcloc caller-stx)])
-    #'($line LINE-NUMBER (thunk STATEMENT) SRCLOC)))
+  (with-pattern ([CALLER-STX caller-stx])
+    #'($line LINE-NUMBER (thunk STATEMENT) (syntax-srcloc #'CALLER-STX))))
 
 (define (b-statement stmt) stmt)
 (define (b-rem str) #f)
