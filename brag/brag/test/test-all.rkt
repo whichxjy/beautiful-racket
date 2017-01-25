@@ -12,7 +12,6 @@
          "test-flatten.rkt"
          "test-lexer.rkt"
          "test-parser.rkt"
-         "exercise-python-grammar.rkt"
          "test-errors.rkt"
          "test-old-token.rkt"
          "test-weird-grammar.rkt"
