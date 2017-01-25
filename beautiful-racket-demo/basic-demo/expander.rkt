@@ -15,7 +15,7 @@
 
 (define-macro (b-line LINE-NUMBER STATEMENT)
   (with-pattern ([CALLER-STX caller-stx])
-    #'($line LINE-NUMBER (thunk STATEMENT) (syntax-srcloc #'CALLER-STX))))
+    #'($line LINE-NUMBER (λ () STATEMENT) (syntax-srcloc #'CALLER-STX))))
 
 (define (b-statement stmt) stmt)
 (define (b-rem str) #f)
@@ -42,5 +42,5 @@
       (define this-result (this-thunk))
       (if (exact-positive-integer? this-result)
           (hash-ref line-idx-table this-result
-                    (thunk (raise-line-not-found ($line-srcloc this-line))))
+                    (λ () (raise-line-not-found ($line-srcloc this-line))))
           (add1 line-idx)))))
