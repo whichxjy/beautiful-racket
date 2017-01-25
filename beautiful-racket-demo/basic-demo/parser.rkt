@@ -1,42 +1,18 @@
 #lang brag
 
-basic-program : line*
+b-program : b-line*
 
-line: NUMBER statement [/":" statement]*
+b-line: NUMBER b-statement
 
-statement : "def" id /"(" id /")" /"=" expr
-| "dim" id-expr [/"," id-expr]*
-| "end" | "stop"
-| "gosub" expr
-| "goto" expr
-| "on" expr ("gosub" | "goto") expr [/"," expr]*
-| "if" expr /"then" (statement | expr) [/"else" (statement | expr)]
-| "input" [print-list /";"] id [/"," id]*
-| [/"let"] id-expr "=" expr
-| "print" [print-list]
-| "return"
-| "for" id /"=" expr /"to" expr [/"step" expr]
-| "next" [id]
+b-statement: b-rem
+| b-print
+| b-goto
+| b-end
 
-print-list : expr [[";"] [print-list]]
+b-rem : REM
 
-expr : comp-expr [("and" | "or") expr]
+b-print : /"print" STRING
 
-comp-expr : sum [("=" | ">" | ">=" | "<" | "<=" | "<>") comp-expr]
+b-goto : /"goto" NUMBER
 
-sum : [sum ("+" | "-")] product
-
-product : [product ("*" | "/")] power
-
-power : value [/"^" value]
-
-@value : maybe-negative-val
-| id-expr
-| /"(" expr /")"
-| STRING
-
-id-expr : id [/"(" expr [/"," expr]* /")"]
-
-@id : ID
-
-maybe-negative-val : ["-"] (id-expr | NUMBER)
+b-end : /"end"

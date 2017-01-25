@@ -116,3 +116,10 @@
   (check-false (syntax-property* x 'foo))
   (check-true (syntax-property* x 'bar))
   (check-equal? (syntax-property* x 'foo 'bar 'zam) '(#f #t boni)))
+
+(define (syntax-srcloc stx)
+  (srcloc (syntax-source stx)
+          (syntax-line stx)
+          (syntax-column stx)
+          (syntax-position stx)
+          (syntax-span stx)))
