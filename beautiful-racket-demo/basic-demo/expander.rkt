@@ -1,21 +1,23 @@
 #lang br/quicklang
 
-(define-exn-srcloc duplicate-line-number exn:fail)
-
 (define-macro (b-module-begin (b-program LINE ...))
-  #'(#%module-begin
-     (define lines (sort (list LINE ...) #:key $line-number <))
-     (unless (apply < (map $line-number lines))
-       (raise-duplicate-line-number
-        ($line-srcloc (check-duplicates lines = #:key $line-number))))
-     (run lines)))
+  (with-pattern ([(LINE-NUM ...)
+                  (filter-stx-prop 'b-line-number (syntax-flatten #'(LINE ...)))]
+                 [(LINE-ID ...) (syntax-map (λ (stx) (prefix-id "line-" stx)) #'(LINE-NUM ...))])
+    #'(#%module-begin
+       LINE ...
+       (define line-table (apply hasheqv (append (list LINE-NUM LINE-ID) ...)))
+       (run line-table))))
 (provide (rename-out [b-module-begin #%module-begin]))
 
-(struct $line (number thunk srcloc) #:transparent)
-
 (define-macro (b-line LINE-NUMBER STATEMENT)
-  (with-pattern ([CALLER-STX caller-stx])
-    #'($line LINE-NUMBER (λ () STATEMENT) (syntax-srcloc #'CALLER-STX))))
+  (with-pattern ([LINE-NUMBER-ID (prefix-id "line-" #'LINE-NUMBER
+                                            #:source #'LINE-NUMBER)]
+                 [ORIG-LOC caller-stx])
+    (syntax/loc caller-stx (define (LINE-NUMBER-ID #:srcloc? [srcloc #f])
+                             (if srcloc
+                                 (syntax-srcloc #'ORIG-LOC)
+                                 STATEMENT)))))
 
 (define (b-statement stmt) stmt)
 (define (b-rem str) #f)
@@ -29,18 +31,16 @@
 
 (define-exn-srcloc line-not-found exn:fail)
 
-(define (run lines)
-  (define line-vec (list->vector lines))
-  (define line-idx-table (for/hasheqv ([(line idx) (in-indexed line-vec)])
-                           (values ($line-number line) idx)))
+(define (run line-table)
+  (define line-vec (list->vector (sort (hash-keys line-table) <)))
   (with-handlers ([end-program-signal? void])
     (for/fold ([line-idx 0])
               ([i (in-naturals)])
       (unless (< line-idx (vector-length line-vec)) (b-end))
-      (define this-line (vector-ref line-vec line-idx))
-      (define this-thunk ($line-thunk this-line))
-      (define this-result (this-thunk))
-      (if (exact-positive-integer? this-result)
-          (hash-ref line-idx-table this-result
-                    (λ () (raise-line-not-found ($line-srcloc this-line))))
+      (define line-num (vector-ref line-vec line-idx))
+      (define line-proc (hash-ref line-table line-num))
+      (define line-result (line-proc))
+      (if (exact-positive-integer? line-result)
+          (or (vector-member line-result line-vec)
+              (raise-line-not-found (line-proc #:srcloc? #t)))
           (add1 line-idx)))))

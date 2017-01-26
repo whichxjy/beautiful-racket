@@ -2,7 +2,9 @@
 
 b-program : b-line*
 
-b-line: NUMBER b-statement
+b-line: @b-line-number b-statement
+
+b-line-number : NUMBER
 
 b-statement: b-rem
 | b-print
