@@ -4,4 +4,4 @@
 30 rem goto 50
 45 print "shite"
 50 print "foobar"
-10 goto 45
+60 goto 45
