@@ -1,6 +1,5 @@
 #lang br
-(require parser-tools/lex parser-tools/lex-sre
-         brag/support
+(require brag/support
          racket/string)
 
 (provide tokenize)
@@ -10,10 +9,10 @@
       (lexer-src-pos
        [(eof) eof]
        [(union
-         (seq "/*" (complement (seq any-string "*/" any-string)) "*/")
-         (seq "//" (repetition 1 +inf.0 (char-complement #\newline)) #\newline))
+         (:seq "/*" (complement (:seq any-string "*/" any-string)) "*/")
+         (:seq "//" (repetition 1 +inf.0 (char-complement #\newline)) #\newline))
         (token 'COMMENT lexeme #:skip? #t)]
-       [(union #\tab #\space #\newline) (get-token input-port)]
+       [(union #\tab #\space #\newline) (return-without-pos (get-token input-port))]
        [(union "CHIP" "IN" "OUT" "PARTS:") lexeme]
        [(char-set "[]{}(),;=.") lexeme]
        ["true" (token 'TRUE #t)]
@@ -21,6 +20,6 @@
        [(repetition 1 +inf.0 numeric) (token 'NUMBER (string->number lexeme))]
        ; bugaboo: "10" is ambiguous: number or binary number?
        [(repetition 1 +inf.0 (char-set "01")) (token 'BINARY-NUMBER (string->number lexeme 2))]
-       [(seq (repetition 1 1 alphabetic) (repetition 0 +inf.0 (union alphabetic numeric "-"))) (token 'ID (string->symbol lexeme))]))
+       [(:seq (repetition 1 1 alphabetic) (repetition 0 +inf.0 (union alphabetic numeric "-"))) (token 'ID (string->symbol lexeme))]))
     (get-token input-port))  
   next-token)

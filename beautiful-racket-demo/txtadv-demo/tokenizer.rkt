@@ -1,6 +1,5 @@
 #lang br
-(require parser-tools/lex parser-tools/lex-sre
-         brag/support
+(require brag/support
          racket/string)
 
 (provide tokenize)
@@ -10,13 +9,13 @@
       (lexer
        [(eof) eof]
        [(union
-         (seq "/*" (complement (seq any-string "*/" any-string)) "*/")
-         (seq "//" (repetition 1 +inf.0 (char-complement #\newline)) #\newline))
+         (:seq "/*" (complement (:seq any-string "*/" any-string)) "*/")
+         (:seq "//" (repetition 1 +inf.0 (char-complement #\newline)) #\newline))
         (token 'COMMENT lexeme #:skip? #t)]
        [(union #\tab #\space #\newline) (get-token input-port)]
        [(repetition 1 +inf.0 (union upper-case (char-set "="))) lexeme]
-       [(seq "\"" (complement (seq any-string "\"" any-string)) "\"") (token 'STRING (string-trim lexeme "\""))]
-       [(seq "---"
+       [(:seq "\"" (complement (:seq any-string "\"" any-string)) "\"") (token 'STRING (string-trim lexeme "\""))]
+       [(:seq "---"
              (repetition 1 +inf.0 (union alphabetic numeric punctuation))
              "---") (token 'DASHED-NAME (string->symbol (string-trim lexeme "-" #:repeat? #t)))]
        [(repetition 1 +inf.0 (union alphabetic numeric (char-set "-!?.#'")))

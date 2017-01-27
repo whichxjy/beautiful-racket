@@ -1,5 +1,5 @@
 #lang br
-(require parser-tools/lex brag/support)
+(require brag/support)
 
 (define+provide (tokenize ip)
   (define get-token

@@ -1,6 +1,5 @@
 #lang br
-(require parser-tools/lex parser-tools/lex-sre
-         brag/support
+(require brag/support
          racket/string)
 
 (provide tokenize)
@@ -10,12 +9,12 @@
       (lexer-src-pos
        [(eof) eof]
         [(union
-         (seq "/*" (complement (seq any-string "*/" any-string)) "*/")
-         (seq "//" (repetition 1 +inf.0 (char-complement #\newline)) #\newline))
+         (:seq "/*" (complement (:seq any-string "*/" any-string)) "*/")
+         (:seq "//" (repetition 1 +inf.0 (char-complement #\newline)) #\newline))
         (token 'COMMENT lexeme #:skip? #t)]
-       [(union #\tab #\space #\newline) (get-token input-port)]
+       [(union #\tab #\space #\newline) (return-without-pos (get-token input-port))]
        [(union "load" "output-list" "output-file" "compare-to" "set" "eval" "output" (char-set ",;")) lexeme]
-       [(seq "%" (repetition 1 +inf.0 (union alphabetic numeric (char-set ".")))) (token 'FORMAT-STRING lexeme)]
+       [(:seq "%" (repetition 1 +inf.0 (union alphabetic numeric (char-set ".")))) (token 'FORMAT-STRING lexeme)]
        [(repetition 1 +inf.0 numeric) (token 'VAL (string->number lexeme))]
        [(repetition 1 +inf.0 (union alphabetic numeric (char-set "-."))) (token 'ID lexeme)]))
     (get-token input-port))  

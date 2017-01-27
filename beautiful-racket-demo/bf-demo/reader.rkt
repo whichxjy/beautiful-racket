@@ -8,7 +8,7 @@
   (datum->syntax #f module-datum))
 (provide read-syntax)
 
-(require parser-tools/lex)
+(require brag/support)
 (define (tokenize port)
   (define (next-token)
     (define our-lexer

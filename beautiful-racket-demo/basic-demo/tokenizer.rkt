@@ -1,7 +1,5 @@
 #lang br
-(require parser-tools/lex
-         (prefix-in : parser-tools/lex-sre)
-         brag/support)
+(require brag/support)
 (provide (all-defined-out))
 
 (define basic-lexer
