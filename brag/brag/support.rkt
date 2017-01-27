@@ -35,17 +35,22 @@
 ;; This is intended to be a general token structure constructor that's nice
 ;; to work with.
 ;; It should cooperate with the tokenizers constructed with make-permissive-tokenizer.
-(define token
-  (lambda (type                 ;; (U symbol string)
-           [val #f]  ;; any
-           #:position [position #f] ;; (U #f number)
-           #:line [line #f]     ;; (U #f number)
-           #:column [column #f] ;; (U #f number)
-           #:span [span #f]     ;; boolean
-           #:skip? [skip? #f])
-    (token-struct (if (string? type) (string->symbol type) type)
-                  val
-                  position line column span skip?)))
+(define (token type                 ;; (U symbol string)
+               [val #f]  ;; any
+               [srcloc #f]
+               #:position [position #f] ;; (U #f number)
+               #:line [line #f]     ;; (U #f number)
+               #:column [column #f] ;; (U #f number)
+               #:span [span #f]     ;; boolean
+               #:skip? [skip? #f])
+  (token-struct (if (string? type) (string->symbol type) type)
+                val
+                ;; keyword values take precedence over srcloc values
+                (or position (and srcloc (srcloc-position srcloc)))
+                (or line (and srcloc (srcloc-line srcloc)))
+                (or column (and srcloc (srcloc-column srcloc)))
+                (or span (and srcloc (srcloc-span srcloc)))
+                skip?))
 
 
 ;; When bad things happen, we need to emit errors with source location.
@@ -62,10 +67,14 @@
                          in))
   (define token-producer (tokenize input-port))
   (for/list ([token (in-producer token-producer (λ(tok)
-                                                  ;; position-tokens are produced by lexer-src-pos
-                                                  (eq? eof (if (position-token? tok)
-                                                               (position-token-token tok)
-                                                               tok))))])
+                                                  (eq? eof (cond
+                                                             ;; position-tokens are produced by lexer-src-pos,
+                                                             [(position-token? tok)
+                                                              (position-token-token tok)]
+                                                             ;; and srcloc-tokens by lexer-srcloc
+                                                             [(srcloc-token? tok)
+                                                              (srcloc-token-token tok)]
+                                                             [else tok]))))])
             token))
 
 (provide trim-ends)
@@ -86,7 +95,7 @@
       [(_ . STRS)
        (with-syntax ([(UCSTR ...) (map (compose1 string-upcase syntax->datum) (syntax->list #'STRS))]
                      [(LCSTR ...) (map (compose1 string-downcase syntax->datum) (syntax->list #'STRS))])
-       #'(union (union UCSTR ...) (union LCSTR ...)))])))
+         #'(union (union UCSTR ...) (union LCSTR ...)))])))
 
 ;; change names of lexer abbreviations to be consistent with Racket srcloc conventions
 

@@ -117,6 +117,16 @@
                              (if (no-position? (lex:position-token-end-pos a-position-token))
                                  e
                                  (lex:position-token-end-pos a-position-token)))]
+
+        [(lex:srcloc-token t loc)
+         (define a-position-token (loop t))
+         (lex:position-token (lex:position-token-token a-position-token)
+                             (if (no-position? (lex:position-token-start-pos a-position-token))
+                                 (lex:position (srcloc-position loc) (srcloc-line loc) (srcloc-column loc))
+                                 (lex:position-token-start-pos a-position-token))
+                             (if (no-position? (lex:position-token-start-pos a-position-token))
+                                 (lex:position (+ (srcloc-position loc) (srcloc-span loc)) #f #f)
+                                 (lex:position-token-end-pos a-position-token)))]
         
         [else
          ;; Otherwise, we have no idea how to treat this as a token.

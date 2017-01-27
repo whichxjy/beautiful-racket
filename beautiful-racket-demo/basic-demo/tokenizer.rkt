@@ -5,7 +5,7 @@
 (provide (all-defined-out))
 
 (define basic-lexer
-  (lexer-src-pos
+  (lexer-srcloc
    [(eof) eof]
    [whitespace (token lexeme #:skip? #t)]
    [(from/to "rem" "\n") (token 'REM (string-downcase lexeme))]
