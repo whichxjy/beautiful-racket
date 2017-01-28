@@ -13,10 +13,10 @@
   (check-true (token? (token 'A-TOKEN-STRUCT "hi")))
   (check-false (token? 42)))
 
-(define (tokenize port)
+(define (make-tokenizer port)
   (port-count-lines! port)
   (define (next-token)
-    (define our-lexer
+    (define jsonic-lexer
       (lexer
        [(eof) eof]
        [(from/to "//" "\n") (next-token)]
@@ -33,22 +33,24 @@
                         #:column (col lexeme-start)
                         #:span (- (pos lexeme-end)
                                   (pos lexeme-start)))]))
-    (our-lexer port))
+    (jsonic-lexer port))
   next-token)
 (provide (contract-out
-          [tokenize (input-port? . -> . (-> token?))]))
+          [make-tokenizer (input-port? . -> . (-> token?))]))
 
 (module+ test
-  (check-equal? (apply-tokenizer tokenize "// comment\n") empty)
   (check-equal?
-   (apply-tokenizer tokenize "@$ (+ 6 7) $@")
+   (apply-tokenizer-maker make-tokenizer "// comment\n")
+   empty)
+  (check-equal?
+   (apply-tokenizer-maker make-tokenizer "@$ (+ 6 7) $@")
    (list (token 'SEXP-TOK " (+ 6 7) "
                 #:position 3
                 #:line 1
                 #:column 2
                 #:span 9)))
   (check-equal?
-   (apply-tokenizer tokenize "hi")
+   (apply-tokenizer-maker make-tokenizer "hi")
    (list (token 'CHAR-TOK "h"
                 #:position 1
                 #:line 1
