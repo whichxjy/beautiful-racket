@@ -8,7 +8,7 @@
                "brag"
                "draw-lib"
                "gui-lib"
-               "parser-tools-lib"
+               "br-parser-tools-lib"
                "rackunit-lib"
                "syntax-color-lib"))
 (define build-deps '("scribble-lib"))
