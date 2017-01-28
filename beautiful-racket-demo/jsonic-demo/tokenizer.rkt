@@ -1,15 +1,15 @@
 #lang br/quicklang
 (require brag/support)
 
-(define (tokenize port)
+(define (make-tokenizer port)
   (define (next-token)
-    (define our-lexer
+    (define jsonic-lexer
       (lexer
        [(eof) eof]
        [(from/to "//" "\n") (next-token)]
        [(from/to "@$" "$@")
         (token 'SEXP-TOK (trim-ends "@$" lexeme "$@"))]
        [any-char (token 'CHAR-TOK lexeme)]))
-    (our-lexer port))  
+    (jsonic-lexer port))  
   next-token)
-(provide tokenize)
+(provide make-tokenizer)

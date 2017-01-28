@@ -2,7 +2,7 @@
 (require "tokenizer.rkt" "parser.rkt")
 
 (define (read-syntax path port)
-  (define parse-tree (parse path (tokenize port)))
+  (define parse-tree (parse path (make-tokenizer port)))
   (define module-datum `(module jsonic-module jsonic-demo/expander
                           ,parse-tree))
   (datum->syntax #f module-datum))
