@@ -9,7 +9,7 @@
 
 @title{Parser Tools: @exec{lex} and @exec{yacc}-style Parsing}
 
-@author["Scott Owens"]
+@author["Scott Owens (99%)" "Matthew Butterick (1%)"]
 
 This documentation assumes familiarity with @exec{lex} and @exec{yacc}
 style lexer and parser generators.
@@ -248,10 +248,18 @@ an @racket[action-expr], returns @racket[(make-position-token
 _action-result start-pos end-pos)] instead of simply
 @racket[_action-result].}
 
+@defform[(lexer-srcloc (trigger action-expr) ...)]{
+
+Like @racket[lexer], but for each @racket[_action-result] produced by
+an @racket[action-expr], returns @racket[(make-srcloc-token
+_action-result lexeme-srcloc)] instead of simply
+@racket[_action-result].}
+
 @deftogether[(
 @defidform[start-pos]
 @defidform[end-pos]
 @defidform[lexeme]
+@defidform[lexeme-srcloc]
 @defidform[input-port]
 @defidform[return-without-pos]
 )]{
@@ -275,6 +283,11 @@ error.}
 
    Lexers created with @racket[lexer-src-pos] return instances of @racket[position-token].}
 
+
+@defstruct[srcloc-token ([token any/c]
+                           [srcloc srcloc?])]{
+
+   Lexers created with @racket[lexer-srcloc] return instances of @racket[srcloc-token].}
 
 @defparam[file-path source any/c]{
 
