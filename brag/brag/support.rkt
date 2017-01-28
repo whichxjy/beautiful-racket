@@ -60,8 +60,9 @@
                                 (exn:fail:parsing-srclocs instance)))
 
 
-(provide apply-tokenizer)
-(define (apply-tokenizer tokenize in)
+(provide apply-tokenizer-maker
+         (rename-out [apply-tokenizer-maker apply-tokenizer]))
+(define (apply-tokenizer-maker tokenize in)
   (define input-port (if (string? in)
                          (open-input-string in)
                          in))

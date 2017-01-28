@@ -967,11 +967,11 @@ DrRacket should highlight the offending locations in the source.}
 
 
 
-@defproc[(apply-tokenizer [tokenizer procedure?] 
-                [source-string (or/c string?
+@defproc[(apply-tokenizer-maker [tokenizer-maker procedure?] 
+                [source (or/c string?
                                     input-port?)])
          list?]{
-Repeatedly apply @racket[tokenizer] to @racket[source-string], gathering the resulting tokens into a list. Useful for testing or debugging a tokenizer.
+Repeatedly apply @racket[tokenizer-maker] to @racket[source], gathering the resulting tokens into a list. @racket[source] can be a string or an input port. Useful for testing or debugging a tokenizer.
 }
 
 
