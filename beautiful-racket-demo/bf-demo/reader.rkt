@@ -2,19 +2,19 @@
 (require "parser.rkt")
 
 (define (read-syntax path port)
-  (define parse-tree (parse path (tokenize port)))
+  (define parse-tree (parse path (make-tokenizer port)))
   (define module-datum `(module bf-mod bf-demo/expander
                           ,parse-tree))
   (datum->syntax #f module-datum))
 (provide read-syntax)
 
 (require brag/support)
-(define (tokenize port)
+(define (make-tokenizer port)
   (define (next-token)
-    (define our-lexer
+    (define bf-lexer
       (lexer
        [(eof) eof]
        [(char-set "><-.,+[]") lexeme]
        [any-char (next-token)]))
-    (our-lexer port))  
+    (bf-lexer port))  
   next-token)
