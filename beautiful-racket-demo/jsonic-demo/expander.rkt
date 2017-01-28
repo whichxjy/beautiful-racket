@@ -8,15 +8,15 @@
      (display result-string)))
 (provide (rename-out [js-module-begin #%module-begin]))
 
+(define-macro (jsonic-char CHAR-TOK-VALUE)
+  #'CHAR-TOK-VALUE)
+(provide jsonic-char)
+
 (define-macro (jsonic-program SEXP-OR-JSON-STR ...)
   #'(string-trim (string-append SEXP-OR-JSON-STR ...)))
 (provide jsonic-program)
 
-(define-macro (json-char CHAR-STR)
-  #'CHAR-STR)
-(provide json-char)
-
-(define-macro (s-exp SEXP-STR)
+(define-macro (jsonic-sexp SEXP-STR)
   (with-pattern ([SEXP-DATUM (format-datum '~a #'SEXP-STR)])
     #'(jsexpr->string SEXP-DATUM)))
-(provide s-exp)
+(provide jsonic-sexp)
