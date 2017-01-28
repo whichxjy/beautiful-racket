@@ -9,19 +9,19 @@
   #'(void OP-OR-LOOP-ARG ...))
 (provide bf-program)
 
-(define-macro (loop "[" OP-OR-LOOP-ARG ... "]")
+(define-macro (bf-loop "[" OP-OR-LOOP-ARG ... "]")
   #'(until (zero? (current-byte))
            OP-OR-LOOP-ARG ...))
-(provide loop)
+(provide bf-loop)
 
-(define-macro-cases op
-  [(op ">") #'(gt)]
-  [(op "<") #'(lt)]
-  [(op "+") #'(plus)]
-  [(op "-") #'(minus)]
-  [(op ".") #'(period)]
-  [(op ",") #'(comma)])
-(provide op)
+(define-macro-cases bf-op
+  [(bf-op ">") #'(gt)]
+  [(bf-op "<") #'(lt)]
+  [(bf-op "+") #'(plus)]
+  [(bf-op "-") #'(minus)]
+  [(bf-op ".") #'(period)]
+  [(bf-op ",") #'(comma)])
+(provide bf-op)
 
 (define arr (make-vector 30000 0))
 (define ptr 0)

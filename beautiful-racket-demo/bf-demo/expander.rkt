@@ -16,23 +16,23 @@
       (void (fold-funcs first-apl (list OP-OR-LOOP-ARG ...)))))
 (provide bf-program)
 
-(define-macro (loop "[" OP-OR-LOOP-ARG ... "]")
+(define-macro (bf-loop "[" OP-OR-LOOP-ARG ... "]")
   #'(lambda (arr ptr)
       (for/fold ([current-apl (list arr ptr)])
                 ([i (in-naturals)]
                  #:break (zero? (apply current-byte
                                        current-apl)))
         (fold-funcs current-apl (list OP-OR-LOOP-ARG ...)))))
-(provide loop)
+(provide bf-loop)
 
-(define-macro-cases op
-  [(op ">") #'gt]
-  [(op "<") #'lt]
-  [(op "+") #'plus]
-  [(op "-") #'minus]
-  [(op ".") #'period]
-  [(op ",") #'comma])
-(provide op)
+(define-macro-cases bf-op
+  [(bf-op ">") #'gt]
+  [(bf-op "<") #'lt]
+  [(bf-op "+") #'plus]
+  [(bf-op "-") #'minus]
+  [(bf-op ".") #'period]
+  [(bf-op ",") #'comma])
+(provide bf-op)
 
 (define (current-byte arr ptr) (vector-ref arr ptr))
 
