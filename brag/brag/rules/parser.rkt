@@ -1,6 +1,6 @@
 #lang racket/base
-(require parser-tools/yacc
-         parser-tools/lex
+(require br-parser-tools/yacc
+         br-parser-tools/lex
          racket/list
          racket/match
          "rule-structs.rkt")
@@ -240,7 +240,7 @@
 
 
 ;; position->pos: position -> pos
-;; Coerses position structures from parser-tools/lex to our own pos structures.
+;; Coerses position structures from br-parser-tools/lex to our own pos structures.
 (define (position->pos a-pos)
   (pos (position-offset a-pos)
        (position-line a-pos)

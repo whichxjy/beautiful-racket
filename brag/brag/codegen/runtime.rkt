@@ -3,7 +3,7 @@
 (require racket/match 
          racket/list
          racket/generator
-         (prefix-in lex: parser-tools/lex) 
+         (prefix-in lex: br-parser-tools/lex) 
          brag/support
          brag/private/internal-support)
 

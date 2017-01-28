@@ -1,5 +1,5 @@
 #lang racket/base
-(require parser-tools/lex)
+(require br-parser-tools/lex)
 
 (provide (all-defined-out))
 

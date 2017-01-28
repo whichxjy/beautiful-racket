@@ -5,7 +5,7 @@
           (for-label racket
                      brag/support
                      brag/examples/nested-word-list
-                     (only-in parser-tools/lex lexer-src-pos)
+                     (only-in br-parser-tools/lex lexer-src-pos)
                      (only-in syntax/parse syntax-parse ~literal)))
 
 
@@ -256,11 +256,11 @@ A @emph{token} is the smallest meaningful element of a source program. Tokens ca
 
 If possible, we also want to attach source location information to each token. Why? Because this informatino will be incorporated into the syntax objects produced by @racket[parse].
 
-A parser often works in conjunction with a helper function called a @emph{lexer} that converts the raw code of the source program into tokens. The @racketmodname[parser-tools/lex] library can help us write a position-sensitive
+A parser often works in conjunction with a helper function called a @emph{lexer} that converts the raw code of the source program into tokens. The @racketmodname[br-parser-tools/lex] library can help us write a position-sensitive
 tokenizer:
 
 @interaction[#:eval my-eval
-(require parser-tools/lex)
+(require br-parser-tools/lex)
 (define (tokenize ip)
   (port-count-lines! ip)
   (define my-lexer
@@ -299,7 +299,7 @@ Note also from this lexer example:
 @item{@racket[parse] accepts as input either a sequence of tokens, or a
 function that produces tokens (which @racket[parse] will call repeatedly to get the next token).}
 
-@item{As an alternative to the basic @racket[token] structure, a token can also be an instance of the @racket[position-token] structure (also found in @racketmodname[parser-tools/lex]). In that case, the token will try to derive its position from that of the position-token.}
+@item{As an alternative to the basic @racket[token] structure, a token can also be an instance of the @racket[position-token] structure (also found in @racketmodname[br-parser-tools/lex]). In that case, the token will try to derive its position from that of the position-token.}
 
 @item{@racket[parse] will stop if it gets @racket[void] (or @racket['eof]) as a token.}
 
@@ -811,8 +811,8 @@ A @deftech{token} in @tt{brag} can be any of the following values:
 @item{a string}
 @item{a symbol}
 @item{an instance produced by @racket[token]}
-@item{an instance produced by the token constructors of @racketmodname[parser-tools/lex]}
-@item{an instance of @racketmodname[parser-tools/lex]'s @racket[position-token] whose 
+@item{an instance produced by the token constructors of @racketmodname[br-parser-tools/lex]}
+@item{an instance of @racketmodname[br-parser-tools/lex]'s @racket[position-token] whose 
       @racket[position-token-token] is a @tech{token}.}
 ]
 
@@ -917,7 +917,7 @@ The @racketmodname[brag/support] module provides functions to interact with
 @tt{brag} programs. The most useful is the @racket[token] function, which
 produces tokens to be parsed.
 
-In addition to the exports shown below, the @racketmodname[brag/support] module also provides everything from @racketmodname[brag/support], and everything from @racketmodname[parser-tools/lex].
+In addition to the exports shown below, the @racketmodname[brag/support] module also provides everything from @racketmodname[brag/support], and everything from @racketmodname[br-parser-tools/lex].
 
 
 @defproc[(token [type (or/c string? symbol?)]

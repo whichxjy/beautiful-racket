@@ -1,11 +1,11 @@
 #lang racket/base
-(require parser-tools/lex
+(require br-parser-tools/lex
          racket/string
          racket/struct
-         (prefix-in : parser-tools/lex-sre)
+         (prefix-in : br-parser-tools/lex-sre)
          (for-syntax racket/base))
-(provide (all-from-out parser-tools/lex)
-         (all-from-out parser-tools/lex-sre)
+(provide (all-from-out br-parser-tools/lex)
+         (all-from-out br-parser-tools/lex-sre)
          [struct-out token-struct]
          token
          [struct-out exn:fail:parsing])

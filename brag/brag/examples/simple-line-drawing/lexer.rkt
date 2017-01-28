@@ -4,7 +4,7 @@
 
 ;; A simple lexer for simple-line-drawing.
 (require brag/support
-         parser-tools/lex)
+         br-parser-tools/lex)
 
 (define (tokenize ip)
   (port-count-lines! ip)

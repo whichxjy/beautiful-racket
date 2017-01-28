@@ -5,8 +5,8 @@
 (require brag/examples/simple-line-drawing
          brag/support
          racket/list
-         parser-tools/lex
-         (prefix-in : parser-tools/lex-sre)
+         br-parser-tools/lex
+         (prefix-in : br-parser-tools/lex-sre)
          rackunit)
 
 (define-tokens tokens (INTEGER STRING |;| EOF))
@@ -72,5 +72,5 @@ EOF
 ;; FIXME: add tests to make sure location is as we expect.
 ;;
 ;; FIXME: handle the EOF issue better.  Something in cfg-parser
-;; appears to deviate from parser-tools/yacc with regards to the stop
+;; appears to deviate from br-parser-tools/yacc with regards to the stop
 ;; token.

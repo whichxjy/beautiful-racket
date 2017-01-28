@@ -1,7 +1,7 @@
 #lang racket/base
 (require brag/rules/lexer
          rackunit
-         parser-tools/lex)
+         br-parser-tools/lex)
 
 (define (l s)
   (define t (lex/1 (open-input-string s)))

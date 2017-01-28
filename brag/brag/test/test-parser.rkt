@@ -2,7 +2,7 @@
 
 
 (require rackunit
-         parser-tools/lex
+         br-parser-tools/lex
          brag/rules/parser
          brag/rules/lexer
          brag/rules/rule-structs)

@@ -1,5 +1,5 @@
 #lang racket/base
-;; This module implements a parser form like the parser-tools's
+;; This module implements a parser form like the br-parser-tools's
 ;; `parser', except that it works on an arbitrary CFG (returning
 ;; the first sucecssful parse).
 
@@ -23,7 +23,7 @@
 ;; different lengths. (Otherwise, in the spirit of finding one
 ;; successful parse, only the first result is kept.)
 
-;; The parser-tools's `parse' is used to transform tokens in the
+;; The br-parser-tools's `parse' is used to transform tokens in the
 ;; grammar to tokens specific to this parser. In other words, this
 ;; parser uses `parser' so that it doesn't have to know anything about
 ;; tokens.
@@ -31,12 +31,12 @@
 
 
 
-(require parser-tools/yacc
-         parser-tools/lex)
+(require br-parser-tools/yacc
+         br-parser-tools/lex)
 
 (require (for-syntax racket/base
                      syntax/boundmap
-                     parser-tools/private-lex/token-syntax))
+                     br-parser-tools/private-lex/token-syntax))
 
 (provide cfg-parser)
 
@@ -797,7 +797,7 @@
 
 (module* test racket/base
   (require (submod "..")
-           parser-tools/lex
+           br-parser-tools/lex
            racket/block
            rackunit)
 

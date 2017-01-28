@@ -19,7 +19,7 @@
 ;; FIXME: abstract this so we can just call (rules ...) without
 ;; generating the whole module body.
 (define (rules-codegen stx 
-                       #:parser-provider-module [parser-provider-module 'parser-tools/yacc]
+                       #:parser-provider-module [parser-provider-module 'br-parser-tools/yacc]
                        #:parser-provider-form [parser-provider-form 'parser])
   (syntax-case stx ()
     [(_  r ...)
@@ -36,7 +36,7 @@
        (check-all-rules-no-duplicates! rules)
        (check-all-rules-satisfiable! rules)
        
-       ;; We flatten the rules so we can use the yacc-style ruleset that parser-tools
+       ;; We flatten the rules so we can use the yacc-style ruleset that br-parser-tools
        ;; supports.
        (define flattened-rules (flatten-rules rules))
        
@@ -86,7 +86,7 @@
                      [parser-form parser-provider-form])
          (quasisyntax/loc stx
            (begin             
-             (require parser-tools/lex
+             (require br-parser-tools/lex
                       parser-module
                       brag/codegen/runtime
                       brag/support

@@ -2,7 +2,7 @@
 (require brag/examples/simple-arithmetic-grammar
          brag/support
          racket/set
-         parser-tools/lex
+         br-parser-tools/lex
          racket/list
          rackunit)
 

@@ -5,7 +5,7 @@
 ;; Danny Yoo (dyoo@hashcollision.org)
 ;;
 ;; Intent: make it trivial to generate languages for Racket.  At the
-;; moment, I find it painful to use parser-tools.  This library is
+;; moment, I find it painful to use br-parser-tools.  This library is
 ;; meant to make it less agonizing.
 ;;
 ;; The intended use of this language is as follows:
@@ -25,11 +25,11 @@
 ;; 
 ;; You'll still need to do a little work, by providing a lexer that
 ;; defines what the uppercased tokens mean.  For example, you can
-;; use the parser-tools/lex lexer tools:
+;; use the br-parser-tools/lex lexer tools:
 ;;
 ;; (require brag/support
-;;          parser-tools/lex
-;;          parser-tools/lex-sre)
+;;          br-parser-tools/lex
+;;          br-parser-tools/lex-sre)
 ;;
 ;; (define tokenize
 ;;   (lexer-src-pos
@@ -91,6 +91,6 @@
          #%top-interaction)
 
 (define-syntax (rules stx)
-  (rules-codegen #:parser-provider-module 'brag/cfg-parser/cfg-parser ;; 'parser-tools/yacc 
+  (rules-codegen #:parser-provider-module 'brag/cfg-parser/cfg-parser ;; 'br-parser-tools/yacc 
                  #:parser-provider-form   'cfg-parser                 ;; 'parser
                  stx))
