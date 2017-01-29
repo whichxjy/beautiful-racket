@@ -1,20 +1,14 @@
 #lang br
-(require brag/support)
-(provide (all-defined-out))
+(require "lexer.rkt" brag/support racket/contract)
 
-(define basic-lexer
-  (lexer-srcloc
-   [(eof) eof]
-   [whitespace (token lexeme #:skip? #t)]
-   [(from/to "rem" "\n") (token 'REM lexeme)]
-   [(:or "print" "goto" "end" "+" ":") lexeme]
-   [(:+ numeric) (token 'INTEGER (string->number lexeme))]
-   [(:or (:seq (:+ numeric) ".")
-         (:seq (:* numeric) "." (:+ numeric)))
-    (token 'DECIMAL (string->number lexeme))]
-   [(from/to "\"" "\"") (token 'STRING (trim-ends  "\"" lexeme "\""))]))
-
-(define (make-tokenizer ip)
+(define (make-tokenizer ip [path #f])
   (port-count-lines! ip)
+  (file-path path)
   (define (next-token) (basic-lexer ip))
   next-token)
+
+(provide
+ (contract-out
+  [make-tokenizer
+   ((input-port?) (path?) . ->* .
+                  (-> (or/c eof-object? string? srcloc-token?)))]))
