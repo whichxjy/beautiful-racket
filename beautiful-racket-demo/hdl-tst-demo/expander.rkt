@@ -20,8 +20,7 @@
 (define (print-line output-filename cells)
   (with-output-to-file output-filename
     (λ () (printf (format "~a\n" (string-join cells "|" #:before-first "|" #:after-last "|"))))
-    #:mode 'text
-    #:exists 'append))
+    #:mode 'text #:exists 'append))
 
 (module+ test
   (require rackunit)
@@ -44,8 +43,7 @@
 
 (define-macro (tst-load-expr CHIPFILE-STRING)
   (set! chip-prefix (string-replace (syntax->datum #'CHIPFILE-STRING) ".hdl" ""))
-  (with-pattern
-      ([CHIPFILE.RKT (format-string "~a.rkt" #'CHIPFILE-STRING)])
+  (with-pattern ([CHIPFILE.RKT (format-string "~a.rkt" #'CHIPFILE-STRING)])
     #'(require CHIPFILE.RKT)))
 
 
@@ -53,10 +51,8 @@
   (with-shared-id (output-file output-filename)
     #'(begin
         (define output-filename OUTPUT-FILE-STRING)
-        (with-output-to-file output-filename
-          (λ () (printf ""))
-          #:mode 'text
-          #:exists 'replace))))
+        (with-output-to-file output-filename (λ () (printf ""))
+          #:mode 'text #:exists 'replace))))
 
 
 (define-macro (tst-compare-to-expr COMPARE-FILE-STRING)
@@ -67,9 +63,8 @@
 
 (define-macro (tst-output-list-expr (COL-NAME FORMAT-SPEC) ...)
   (with-shared-id (eval-result eval-chip output output-filename)
-    (with-pattern
-        ([(COL-ID ...) (suffix-ids #'(COL-NAME ...))]
-         [(CHIP-COL-ID ...) (prefix-ids chip-prefix "-" #'(COL-NAME ...))])
+    (with-pattern ([(COL-ID ...) (suffix-ids #'(COL-NAME ...) "")]
+                   [(CHIP-COL-ID ...) (prefix-ids chip-prefix "-" #'(COL-NAME ...))])
       #'(begin
           (define (output COL-ID ...)
             (print-line output-filename (map print-cell (list COL-ID ...) (list FORMAT-SPEC ...))))
