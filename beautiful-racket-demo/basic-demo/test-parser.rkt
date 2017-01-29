@@ -8,4 +8,4 @@
 here
   )
 
-(parse-tree (apply-tokenizer tokenize str))
+(parse-tree (apply-tokenizer-maker make-tokenizer str))
