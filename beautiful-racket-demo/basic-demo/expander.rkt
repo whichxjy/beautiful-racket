@@ -1,46 +1,54 @@
 #lang br/quicklang
+(provide (rename-out [b-module-begin #%module-begin])
+         (matching-identifiers-out #rx"^b-" (all-defined-out)))
 
 (define-macro (b-module-begin (b-program LINE ...))
   (with-pattern ([(LINE-NUM ...)
-                  (filter-stx-prop 'b-line-number (syntax-flatten #'(LINE ...)))]
-                 [(LINE-ID ...) (syntax-map (λ (stx) (prefix-id "line-" stx)) #'(LINE-NUM ...))])
+                  (filter-stx-prop 'b-line-number (stx-flatten #'(LINE ...)))]
+                 [(LINE-ID ...) (prefix-ids "line-" #'(LINE-NUM ...))])
     #'(#%module-begin
        LINE ...
-       (define line-table (apply hasheqv (append (list LINE-NUM LINE-ID) ...)))
+       (define line-table
+         (apply hasheqv (append (list LINE-NUM LINE-ID) ...)))
        (run line-table))))
-(provide (rename-out [b-module-begin #%module-begin]))
 
-(define-macro (b-line LINE-NUMBER STATEMENT)
+(define-macro (b-line LINE-NUMBER STATEMENT ...)
   (with-pattern ([LINE-NUMBER-ID (prefix-id "line-" #'LINE-NUMBER
                                             #:source #'LINE-NUMBER)]
                  [ORIG-LOC caller-stx])
-    (syntax/loc caller-stx (define (LINE-NUMBER-ID #:srcloc? [srcloc #f])
-                             (if srcloc
-                                 (syntax-srcloc #'ORIG-LOC)
-                                 STATEMENT)))))
+    (syntax/loc caller-stx
+      (define (LINE-NUMBER-ID #:srcloc? [srcloc #f])
+        (if srcloc
+            (syntax-srcloc #'ORIG-LOC)
+            (begin STATEMENT ...))))))
 
-(define (b-statement stmt) stmt)
-(define (b-rem str) #f)
-(define (b-print str) (displayln str))
-(define (b-goto line-number) line-number)
+(define b-rem void)
+(define (b-print [val ""]) (displayln val))
+(define (b-sum . nums) (apply + nums))
+(define (b-expr expr)
+  (if (integer? expr) (inexact->exact expr) expr))
 
-(define-exn end-program-signal exn:fail)
-(define (b-end) (raise-end-program-signal))
+(struct $program-end-signal ())
+(define (b-end) (raise ($program-end-signal)))
 
-(provide b-line b-statement b-rem b-print b-goto b-end)
+(struct $change-line-signal (num))
+(define (b-goto expr) (raise ($change-line-signal expr)))
 
-(define-exn-srcloc line-not-found exn:fail)
+(define-exn line-not-found exn:fail)
 
 (define (run line-table)
   (define line-vec (list->vector (sort (hash-keys line-table) <)))
-  (with-handlers ([end-program-signal? void])
+  (with-handlers ([$program-end-signal? void])
     (for/fold ([line-idx 0])
               ([i (in-naturals)])
       (unless (< line-idx (vector-length line-vec)) (b-end))
       (define line-num (vector-ref line-vec line-idx))
       (define line-proc (hash-ref line-table line-num))
-      (define line-result (line-proc))
-      (if (exact-positive-integer? line-result)
-          (or (vector-member line-result line-vec)
-              (raise-line-not-found (line-proc #:srcloc? #t)))
-          (add1 line-idx)))))
+      (with-handlers ([$change-line-signal?
+                       (λ (cls)
+                         (or
+                          (and (exact-positive-integer? ($change-line-signal-num cls))
+                               (vector-member ($change-line-signal-num cls) line-vec))
+                          (raise-line-not-found (line-proc #:srcloc? #t))))])
+        (line-proc)
+        (add1 line-idx)))))

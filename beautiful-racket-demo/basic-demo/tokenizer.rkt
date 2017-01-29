@@ -6,12 +6,15 @@
   (lexer-srcloc
    [(eof) eof]
    [whitespace (token lexeme #:skip? #t)]
-   [(from/to "rem" "\n") (token 'REM (string-downcase lexeme))]
-   [(:or "print" "goto" "end") (token (string-downcase lexeme)
-                                      (string-downcase lexeme))]
-   [(:+ numeric) (token 'NUMBER (string->number lexeme))]
+   [(from/to "rem" "\n") (token 'REM lexeme)]
+   [(:or "print" "goto" "end" "+" ":") lexeme]
+   [(:+ numeric) (token 'INTEGER (string->number lexeme))]
+   [(:or (:seq (:+ numeric) ".")
+         (:seq (:* numeric) "." (:+ numeric)))
+    (token 'DECIMAL (string->number lexeme))]
    [(from/to "\"" "\"") (token 'STRING (trim-ends  "\"" lexeme "\""))]))
 
-(define (tokenize ip)
+(define (make-tokenizer ip)
   (port-count-lines! ip)
-  (λ () (basic-lexer ip)))
+  (define (next-token) (basic-lexer ip))
+  next-token)

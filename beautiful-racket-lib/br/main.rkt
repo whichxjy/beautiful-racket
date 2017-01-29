@@ -1,9 +1,9 @@
 #lang racket/base
-(require racket/provide racket/list racket/string racket/format racket/match racket/port  racket/function
+(require racket/provide racket/list racket/string racket/format racket/match racket/port  racket/function racket/provide
          br/define br/syntax br/datum br/debug br/cond br/case br/exception br/list racket/class racket/vector br/reader-utils
          (for-syntax racket/base racket/syntax br/syntax br/debug br/define br/datum))
 (provide (all-from-out racket/base)
-         (all-from-out racket/list racket/string racket/format racket/match racket/port racket/function
+         (all-from-out racket/list racket/string racket/format racket/match racket/port racket/function racket/provide
                        br/syntax br/datum br/debug br/cond br/case br/exception br/list racket/class racket/vector br/define br/reader-utils)
          (for-syntax (all-from-out racket/base racket/syntax br/syntax br/debug br/datum))
          (for-syntax caller-stx with-shared-id)) ; from br/define

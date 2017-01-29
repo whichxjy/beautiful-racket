@@ -10,9 +10,14 @@
          br/private/syntax-flatten)
 (provide (all-defined-out)
          syntax-flatten
+         stx-map
          (rename-out [strip-context strip-bindings]
                      [replace-context replace-bindings]
-                     [stx-map syntax-map]))
+                     [stx-map syntax-map]
+                     [syntax-flatten stx-flatten]
+                     [prefix-id prefix-ids]
+                     [suffix-id suffix-ids]
+                     [infix-id infix-ids]))
 
 (module+ test
   (require rackunit))
