@@ -7,7 +7,7 @@
                      br-parser-tools/yacc
                      br-parser-tools/cfg-parser))
 
-@title{Parser Tools: @exec{lex} and @exec{yacc}-style Parsing}
+@title{Beautiful Racket Parser Tools: @exec{lex} and @exec{yacc}-style Parsing}
 
 @author["Scott Owens (99%)" "Matthew Butterick (1%)"]
 
