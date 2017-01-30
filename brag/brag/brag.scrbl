@@ -1053,5 +1053,9 @@ characters.}
 
 A string that is bounded by @racket[open] and @racket[close]. Matching is non-greedy (meaning, it stops at the first occurence of @racket[close]). The resulting lexeme includes @racket[open] and @racket[close]. To remove them, see @racket[trim-ends].}
 
+@defform[(from/stop-before open close)]{
+
+Like @racket[from/to], a string that is bounded by @racket[open] and @racket[close], except that @racket[close] is not included in the resulting lexeme. Matching is non-greedy (meaning, it stops at the first occurence of @racket[close]).}
+
 
 @close-eval[my-eval]
