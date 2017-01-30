@@ -974,6 +974,13 @@ DrRacket should highlight the offending locations in the source.}
 Repeatedly apply @racket[tokenizer-maker] to @racket[source], gathering the resulting tokens into a list. @racket[source] can be a string or an input port. Useful for testing or debugging a tokenizer.
 }
 
+@defproc[(apply-lexer [lexer procedure?] 
+                [source (or/c string?
+                                    input-port?)])
+         list?]{
+Repeatedly apply @racket[lexer] to @racket[source], gathering the resulting tokens into a list. @racket[source] can be a string or an input port. Useful for testing or debugging a lexer.
+}
+
 
 @defproc[(trim-ends [left-str string?]
 [str string?]

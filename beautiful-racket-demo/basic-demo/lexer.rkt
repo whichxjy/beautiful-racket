@@ -10,9 +10,12 @@
    [(from/to "rem" "\n") (token 'REM lexeme)]
    [(:or "print" "goto" "end" "+" ":") lexeme]
    [digits (token 'INTEGER (string->number lexeme))]
-   [(:or (:seq digits ".") (:seq (:? digits) "." digits))
+   [(:or (:seq (:? digits) "." digits)
+         (:seq digits "."))
     (token 'DECIMAL (string->number lexeme))]
-   [(from/to "\"" "\"")
-    (token 'STRING (trim-ends "\"" lexeme "\""))]))
+   [(:or (from/to "\"" "\"") (from/to "'" "'"))
+    (token 'STRING
+           (substring lexeme
+                      1 (sub1 (string-length lexeme))))]))
 
 (provide basic-lexer)
