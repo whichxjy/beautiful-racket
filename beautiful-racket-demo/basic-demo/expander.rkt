@@ -23,7 +23,7 @@
       (define (LINE-NUMBER-ID #:srcloc? [srcloc #f])
         (if srcloc
             (syntax-srcloc #'ORIG-LOC)
-            (begin STATEMENT ...))))))
+            (begin (void) STATEMENT ...))))))
 
 (define b-rem void)
 (define (b-print [val ""]) (displayln val))

@@ -1,7 +1,7 @@
 #lang brag
 b-program : b-line*
-b-line : @b-line-number b-statement (/":" b-statement)*
-b-line-number : INTEGER
+b-line : @b-line-number [b-statement] (/":" [b-statement])*
+b-line-number : LINE-NUMBER
 @b-statement : b-rem
              | b-print
              | b-goto

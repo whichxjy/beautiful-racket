@@ -1,5 +1,6 @@
 #lang basic-demo
 30 rem print "ignored"
+35
 50 print "never gets here"
 40 end
 60 print 'three' : print 1.0 + 3
