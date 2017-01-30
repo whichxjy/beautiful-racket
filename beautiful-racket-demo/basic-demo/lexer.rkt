@@ -3,7 +3,7 @@
 
 (define basic-lexer
   (lexer-srcloc
-   [(eof) eof]
+   [(eof) (return-without-srcloc eof)]
    [whitespace (token lexeme #:skip? #t)]
    [(from/to "rem" "\n") (token 'REM lexeme)]
    [(:or "print" "goto" "end" "+" ":") lexeme]
@@ -14,8 +14,11 @@
    [(from/to "\"" "\"")
     (token 'STRING (trim-ends "\"" lexeme "\""))]))
 
-(provide
- (contract-out
-  [basic-lexer
-   (input-port? . -> .
-                (or/c eof-object? string? srcloc-token?))]))
+(provide basic-lexer)
+
+
+(define (apply-lexer lexer str)
+(for/list ([t (in-port lexer (open-input-string str))])
+  t))
+
+(apply-lexer basic-lexer "10 rem")

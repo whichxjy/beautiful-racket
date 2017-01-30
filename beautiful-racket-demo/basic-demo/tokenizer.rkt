@@ -7,8 +7,4 @@
   (define (next-token) (basic-lexer ip))
   next-token)
 
-(provide
- (contract-out
-  [make-tokenizer
-   ((input-port?) (path?) . ->* .
-                  (-> (or/c eof-object? string? srcloc-token?)))]))
+(provide make-tokenizer)

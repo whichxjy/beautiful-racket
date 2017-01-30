@@ -167,14 +167,14 @@ are a few examples, using @racket[:] prefixed SRE syntax:
        @item{@racket[input-port] --- the input-port being
             processed (this is useful for matching input with multiple
             lexers).}
-       @item{@racket[(return-without-pos x)] is a function (continuation) that
-	immediately returns the value of @racket[x] from the lexer.  This useful
-	in a src-pos lexer to prevent the lexer from adding source
+       @item{@racket[(return-without-pos x)] and @racket[(return-without-srcloc x)] are functions (continuations) that
+	immediately return the value of @racket[x] from the lexer.  This useful
+	in a src-pos or src-loc lexer to prevent the lexer from adding source
 	information.  For example:
 
 	@racketblock[
 	(define get-token
-	  (lexer-src-pos
+	  (lexer-srcloc
 	  ...
 	  ((comment) (get-token input-port))
 	  ...))
@@ -182,7 +182,7 @@ are a few examples, using @racket[:] prefixed SRE syntax:
 
 	would wrap the source location information for the comment around
 	the value of the recursive call.  Using
-	@racket[((comment) (return-without-pos (get-token input-port)))] 
+	@racket[((comment) (return-without-srcloc (get-token input-port)))] 
 	will cause the value of the recursive call to be returned without
 	wrapping position around it.}
      ]
@@ -262,6 +262,7 @@ _action-result lexeme-srcloc)] instead of simply
 @defidform[lexeme-srcloc]
 @defidform[input-port]
 @defidform[return-without-pos]
+@defidform[return-without-srcloc]
 )]{
 
 Use of these names outside of a @racket[lexer] action is a syntax

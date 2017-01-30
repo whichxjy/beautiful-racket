@@ -46,7 +46,7 @@
                      [(eq? src-loc-style 'lexer-srcloc)
                       #`(let/ec ret
                           (syntax-parameterize 
-                              ([return-without-pos (make-rename-transformer #'ret)])
+                              ([return-without-srcloc (make-rename-transformer #'ret)])
                             (make-srcloc-token #,action lexeme-srcloc)))]
                      [else action])))
       (syntax/loc action
@@ -405,6 +405,6 @@
          ...
          (provide id ...))]))
   
-  (provide-lex-keyword start-pos end-pos lexeme lexeme-srcloc input-port return-without-pos)
+  (provide-lex-keyword start-pos end-pos lexeme lexeme-srcloc input-port return-without-pos return-without-srcloc)
 
   )
