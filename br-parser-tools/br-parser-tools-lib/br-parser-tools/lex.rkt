@@ -26,6 +26,7 @@
            
            ;; File path for highlighting errors while lexing
            file-path
+           lexer-file-path ;; alternate name
            
            ;; Lex abbrevs for unicode char sets.  See mzscheme manual section 3.4.
            any-char any-string nothing alphabetic lower-case upper-case title-case
@@ -334,6 +335,7 @@
       (do-match lb first-pos longest-match-action match)))
 
   (define file-path (make-parameter #f))
+  (define lexer-file-path file-path)
 
   (define (do-match ip first-pos action value)
     #;(printf "(action ~a ~a ~a ~a)\n" 

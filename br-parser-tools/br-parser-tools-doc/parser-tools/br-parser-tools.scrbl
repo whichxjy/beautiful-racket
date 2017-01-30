@@ -296,6 +296,10 @@ error.}
  raises a @racket[exn:fail:read] error.  Setting this parameter allows
  DrRacket, for example, to open the file containing the error.}
 
+@defparam[lexer-file-path source any/c]{
+                                        
+Alias for @racket[file-path].}
+
 
 @; ----------------------------------------
 
