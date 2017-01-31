@@ -13,7 +13,7 @@
  (lex "rem ignored\n")
  (list (srcloc-token (token 'REM "rem ignored")
                      (srcloc 'string #f #f 1 11))
-       (srcloc-token (token 'NEWLINE)
+       (srcloc-token (token 'NEWLINE "\n")
                      (srcloc 'string #f #f 12 1))))
 (check-equal?
  (lex "print")

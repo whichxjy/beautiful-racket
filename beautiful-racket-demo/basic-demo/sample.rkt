@@ -1,5 +1,5 @@
 #lang basic-demo
-30 rem print "ignored"
+30 rem print 'ignored'
 35
 50 print "never gets here"
 40 end
