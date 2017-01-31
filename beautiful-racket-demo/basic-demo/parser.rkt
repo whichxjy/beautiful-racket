@@ -8,5 +8,5 @@ b-end : /"end"
 b-print : /"print" [STRING | b-num-expr]
 b-goto : /"goto" b-num-expr
 b-num-expr : b-sum
-b-sum : (b-number /"+")* b-number
+b-sum : b-number (/"+" b-number)*
 @b-number : INTEGER | DECIMAL
