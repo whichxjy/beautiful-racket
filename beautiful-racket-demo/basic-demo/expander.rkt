@@ -20,8 +20,8 @@
                                   #:source #'LINE-NUMBER)]
        [ORIG-LOC caller-stx])
     (syntax/loc caller-stx
-      (define (LINE-NUMBER-ID #:srcloc? [srcloc #f])
-        (if srcloc
+      (define (LINE-NUMBER-ID #:srcloc? [loc #f])
+        (if loc
             (syntax-srcloc #'ORIG-LOC)
             (begin (void) STATEMENT ...))))))
 

@@ -7,7 +7,7 @@
   (lexer-srcloc
    [(eof) (return-without-srcloc eof)]
    [(from/stop-before "rem" "\n") (token 'REM lexeme)]
-   [(:seq "\n" digits) (token 'LINE-NUMBER (string->number (string-trim lexeme)))] 
+   ["\n" (token 'NEWLINE)]
    [whitespace (token lexeme #:skip? #t)]
    [(:or "print" "goto" "end" "+" ":") lexeme]
    [digits (token 'INTEGER (string->number lexeme))]
