@@ -28,7 +28,7 @@
 (define b-rem void)
 (define (b-print [val ""]) (displayln val))
 (define (b-sum . nums) (apply + nums))
-(define (b-expr expr)
+(define (b-num-expr expr)
   (if (integer? expr) (inexact->exact expr) expr))
 
 (struct $program-end-signal ())
