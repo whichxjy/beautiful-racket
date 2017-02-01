@@ -4,6 +4,7 @@
   (for-syntax racket/base
               syntax/parse
               br/private/syntax-flatten
+              br/private/generate-literals
               syntax/define))
 (provide (all-defined-out)
          (for-syntax with-shared-id))
@@ -20,25 +21,6 @@
     #'(begin
         (provide id)
         (define id lambda-exp))))
-
-
-(begin-for-syntax
-  (define (upcased-and-capitalized? sym)
-    (define str (symbol->string sym))
-    (and (equal? (string-upcase str) str)
-         (let ([first-letter (substring str 0 1)])
-           (or (and (string->number first-letter) #t) ; leading digit OK
-               (not (equal? (string-downcase first-letter) first-letter))))))
-
-  (define (generate-literals pats)
-    ;; generate literals for any symbols that are not ... or _ 
-    (define pattern-arg-prefixer "_")
-    (for*/list ([pat-arg (in-list (syntax-flatten pats))]
-                [pat-datum (in-value (syntax->datum pat-arg))]
-                #:when (and (symbol? pat-datum)
-                            (not (member pat-datum '(... _))) ; exempted from literality
-                            (not (upcased-and-capitalized? pat-datum))))
-               pat-arg)))
 
 (begin-for-syntax
   ;; expose the caller context within br:define macros with syntax parameter
@@ -173,12 +155,12 @@
     [(_ id:id leading-pat:expr ... else-pat:else-clause trailing-pat0:expr trailing-pat:expr ...)
      (raise-syntax-error 'define-macro-cases "`else` clause must be last" (syntax->datum #'id))]
     [(_ id:id (pat:expr . result-exprs:expr) ... else-clause:else-clause)
-     (with-syntax ([LITERALS (generate-literals #'(pat ...))])
+     (with-syntax ([(LITERAL ...) (generate-literals #'(pat ...))])
        #'(define-macro id
            (λ (stx)
              (define result
                (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
-                 (syntax-case stx LITERALS
+                 (syntax-case stx (LITERAL ...)
                    [pat . result-exprs] ...
                    else-clause)))
              (if (syntax? result)

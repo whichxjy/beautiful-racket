@@ -18,10 +18,9 @@
 (define-macro (forever . EXPRS)
   ;; todo: would be better with a syntax parameter
   (with-pattern
-   ([stop (datum->syntax #'EXPRS 'stop)])
-   #'(let/ec stop
-       (while #t
-              . EXPRS))))
+   ([STOP (datum->syntax #'EXPRS 'stop)])
+   #'(let/ec STOP
+       (while #t . EXPRS))))
 
 (module+ test
   (require rackunit)

@@ -9,7 +9,7 @@
 
 (define-macro (b-module-begin (b-program LINE ...))
   (with-pattern
-      ([((NAME NUM STMT ...) ...) #'(LINE ...)]
+      ([((b-line NUM STMT ...) ...) #'(LINE ...)]
        [(LINE-FUNC ...) (prefix-id "line-" #'(NUM ...))])
     #'(#%module-begin
        LINE ...

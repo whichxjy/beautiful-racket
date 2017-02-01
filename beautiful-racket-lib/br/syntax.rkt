@@ -1,5 +1,8 @@
 #lang racket/base
-(require (for-syntax racket/base racket/syntax)
+(require (for-syntax
+          racket/base
+          racket/syntax
+          br/private/generate-literals)
          racket/list
          racket/match
          racket/syntax
@@ -30,11 +33,12 @@
 
 (define-macro-cases with-pattern
   [(_ () . BODY) #'(begin . BODY)]
-  [(_ ([SID SID-STX] STX ...) . BODY)
-   #'(with-syntax ([SID SID-STX])
-       (with-pattern (STX ...) . BODY))]
-  [(_ ([SID] STX ...) . BODY) ; standalone id
-   #'(with-pattern ([SID SID] STX ...) . BODY)]) ; convert to previous case
+  [(_ ([PAT STX] PAT+STX ...) . BODY)
+   (with-syntax ([(LITERAL ...) (generate-literals #'PAT)])
+     #'(syntax-case STX (LITERAL ...)
+         [PAT (with-pattern (PAT+STX ...) (let () . BODY))]))]
+  [(_ ([ID] STX ...) . BODY) ; standalone id
+   #'(with-pattern ([ID ID] STX ...) . BODY)]) ; convert to previous case
 
 
 (define (check-syntax-list-argument caller-name arg)
