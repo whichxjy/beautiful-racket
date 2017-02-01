@@ -1,43 +1,28 @@
 #lang br/quicklang
-(provide (rename-out [b-module-begin #%module-begin])
-         (matching-identifiers-out #rx"^b-" (all-defined-out)))
+(provide (matching-identifiers-out #rx"^b-" (all-defined-out)))
+
+(define-macro (b-line NUM STATEMENT ...)
+  (with-pattern ([LINE-NUM (prefix-id "line-" #'NUM
+                                      #:source #'NUM)])
+    (syntax/loc caller-stx
+      (define (LINE-NUM) (void) STATEMENT ...))))
 
 (define-macro (b-module-begin (b-program LINE ...))
   (with-pattern
-      ([(LINE-NUM ...)
-        (filter-stx-prop 'b-line-number
-                         (stx-flatten #'(LINE ...)))]
-       [(LINE-ID ...) (prefix-ids "line-" #'(LINE-NUM ...))])
+      ([((NAME NUM STMT ...) ...) #'(LINE ...)]
+       [(LINE-FUNC ...) (prefix-id "line-" #'(NUM ...))])
     #'(#%module-begin
        LINE ...
        (define line-table
-         (apply hasheqv (append (list LINE-NUM LINE-ID) ...)))
+         (apply hasheqv (append (list NUM LINE-FUNC) ...)))
        (run line-table))))
-
-(define-macro (b-line LINE-NUMBER STATEMENT ...)
-  (with-pattern
-      ([LINE-NUMBER-ID (prefix-id "line-" #'LINE-NUMBER
-                                  #:source #'LINE-NUMBER)]
-       [ORIG-LOC caller-stx])
-    (syntax/loc caller-stx
-      (define (LINE-NUMBER-ID #:srcloc? [loc #f])
-        (if loc
-            (syntax-srcloc #'ORIG-LOC)
-            (begin (void) STATEMENT ...))))))
-
-(define b-rem void)
-(define (b-print [val ""]) (displayln val))
-(define (b-sum . nums) (apply + nums))
-(define (b-num-expr expr)
-  (if (integer? expr) (inexact->exact expr) expr))
+(provide (rename-out [b-module-begin #%module-begin]))
 
 (struct $program-end-signal ())
 (define (b-end) (raise ($program-end-signal)))
 
 (struct $change-line-signal (val))
 (define (b-goto expr) (raise ($change-line-signal expr)))
-
-(define-exn line-not-found exn:fail)
 
 (define (run line-table)
   (define line-vec
@@ -55,7 +40,13 @@
               (or
                (and (exact-positive-integer? clsv)
                     (vector-member clsv line-vec))
-               (raise-line-not-found
-                (line-proc #:srcloc? #t))))])
+               (error (format "error in line ~a: line ~a not found"
+                              line-num clsv))))])
         (line-proc)
         (add1 line-idx)))))
+
+(define b-rem void)
+(define (b-print [val ""]) (displayln val))
+(define (b-sum . nums) (apply + nums))
+(define (b-num-expr expr)
+  (if (integer? expr) (inexact->exact expr) expr))
