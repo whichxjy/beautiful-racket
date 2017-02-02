@@ -15,7 +15,7 @@
        LINE ...
        (define line-table
          (apply hasheqv (append (list NUM LINE-FUNC) ...)))
-       (run line-table))))
+       (void (run line-table)))))
 (provide (rename-out [b-module-begin #%module-begin]))
 
 (struct end-program-signal ())
