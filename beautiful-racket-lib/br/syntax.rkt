@@ -33,12 +33,12 @@
 
 (define-macro-cases with-pattern
   [(_ () . BODY) #'(begin . BODY)]
-  [(_ ([PAT STX] PAT+STX ...) . BODY)
-   (with-syntax ([(LITERAL ...) (generate-literals #'PAT)])
-     #'(syntax-case STX (LITERAL ...)
-         [PAT (with-pattern (PAT+STX ...) (let () . BODY))]))]
-  [(_ ([ID] STX ...) . BODY) ; standalone id
-   #'(with-pattern ([ID ID] STX ...) . BODY)]) ; convert to previous case
+  [(_ ([PAT0 STX0] PAT+STX ...) . BODY)
+   (with-syntax ([(LITERAL ...) (generate-literals #'PAT0)])
+     #'(syntax-case STX0 (LITERAL ...)
+         [PAT0 (with-pattern (PAT+STX ...) (let () . BODY))]
+         [else (raise-syntax-error 'with-pattern
+                                   (format "unable to match pattern ~a" 'PAT0) STX0)]))])
 
 
 (define (check-syntax-list-argument caller-name arg)
