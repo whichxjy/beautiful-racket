@@ -153,13 +153,16 @@
                                         (parse tokenizer))])))]))
              
              (define parse (make-rule-parser start-id))
-             (provide parse-tree)
-             (define (parse-tree x)
+             (provide parse-to-datum parse-tree)
+             
+             (define (parse-to-datum x)
                (let loop ([x (syntax->datum (parse x))])
                  (cond
                    [(list? x) (map loop x)]
                    [(char? x) (string x)]
-                   [else x])))))))]))
+                   [else x])))
+
+             (define parse-tree parse-to-datum)))))]))
 
 
 ;; Given a flattened rule, returns a syntax for the code that

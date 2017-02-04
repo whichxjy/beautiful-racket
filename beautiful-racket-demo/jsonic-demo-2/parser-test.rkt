@@ -2,21 +2,21 @@
 (require "parser.rkt" "tokenizer.rkt" brag/support rackunit)
 
 (check-equal?
- (parse-tree
+ (parse-to-datum
   (apply-tokenizer-maker make-tokenizer "// line commment\n"))
  '(jsonic-program))
 (check-equal?
- (parse-tree
+ (parse-to-datum
   (apply-tokenizer-maker make-tokenizer "@$ 42 $@"))
  '(jsonic-program (jsonic-sexp " 42 ")))
 (check-equal?
- (parse-tree
+ (parse-to-datum
   (apply-tokenizer-maker make-tokenizer "hi"))
  '(jsonic-program
    (jsonic-char "h")
    (jsonic-char "i")))
 (check-equal?
- (parse-tree
+ (parse-to-datum
   (apply-tokenizer-maker make-tokenizer
                          "hi\n// comment\n@$ 42 $@"))
  '(jsonic-program

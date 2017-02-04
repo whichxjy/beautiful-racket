@@ -8,4 +8,4 @@
 here
   )
 
-(parse-tree (apply-tokenizer-maker make-tokenizer str))
+(parse-to-datum (apply-tokenizer-maker make-tokenizer str))

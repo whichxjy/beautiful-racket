@@ -4,9 +4,9 @@
          rackunit)
 
 (check-equal?
- (parse-tree "\ty\n x\tz")
+ (parse-to-datum "\ty\n x\tz")
  '(start (tab "\t") (letter "y") (newline "\n") (space " ") (letter "x") (tab "\t") (letter "z")))
 
 (check-equal?
- (parse-tree "\t\n \t")
+ (parse-to-datum "\t\n \t")
  '(start (tab "\t") (newline "\n") (space " ") (tab "\t")))
