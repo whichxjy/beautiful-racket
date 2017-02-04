@@ -258,7 +258,7 @@ The error is cleared when the argument is capitalized, thus making it a wildcard
 (good-squarer +10i)
 ]
 
-You can use the special variable @racketfont{caller-stx} — available only within the body of @racket[define-macro] — to access the original input argument to the macro.
+You can use the special variable @racket[caller-stx] — available only within the body of @racket[define-macro] — to access the original input argument to the macro.
 
 @;{todo: fix this example. complains that caller-stx is unbound}
 @examples[#:eval my-eval
@@ -371,7 +371,7 @@ As with @racket[define-macro], wildcards in each syntax pattern must be @tt{CAPI
 
 }
 
-@defthing[caller-stx]{
+@defthing[caller-stx syntax?]{
 A special variable only available inside the body of @racket[define-macro] or @racket[define-macro-cases]. It contains the whole original syntax object that was passed to the macro.
                      }
 
@@ -449,10 +449,13 @@ Bind pattern variables within each @racket[stx-pattern] by matching the pattern 
 
 @defproc[
  (prefix-id
-  [prefix ... string?]
-  [id-or-ids (or/c identifier? (listof identifier?))])
+  [prefix string?] ...
+  [id-or-ids (or/c identifier? (listof identifier?))]
+  [#:source loc-stx syntax? #f])
   (or/c identifier? (listof identifier?))]{
 Create a new identifier within the lexical context of @racket[id-or-ids] with the same name, but prefixed with @racket[prefix]. If there's more than one @racket[prefix], they are concatenated. If @racket[id-or-ids] is a single identifier, then the function returns  a single identifier. Likewise, if it's a list of identifiers, the function returns a list of identifiers, all prefixed.
+
+The optional @racket[loc-stx] argument supplies the source location for the resulting identifier (or identifiers).
 
 @examples[#:eval my-eval
 (define-macro ($-define ID VAL)
