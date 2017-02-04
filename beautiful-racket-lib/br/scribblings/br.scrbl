@@ -4,7 +4,7 @@
 @(require scribble/eval)
 
 @(define my-eval (make-base-eval))
-@(my-eval `(require br racket/stxparam (for-syntax br)))
+@(my-eval `(require br racket/stxparam (for-syntax br br/define)))
 
 
 @title[#:style 'toc]{Beautiful Racket}
@@ -371,6 +371,18 @@ As with @racket[define-macro], wildcards in each syntax pattern must be @tt{CAPI
 
 }
 
+@defthing[caller-stx]{
+A special variable only available inside the body of @racket[define-macro] or @racket[define-macro-cases]. It contains the whole original syntax object that was passed to the macro.
+                     }
+
+
+@defform[
+(define-unhygienic-macro (id pat-arg ...)
+  result-expr ...+) 
+]{
+Like @racket[define-macro], but moves @racket[result-expr] into the lexical context of the calling site. For demonstration purposes only. If you really need to write an unhygienic macro, this is a rather blunt instrument.
+}
+  
 @section{Reader utilities}
 
 @defmodule[br/reader-utils]
@@ -434,8 +446,13 @@ Bind pattern variables within each @racket[stx-pattern] by matching the pattern 
 ]
 }
 
-@defform[(prefix-id prefix id)]{
-Create a new identifier within the lexical context of @racket[id] with the same name, but prefixed with @racket[prefix].
+
+@defproc[
+ (prefix-id
+  [prefix ... string?]
+  [id-or-ids (or/c identifier? (listof identifier?))])
+  (or/c identifier? (listof identifier?))]{
+Create a new identifier within the lexical context of @racket[id-or-ids] with the same name, but prefixed with @racket[prefix]. If there's more than one @racket[prefix], they are concatenated. If @racket[id-or-ids] is a single identifier, then the function returns  a single identifier. Likewise, if it's a list of identifiers, the function returns a list of identifiers, all prefixed.
 
 @examples[#:eval my-eval
 (define-macro ($-define ID VAL)
