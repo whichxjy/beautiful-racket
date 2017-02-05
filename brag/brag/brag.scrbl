@@ -179,20 +179,20 @@ drawing simple ASCII diagrams. So if we write something like this:
 It should generate the following picture:
 
 @nested[#:style 'inset]{
- @verbatim|{
-  XXXXXXXXX
-  XXXXXXXXX
-  XXXXXXXXX
-  XXX   
-  XXX   
-  XXX   
-  XXX   
-  XXX   
-  XXX   
-  XXXXXXXXX
-  XXXXXXXXX
-  XXXXXXXXX
-  }|}
+@verbatim|{
+XXXXXXXXX
+XXXXXXXXX
+XXXXXXXXX
+   XXX   
+   XXX   
+   XXX   
+   XXX   
+   XXX   
+   XXX   
+XXXXXXXXX
+XXXXXXXXX
+XXXXXXXXX
+}|}
 
 
 This makes sense in a casual way. But let's be more precise about how the language works.
@@ -741,7 +741,99 @@ More examples:
  }
  ]
 
+@subsection{Cuts & splices}
 
+By default, every matched token shows up in the parse tree. But sometimes that means that the parse tree ends up holding a bunch of tokens that were only needed to complete the parsing. Once they've served their purpose, it's sometimes useful to filter them out (for instance, to simplify the implementation of a language @tech{expander}). To help with this kind of housekeeping, @racket[brag] supports @emph{cuts} and @emph{splices}.
+
+A @deftech{cut} in a grammar will delete the item from the parse tree. A cut is notated by prefixing either the rule name (on the left) or a pattern element (on the right) with a slash @litchar{/}. 
+
+If the cut is applied to a rule name, the rule name disappears from the parse tree, but its node and its matched elements remain. If the cut is applied to a pattern element, that element disappears disappears from instances of that rule in the parse tree.
+
+For instance, consider this simple grammar for arithmetic expressions:
+
+@verbatim|{
+#lang brag
+expr : term ('+' term)*
+term : factor ('*' factor)*
+factor : ("0" | "1" | "2" | "3"
+       |  "4" | "5" | "6" | "7"
+       | "8"  | "9")+
+}|
+
+If we use it to parse this string:
+
+@verbatim|{1+2*3}|
+
+We get this parse tree:
+
+@racketblock['(expr (term (factor "1")) "+" (term (factor "2") "*" (factor "3")))]
+
+Suppose we felt the @litchar{+} and @litchar{*} characters were superfluous. We can add cuts to the grammar by prefixing these pattern elements with @litchar{/}:
+
+@verbatim|{
+#lang brag
+expr : term (/'+' term)*
+term : factor (/'*' factor)*
+factor : ("0" | "1" | "2" | "3"
+       |  "4" | "5" | "6" | "7"
+       | "8"  | "9")+
+}|
+
+Our parse tree changes accordingly:
+
+@racketblock['(expr (term (factor "1")) (term (factor "2") (factor "3")))]
+
+Now suppose we apply a cut on the rule name, @racket[factor]:
+
+@verbatim|{
+#lang brag
+expr : term (/'+' term)*
+term : factor (/'*' factor)*
+/factor : ("0" | "1" | "2" | "3"
+       |  "4" | "5" | "6" | "7"
+       | "8"  | "9")+
+}|
+
+This time, the rule name disppears from the parse tree, but its nodes and elements remain:
+
+@racketblock['(expr (term ("1")) (term ("2") ("3")))]
+
+A @deftech{splice} in a grammar will merge the elements of a node into the surrounding node. A splice is notated by prefixing either the rule name or a pattern element with an at sign @litchar|{@}|. 
+
+If the splice is applied to a pattern element, that element is spliced only within that rule. If the splice is applied to a rule name, then the splice is applied every time the rule appears in the grammar. 
+
+Suppose we remove the cut from the @racket[factor] rule name and instead splice the second appearance of @racket[factor] in the pattern for the @racket[term] rule:
+
+@verbatim|{
+#lang brag
+expr : term (/'+' term)*
+term : factor (/'*' @factor)*
+factor : ("0" | "1" | "2" | "3"
+       |  "4" | "5" | "6" | "7"
+       | "8"  | "9")+
+}|
+
+The @racket[factor] elements matching the first position of the @racket[term] pattern remain as they were, but the @racket[factor] element matching the second position is spliced into the surrounding node:
+
+@racketblock['(expr (term (factor "1")) (term (factor "2") "3"))]
+
+Finally, suppose we add a splice to the @racket[term] rule name:
+
+@verbatim|{
+#lang brag
+expr : term (/'+' term)*
+@term : factor (/'*' @factor)*
+factor : ("0" | "1" | "2" | "3"
+       |  "4" | "5" | "6" | "7"
+       | "8"  | "9")+
+}|
+
+This time, all the appearances of @racket[term] nodes in the parse tree will have their elements spliced into the surrounding nodes:
+
+@racketblock['(expr (factor "1") (factor "2") "3")]
+
+
+As a convenience, when a grammar element is spliced, or a rule name is cut, @racket[brag] preserves the rule name by adding it as a @tech{syntax property} to the residual elements, using the rule name as a key, and the original syntax object representing the rule name as the value.
 
 
 @subsection{Syntax errors}
