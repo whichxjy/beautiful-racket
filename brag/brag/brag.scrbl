@@ -745,9 +745,11 @@ More examples:
 
 By default, every matched token shows up in the parse tree. But sometimes that means that the parse tree ends up holding a bunch of tokens that were only needed to complete the parsing. Once they've served their purpose, it's sometimes useful to filter them out (for instance, to simplify the implementation of a language @tech{expander}). To help with this kind of housekeeping, @racket[brag] supports @emph{cuts} and @emph{splices}.
 
-A @deftech{cut} in a grammar will delete the item from the parse tree. A cut is notated by prefixing either the rule name (on the left) or a pattern element (on the right) with a slash @litchar{/}. 
+A @deftech{cut} in a grammar will delete an item from the parse tree. A cut is notated by prefixing either the left-hand rule name or a right-hand pattern element with a slash @litchar{/}. 
 
-If the cut is applied to a rule name, the rule name disappears from the parse tree, but its node and its matched elements remain. If the cut is applied to a pattern element, that element disappears disappears from instances of that rule in the parse tree.
+If the cut is applied to a left-hand rule name, the rule name is omitted from the parse tree, but its node and its matched elements remain. 
+
+If the cut is applied to a right-hand pattern element, then that element is omitted from every node matching that rule.
 
 For instance, consider this simple grammar for arithmetic expressions:
 
@@ -798,9 +800,11 @@ This time, the rule name disppears from the parse tree, but its nodes and elemen
 
 @racketblock['(expr (term ("1")) (term ("2") ("3")))]
 
-A @deftech{splice} in a grammar will merge the elements of a node into the surrounding node. A splice is notated by prefixing either the rule name or a pattern element with an at sign @litchar|{@}|. 
+A @deftech{splice} in a grammar will merge the elements of a node into the surrounding node. A splice is notated by prefixing either the left-hand rule name or a right-hand pattern element with an at sign @litchar|{@}|. 
 
-If the splice is applied to a pattern element, that element is spliced only within that rule. If the splice is applied to a rule name, then the splice is applied every time the rule appears in the grammar. 
+If the splice is applied to a left-hand rule name, then the splice is applied every time the rule is used in the parse tree. 
+
+If the splice is applied to a right-hand pattern element, that element is spliced only when it appears as part of the production for that rule. 
 
 Suppose we remove the cut from the @racket[factor] rule name and instead splice the second appearance of @racket[factor] in the pattern for the @racket[term] rule:
 
