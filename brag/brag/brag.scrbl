@@ -743,7 +743,7 @@ More examples:
 
 @subsection{Cuts & splices}
 
-By default, every matched token shows up in the parse tree. But sometimes that means that the parse tree ends up holding a bunch of tokens that were only needed to complete the parsing. Once they've served their purpose, it's sometimes useful to filter them out (for instance, to simplify the implementation of a language @tech{expander}). To help with this kind of housekeeping, @racket[brag] supports @emph{cuts} and @emph{splices}.
+By default, every matched token shows up in the parse tree. But sometimes that means that the parse tree ends up holding a bunch of tokens that were only needed to complete the parsing. Once they've served their purpose, it's sometimes useful to filter them out (for instance, to simplify the implementation of a language expander). To help with this kind of housekeeping, @racket[brag] supports @emph{cuts} and @emph{splices}.
 
 A @deftech{cut} in a grammar will delete an item from the parse tree. A cut is notated by prefixing either the left-hand rule name or a right-hand pattern element with a slash @litchar{/}. 
 
@@ -837,7 +837,7 @@ This time, all the appearances of @racket[term] nodes in the parse tree will hav
 @racketblock['(expr (factor "1") (factor "2") "3")]
 
 
-As a convenience, when a grammar element is spliced, or a rule name is cut, @racket[brag] preserves the rule name by adding it as a @tech{syntax property} to the residual elements, using the rule name as a key, and the original syntax object representing the rule name as the value.
+As a convenience, when a grammar element is spliced, or a rule name is cut, @racket[brag] preserves the rule name by adding it as a syntax property to the residual elements, using the rule name as a key, and the original syntax object representing the rule name as the value.
 
 
 @subsection{Syntax errors}
