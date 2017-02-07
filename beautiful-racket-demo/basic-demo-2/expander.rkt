@@ -1,15 +1,9 @@
 #lang br/quicklang
 (require "runtime.rkt"
          "run.rkt"
-         "line.rkt"
-         "expr.rkt"
-         "misc.rkt"
-         "flow.rkt")
+         "elements.rkt")
 (provide (rename-out [b-module-begin #%module-begin])
-         (all-from-out "line.rkt"
-                       "expr.rkt"
-                       "misc.rkt"
-                       "flow.rkt"))
+         (all-from-out "elements.rkt"))
 
 (define-macro (b-module-begin (b-program LINE ...))
   (with-pattern
