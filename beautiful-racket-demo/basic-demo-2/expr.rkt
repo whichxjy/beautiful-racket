@@ -24,5 +24,3 @@
 
 (define-macro (b-def ID VAR EXPR)
   #'(set! ID (λ (VAR) EXPR)))
-
-(define (b-func id val) (id val))

@@ -29,7 +29,7 @@ b-product : [b-product ("*"|"/"|"%"|"^")] b-value
 
 ;; values
 @b-value : b-id | b-number | /"(" b-expr /")" | b-not | b-func
-b-func : b-id /"(" b-expr /")"
+/b-func : b-id /"(" b-expr /")"
 b-not : /"!" b-value
 @b-id : ID
 @b-number : b-positive | b-negative
