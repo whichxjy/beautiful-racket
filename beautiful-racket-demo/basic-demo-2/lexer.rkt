@@ -9,7 +9,7 @@
    ["\n" (token 'NEWLINE lexeme)]
    [whitespace (token lexeme #:skip? #t)]
    [(from/stop-before "rem" "\n") (token 'REM lexeme)]
-   [(:or "print" "goto" "end" "+" ":" "gosub" "return" "let" "=") lexeme]
+   [(:or "print" "goto" "end" "+" ":" "gosub" "return" "let" "=" "-" "for" "to" "step" "next") lexeme]
    [(:seq (:+ alphabetic) (:* (:or alphabetic numeric))) (token 'ID (string->symbol lexeme))]
    [digits (token 'INTEGER (string->number lexeme))]
    [(:or (:seq (:? digits) "." digits)
