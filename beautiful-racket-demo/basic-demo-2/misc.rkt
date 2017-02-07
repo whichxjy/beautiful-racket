@@ -10,8 +10,8 @@
 (define-macro (b-let ID VAL) #'(set! ID VAL))
 
 (define-macro (b-input ID)
-  #'(set! ID (let* ([str (read-line)]
-                    [num (string->number (string-trim str))])
-               (or num str))))
+  #'(b-let ID (let* ([str (read-line)]
+                     [num (string->number (string-trim str))])
+                (or num str))))
 
 (define (b-end) (raise (end-program-signal)))
