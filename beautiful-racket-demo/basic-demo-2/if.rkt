@@ -1,5 +1,5 @@
 #lang br
-(require "goto.rkt")
+(require "go.rkt")
 (provide b-if b-comp-expr b-logic-expr)
 
 ;; b-if : /"if" b-expr /"then" b-expr [/"else" b-expr]

@@ -1,5 +1,5 @@
 #lang br
-(require "let.rkt" "line.rkt")
+(require "misc.rkt" "line.rkt")
 (provide b-for b-next)
 
 (define thunk-table (make-hasheq))

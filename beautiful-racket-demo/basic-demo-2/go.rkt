@@ -1,6 +1,9 @@
 #lang br
-(require "goto.rkt" "line.rkt")
-(provide b-gosub b-return)
+(require "structs.rkt" "line.rkt")
+(provide b-goto b-gosub b-return)
+
+(define (b-goto num-expr)
+  (raise (change-line-signal num-expr)))
 
 (define return-stack empty)
 
