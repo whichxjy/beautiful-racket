@@ -1,5 +1,5 @@
 #lang br
-(require "struct.rkt")
+(require "structs.rkt")
 (provide (all-defined-out))
 
 (define-macro (b-line NUM STATEMENT ...)

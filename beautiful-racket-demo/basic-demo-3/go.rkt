@@ -1,5 +1,5 @@
 #lang br
-(require "struct.rkt" "line.rkt")
+(require "structs.rkt" "line.rkt")
 (provide b-goto b-gosub b-return)
 
 (define (b-goto num-expr)
