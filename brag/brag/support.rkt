@@ -73,15 +73,27 @@
                          in))
   (define token-producer (tokenize input-port))
   (for/list ([token (in-producer token-producer (λ(tok)
-                                                  (eq? eof (cond
-                                                             ;; position-tokens are produced by lexer-src-pos,
-                                                             [(position-token? tok)
-                                                              (position-token-token tok)]
-                                                             ;; and srcloc-tokens by lexer-srcloc
-                                                             [(srcloc-token? tok)
-                                                              (srcloc-token-token tok)]
-                                                             [else tok]))))])
+                                                  (define val (cond
+                                                                ;; position-tokens are produced by lexer-src-pos,
+                                                                [(position-token? tok)
+                                                                 (position-token-token tok)]
+                                                                ;; and srcloc-tokens by lexer-srcloc
+                                                                [(srcloc-token? tok)
+                                                                 (srcloc-token-token tok)]
+                                                                [else tok]))
+                                                  (or (eof-object? val) (void? val))))])
     token))
+
+(provide apply-colorer)
+(define (apply-colorer colorer port-or-string)
+  (define p (if (string? port-or-string)
+                (open-input-string port-or-string)
+                port-or-string))
+  (let loop ([acc null])
+    (define-values (lex cat shape start end) (colorer p))
+    (if (or (eq? 'eof cat) (eof-object? lex))
+        (reverse acc)
+        (loop (cons (list lex cat shape start end) acc)))))
 
 (provide trim-ends)
 (define (trim-ends left lexeme right)
