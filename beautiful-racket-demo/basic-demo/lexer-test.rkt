@@ -17,19 +17,27 @@
                      (srcloc 'string #f #f 12 1))))
 (check-equal?
  (lex "print")
- (list (srcloc-token "print"
+ (list (srcloc-token (token "print" "print")
                      (srcloc 'string #f #f 1 5))))
 (check-equal?
  (lex "goto")
- (list (srcloc-token "goto"
+ (list (srcloc-token (token "goto" "goto")
                      (srcloc 'string #f #f 1 4))))
 (check-equal?
  (lex "end")
- (list (srcloc-token "end"
+ (list (srcloc-token (token "end" "end")
                      (srcloc 'string #f #f 1 3))))
 (check-equal?
  (lex "+")
- (list (srcloc-token "+"
+ (list (srcloc-token (token "+" "+")
+                     (srcloc 'string #f #f 1 1))))
+(check-equal?
+ (lex ";")
+ (list (srcloc-token (token ";" ";")
+                     (srcloc 'string #f #f 1 1))))
+(check-equal?
+ (lex ":")
+ (list (srcloc-token (token ":" ":")
                      (srcloc 'string #f #f 1 1))))
 (check-equal?
  (lex "12")
