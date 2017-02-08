@@ -1,11 +1,19 @@
 #lang br/quicklang
 (require "parser.rkt" "tokenizer.rkt")
 
+(module+ reader
+  (provide read-syntax get-info))
+
 (define (read-syntax path port)
   (define parse-tree (parse path (make-tokenizer port path)))
   (strip-bindings
    #`(module basic-mod basic-demo-2/expander
        #,parse-tree)))
 
-(module+ reader
-  (provide read-syntax))
+(define (get-info port mod line col pos)
+    (define (handle-query key default)
+      (case key
+        [(color-lexer)
+         (dynamic-require 'basic-demo-2/colorer 'color-basic)]
+        [else default]))
+    handle-query)

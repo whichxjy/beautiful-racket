@@ -10,7 +10,7 @@
    [whitespace (token lexeme #:skip? #t)]
    [(from/stop-before "rem" "\n") (token 'REM lexeme)]
    [(:or "print" "goto" "end" "+" ":" "gosub" "return" "let" "=" "-" "for" "to" "step" "next"
-         "if" "then" "else" "and" "or" "<" ">" "*" "/" "(" ")" "^" "!" "%" "input" ";" "def") lexeme]
+         "if" "then" "else" "and" "or" "<" ">" "*" "/" "(" ")" "^" "!" "%" "input" ";" "def") (token lexeme lexeme)]
    [(:seq (:+ alphabetic) (:* (:or alphabetic numeric "$"))) (token 'ID (string->symbol lexeme))]
    [digits (token 'INTEGER (string->number lexeme))]
    [(:or (:seq (:? digits) "." digits)
