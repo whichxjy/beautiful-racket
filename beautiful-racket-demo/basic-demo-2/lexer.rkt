@@ -3,6 +3,9 @@
 
 (define-lex-abbrev digits (:+ (char-set "0123456789")))
 
+(define (handle-tok-error tok-ok? tok-name tok-value start-pos end-pos)
+  (token 'ERROR tok-value))
+
 (define basic-lexer
   (lexer-srcloc
    [(eof) (return-without-srcloc eof)]
