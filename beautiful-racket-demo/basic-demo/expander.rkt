@@ -46,7 +46,8 @@
         (add1 line-idx)))))
 
 (define (b-rem val) (void))
-(define (b-print [val ""]) (displayln val))
-(define (b-sum . nums) (apply + nums))
-(define (b-num-expr expr)
+(define (b-print . vals)
+  (displayln (string-append* (map ~a vals))))
+(define (b-sum . vals) (apply + vals))
+(define (b-expr expr)
   (if (integer? expr) (inexact->exact expr) expr))
