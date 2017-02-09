@@ -5,7 +5,7 @@
 (define-macro (b-module-begin (b-program LINE ...))
   (with-pattern
       ([(LINE-NUM ...)
-        (filter-stx-prop 'b-line-number
+        (filter-stx-prop 'b-line-num
                          (stx-flatten #'(LINE ...)))]
        [(LINE-ID ...) (prefix-ids "line-" #'(LINE-NUM ...))])
     #'(#%module-begin
