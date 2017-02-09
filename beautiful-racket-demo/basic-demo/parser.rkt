@@ -1,8 +1,8 @@
 #lang brag
 b-program : [b-line] (/NEWLINE [b-line])*
-b-line : b-line-number [b-statement] (/":" [b-statement])*
+b-line : b-line-number [b-statement] (/":" [b-statement])* [b-rem]
 @b-line-number : INTEGER
-@b-statement : b-rem | b-end | b-print | b-goto
+@b-statement : b-end | b-print | b-goto
 b-rem : REM
 b-end : /"end"
 b-print : /"print" [b-printable] (/";" [b-printable])*

@@ -1,13 +1,13 @@
 #lang brag
 ;; program & lines
 b-program : [b-line] (/NEWLINE [b-line])*
-b-line : b-line-number [b-statement] (/":" [b-statement])*
+b-line : b-line-number [b-statement] (/":" [b-statement])* [b-rem]
 @b-line-number : INTEGER
+b-rem : REM
 
 ;; statements
-@b-statement : b-rem | b-end | b-print | b-let | b-input | b-def
+@b-statement : b-end | b-print | b-let | b-input | b-def
              | b-goto | b-gosub | b-return | b-for | b-next | b-if
-b-rem : REM
 b-end : /"end"
 b-print : /"print" [STRING | b-expr] (/";" [STRING | b-expr])*
 b-goto : /"goto" b-expr
