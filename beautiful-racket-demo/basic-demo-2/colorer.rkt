@@ -24,4 +24,4 @@
                  ["(" '(parenthesis |(|)]
                  [")" '(parenthesis |)|)]
                  [else '(no-color #f)])]))
-     (values (or val "") cat paren pos (+ pos span))]))
+     (values val cat paren pos (+ pos span))]))
