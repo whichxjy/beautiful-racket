@@ -7,7 +7,7 @@
                      br-parser-tools/yacc
                      br-parser-tools/cfg-parser))
 
-@title{Beautiful Racket Parser Tools: @exec{lex} and @exec{yacc}-style Parsing}
+@title{Parser Tools: @exec{lex} and @exec{yacc}-style Parsing (Beautiful Racket edition)}
 
 @author["Scott Owens (99%)" "Matthew Butterick (1%)"]
 
@@ -187,7 +187,7 @@ are a few examples, using @racket[:] prefixed SRE syntax:
 	wrapping position around it.}
      ]
 
-     The lexer raises an exception @racket[(exn:read)] if none of the
+     The lexer raises an exception @racket[exn:fail:read] if none of the
      regular expressions match the input.  Hint: If @racket[(any-char
      _custom-error-behavior)] is the last rule, then there will always
      be a match, and @racket[_custom-error-behavior] is executed to
