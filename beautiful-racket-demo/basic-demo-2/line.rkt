@@ -1,6 +1,6 @@
 #lang br
 (require "struct.rkt")
-(provide (all-defined-out))
+(provide b-line raise-line-error)
 
 (define-macro (b-line NUM STATEMENT ...)
   (with-pattern ([LINE-NUM (prefix-id "line-" #'NUM
@@ -13,9 +13,10 @@
           (when msg (raise-line-error msg))
           STATEMENT ...)))))
 
+(define (raise-line-error error-msg)
+  (raise (line-error error-msg)))
+
 (define (handle-line-error num le)
   (error (format "error in line ~a: ~a"
                  num (line-error-msg le))))
 
-(define (raise-line-error str)
-  (raise (line-error str)))
