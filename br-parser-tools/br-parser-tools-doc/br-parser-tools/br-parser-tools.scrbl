@@ -187,7 +187,7 @@ are a few examples, using @racket[:] prefixed SRE syntax:
 	wrapping position around it.}
      ]
 
-     The lexer raises an exception @racket[exn:fail:read] if none of the
+     The lexer raises an @racket[exn:fail:read] exception if none of the
      regular expressions match the input.  Hint: If @racket[(any-char
      _custom-error-behavior)] is the last rule, then there will always
      be a match, and @racket[_custom-error-behavior] is executed to
