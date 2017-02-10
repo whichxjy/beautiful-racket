@@ -5,5 +5,4 @@
 
 (struct end-program-signal ())
 (struct change-line-signal (val))
-
 (struct line-error (msg))

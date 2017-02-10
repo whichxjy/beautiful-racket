@@ -22,7 +22,7 @@
     (remove-duplicates
      (for/list ([var-stx (in-list (syntax-flatten stx))]
                 #:when (syntax-property var-stx 'b-id))
-               var-stx)
+       var-stx)
      #:key syntax->datum)))
 
 (define (run line-table)

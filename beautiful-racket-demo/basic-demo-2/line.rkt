@@ -7,11 +7,15 @@
                                       #:source #'NUM)])
     (syntax/loc caller-stx
       (define (LINE-NUM #:error [msg #f])
-        (with-handlers ([line-error? (λ (le) (handle-line-error NUM le))])
+        (with-handlers
+            ([line-error?
+              (λ (le) (handle-line-error NUM le))])
           (when msg (raise-line-error msg))
           STATEMENT ...)))))
 
 (define (handle-line-error num le)
-  (error (format "error in line ~a: ~a" num (line-error-msg le))))
+  (error (format "error in line ~a: ~a"
+                 num (line-error-msg le))))
 
-(define (raise-line-error str) (raise (line-error str)))
+(define (raise-line-error str)
+  (raise (line-error str)))
