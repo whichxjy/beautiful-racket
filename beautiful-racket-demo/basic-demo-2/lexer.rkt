@@ -3,8 +3,7 @@
 
 (define-lex-abbrev digits (:+ (char-set "0123456789")))
 
-(define (handle-tok-error tok-ok? tok-name tok-value start-pos end-pos)
-  (token 'ERROR tok-value))
+(define-lex-abbrev reserved-terms (:or "print" "goto" "end" "+" ":" "let" "=" "gosub" "return" "-" "for" "to" "step" "next" "if" "then" "else" "and" "or" "<" ">" "*" "/" "(" ")" "^" "!" "%" "input" ";" "def"))
 
 (define basic-lexer
   (lexer-srcloc
@@ -12,9 +11,9 @@
    ["\n" (token 'NEWLINE lexeme)]
    [whitespace (token lexeme #:skip? #t)]
    [(from/stop-before "rem" "\n") (token 'REM lexeme)]
-   [(:or "print" "goto" "end" "+" ":" "gosub" "return" "let" "=" "-" "for" "to" "step" "next"
-         "if" "then" "else" "and" "or" "<" ">" "*" "/" "(" ")" "^" "!" "%" "input" ";" "def") (token lexeme lexeme)]
-   [(:seq (:+ alphabetic) (:* (:or alphabetic numeric "$"))) (token 'ID (string->symbol lexeme))]
+   [reserved-terms (token lexeme lexeme)]
+   [(:seq alphabetic (:* (:or alphabetic numeric "$")))
+    (token 'ID (string->symbol lexeme))]
    [digits (token 'INTEGER (string->number lexeme))]
    [(:or (:seq (:? digits) "." digits)
          (:seq digits "."))
