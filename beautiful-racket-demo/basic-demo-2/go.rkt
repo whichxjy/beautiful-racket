@@ -1,6 +1,8 @@
 #lang br
 (require "struct.rkt" "line.rkt" "misc.rkt")
-(provide b-goto b-gosub b-return b-for b-next)
+(provide b-end b-goto b-gosub b-return b-for b-next)
+
+(define (b-end) (raise (end-program-signal)))
 
 (define (b-goto num-expr)
   (raise (change-line-signal num-expr)))

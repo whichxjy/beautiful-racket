@@ -7,9 +7,9 @@
   (with-pattern
       ([((b-line NUM STMT ...) ...) #'(LINE ...)]
        [(LINE-FUNC ...) (prefix-id "line-" #'(NUM ...))]
-       [(VAR-NAME ...) (find-unique-var-names #'(LINE ...))])
+       [(VAR-ID ...) (find-unique-var-ids #'(LINE ...))])
     #'(#%module-begin
-       (define VAR-NAME 0) ...
+       (define VAR-ID 0) ...
        LINE ...
        (define line-table
          (apply hasheqv (append (list NUM LINE-FUNC) ...)))
@@ -17,10 +17,10 @@
 
 (begin-for-syntax
   (require racket/list)
-  (define (find-unique-var-names stx)
+  (define (find-unique-var-ids line-stxs)
     (remove-duplicates
-     (for/list ([var-stx (in-list (syntax-flatten stx))]
-                #:when (syntax-property var-stx 'b-id))
-       var-stx)
+     (for/list ([stx (in-list (syntax-flatten line-stxs))]
+                #:when (syntax-property stx 'b-id))
+       stx)
      #:key syntax->datum)))
 

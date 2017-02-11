@@ -4,7 +4,7 @@ b-program : [b-line] (/NEWLINE [b-line])*
 b-line : b-line-num [b-statement] (/":" [b-statement])* [b-rem]
 @b-line-num : INTEGER
 b-rem : REM
-@b-statement :  b-rem | b-end | b-print | b-goto  | b-let
+@b-statement : b-end | b-print | b-goto  | b-let
 | b-input | b-def | b-gosub
 | b-return | b-for | b-next | b-if
 b-end : /"end"
