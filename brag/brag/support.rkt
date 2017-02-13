@@ -63,7 +63,7 @@
 (provide apply-lexer)
 (define (apply-lexer lexer val)
   (for/list ([t (in-port lexer (if (string? val) (open-input-string val) val))])
-    t))
+            t))
 
 (provide apply-tokenizer-maker
          (rename-out [apply-tokenizer-maker apply-tokenizer]))
@@ -82,7 +82,7 @@
                                                                  (srcloc-token-token tok)]
                                                                 [else tok]))
                                                   (or (eof-object? val) (void? val))))])
-    token))
+            token))
 
 (provide apply-colorer)
 (define (apply-colorer colorer port-or-string)
