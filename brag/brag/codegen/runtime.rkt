@@ -187,7 +187,7 @@ This would be the place to check a syntax property for hiding.
    ;; each `component-list` is a list that's either empty, or has a single component-stx object
    ;; inside `component-stx` is a name followed by subcomponents
    (for*/list ([component-list (in-list component-lists)]
-               [component-stx (in-list component-list)]) ; this has the effect of omitting empty component-lists
+               [component-stx (in-list component-list)]) ; this has the effect of omitting any empty `component-list`
               (list
                (cond
                  [(eq? (syntax-property component-stx 'hide-or-splice) 'hide)

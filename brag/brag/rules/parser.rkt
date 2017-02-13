@@ -96,7 +96,7 @@
                       #f)
               $2))]
      
-     [(RULE_HEAD_HIDDEN pattern) ; bang indicates hiding
+     [(RULE_HEAD_HIDDEN pattern) ; slash indicates hiding
       (begin
         (define trimmed (cadr (regexp-match (pregexp (format "~a(\\S+)\\s*:$" hide-char)) $1)))
         (rule (position->pos $1-start-pos)
@@ -111,7 +111,7 @@
                       ''hide) ; symbol needs to be double quoted in this case
               $2))]
      
-     [(RULE_HEAD_SPLICED pattern) ;atsign indicates splicinh
+     [(RULE_HEAD_SPLICED pattern) ; atsign indicates splicing
       (begin
         (define trimmed (cadr (regexp-match (pregexp (format "~a(\\S+)\\s*:$" splice-char)) $1)))
         (rule (position->pos $1-start-pos)
