@@ -44,17 +44,17 @@
     ;; derived rules.
     (define (lift-nonprimitive-pattern a-pat)
       (cond
-       [(primitive-pattern? a-pat)
-        (values '() (linearize-primitive-pattern a-pat))]
-       [(hash-has-key? ht (pattern->hash-key a-pat))
-        (values '() (list (hash-ref ht (pattern->hash-key a-pat))))]
-       [else
-        (define head (syntax-case a-pat () [(head rest ...) #'head]))
-        (define new-name (datum->syntax #f (fresh-name) a-pat))
-        (define new-inferred-id (datum->syntax #f `(inferred-id  ,new-name ,head) a-pat))
-        (hash-set! ht (pattern->hash-key a-pat) new-inferred-id)
-        (values (recur #`(rule #,new-name #,a-pat) head)
-                (list new-inferred-id))]))
+        [(primitive-pattern? a-pat)
+         (values '() (linearize-primitive-pattern a-pat))]
+        [(hash-has-key? ht (pattern->hash-key a-pat))
+         (values '() (list (hash-ref ht (pattern->hash-key a-pat))))]
+        [else
+         (define head (syntax-case a-pat () [(head rest ...) #'head]))
+         (define new-name (datum->syntax #f (fresh-name) a-pat))
+         (define new-inferred-id (datum->syntax #f `(inferred-id  ,new-name ,head) a-pat))
+         (hash-set! ht (pattern->hash-key a-pat) new-inferred-id)
+         (values (recur #`(rule #,new-name #,a-pat) head)
+                 (list new-inferred-id))]))
 
     (define (lift-nonprimitive-patterns pats)
       (define-values (rules patterns)
@@ -105,12 +105,12 @@
               (with-syntax ([(sub-pat ...) new-sub-pats])
                 (cons (cond [(= (syntax-e #'min) 0)
                              #`(head origin name
-                                          [(inferred-id name repeat) sub-pat ...]
-                                          [])]
+                                     [(inferred-id name repeat) sub-pat ...]
+                                     [])]
                             [(= (syntax-e #'min) 1)
                              #`(head origin name
-                                          [(inferred-id name repeat) sub-pat ...]
-                                          [sub-pat ...])])
+                                     [(inferred-id name repeat) sub-pat ...]
+                                     [sub-pat ...])])
                       inferred-rules)))]
 
            [(maybe sub-pat)
@@ -133,8 +133,22 @@
 
 
 ;; Given a pattern, return a key appropriate for a hash.
+;;
+;; In the `ragg` days this used `syntax->datum` only.
+;; The problem is that with cuts & splices in the mix, it creates ambiguity:
+;; e.g., the pattern (/"," foo)* and ("," foo)* differ only in the 'hide syntax property
+;; so `syntax->datum` does not capture their differences.
+;; That means they produced the same hash key,
+;; which meant they produced the same inferred pattern. Which is wrong.
+;; So we adjust the key to take account of the 'hide property
+;; by "lifting" it into the datum with cons.
+;; Then the pattern-inference process treats them separately.
 (define (pattern->hash-key a-pat)
-  (syntax->datum a-pat))
+  (let loop ([x a-pat])
+    (let ([maybe-stx-list (syntax->list x)])
+      (if maybe-stx-list
+          (cons (syntax-property x 'hide) (map loop maybe-stx-list))
+          (syntax->datum x)))))
 
 
 ;; Returns true if the pattern looks primitive
