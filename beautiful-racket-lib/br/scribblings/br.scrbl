@@ -489,6 +489,23 @@ source-location information and properties. An alias for @racket[strip-context].
 Uses the bindings from @racket[stx-source] to replace the bindings of all parts of @racket[stx-target], while preserving source-location
 information and properties. An alias for @racket[replace-context].}
 
+
+@defproc[
+ (stx-flatten [stx syntax?])
+  (listof syntax?)]{
+
+Converts a hierarchical syntax object into a flat list of component syntax objects, discarding all the intervening structure. Useful when you need to get at the ``bottommost'' syntax objects.
+
+@examples[#:eval my-eval
+(define my-stx #'(let ([x 42]
+                    [y 25])
+                (define (f z) (* x y z))
+                (displayln (f 11))))
+(map syntax->datum (stx-flatten my-stx))
+]
+
+}
+
 @section{Indentation}
 
 @defmodule[br/indent]
