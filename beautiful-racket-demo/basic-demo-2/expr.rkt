@@ -22,8 +22,3 @@
 (define-macro-cases b-expt
   [(_ VAL) #'VAL]
   [(_ LEFT "^" RIGHT) #'(expt LEFT RIGHT)])
-
-(define (b-not expr) (if (zero? expr) 1 0))
-
-(define-macro (b-def ID VAR EXPR)
-  #'(set! ID (λ (VAR) EXPR)))
