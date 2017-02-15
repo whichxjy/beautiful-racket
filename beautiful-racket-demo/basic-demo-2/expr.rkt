@@ -12,8 +12,12 @@
   [(_ VAL) #'VAL]
   [(_ LEFT "*" RIGHT) #'(* LEFT RIGHT)]
   [(_ LEFT "/" RIGHT) #'(/ LEFT RIGHT 1.0)]
-  [(_ LEFT "^" RIGHT) #'(expt LEFT RIGHT)]
-  [(_ LEFT "%" RIGHT) #'(modulo LEFT RIGHT)])
+  [(_ LEFT "mod" RIGHT) #'(modulo LEFT RIGHT)])
+
+;; b-expt : [b-expt "^"] b-value
+(define-macro-cases b-expt
+  [(_ VAL) #'VAL]
+  [(_ LEFT "^" RIGHT) #'(expt LEFT RIGHT)])
 
 (define (b-expr expr)
   (if (integer? expr) (inexact->exact expr) expr))

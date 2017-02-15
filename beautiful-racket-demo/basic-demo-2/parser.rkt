@@ -25,7 +25,8 @@ b-expr : b-logic-expr
 b-logic-expr : [b-logic-expr ("and" | "or")] b-comp-expr
 b-comp-expr : [b-comp-expr ("=" | "<" | ">")] b-sum
 b-sum : [b-sum ("+"|"-")] b-product
-b-product : [b-product ("*"|"/"|"%"|"^")] b-value
+b-product : [b-product ("*"|"/"|"mod")] b-expt
+b-expt : [b-expt "^"] b-value
 
 ;; values
 @b-value : b-id | b-number | /"(" b-expr /")" | b-not | b-func
