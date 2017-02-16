@@ -12,7 +12,7 @@ b-print : /"print" [b-printable] (/";" [b-printable])*
 @b-printable : STRING | b-expr
 b-goto : /"goto" b-expr
 b-let : [/"let"] b-id /"=" (STRING | b-expr)
-b-if : /"if" b-expr /"then" b-expr [/"else" b-expr]
+b-if : /"if" b-expr /"then" (b-statement | b-expr) [/"else" (b-statement | b-expr)]
 b-gosub : /"gosub" b-expr
 b-return : /"return"
 b-input : /"input" b-id
@@ -22,8 +22,8 @@ b-for : /"for" b-id /"=" b-expr /"to" b-expr [/"step" b-expr]
 b-next : /"next" [b-id]
 
 b-expr : b-logic-expr 
-b-logic-expr : [b-logic-expr ("and" | "or")] b-comp-expr
-b-comp-expr : [b-comp-expr ("=" | "<" | ">")] b-sum
+b-logic-expr : [b-logic-expr ("and"|"or"|"not")] b-comp-expr
+b-comp-expr : [b-comp-expr ("="|"<"|">"|"<>")] b-sum
 b-sum : [b-sum ("+"|"-")] b-product
 b-product : [b-product ("*"|"/"|"mod")] b-neg
 b-neg : ["-"] b-expt

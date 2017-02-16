@@ -26,10 +26,22 @@
   (require rackunit))
 
 
-(define-macro (syntax-match STX-ARG [(syntax PATTERN) BODY ...] ...)
-  #'(syntax-case STX-ARG ()
-      [PATTERN BODY ...] ...))
-
+(define-macro-cases case-pattern
+  [(_ STX-ARG
+      [PAT . BODY]
+      ...
+      [else . ELSEBODY]) (with-syntax ([(LITERAL ...) (generate-literals #'(PAT ...))])
+                           #'(syntax-case STX-ARG (LITERAL ...)
+                               [PAT . BODY]
+                               ...
+                               [else . ELSEBODY]))]
+  [(_ STX-ARG
+      PAT+BODY
+      ...) #'(case-pattern STX-ARG
+                           PAT+BODY
+                           ...
+                           [else (raise-syntax-error 'case-pattern
+                                                     (format "unable to match pattern for ~v" (syntax->datum STX-ARG)))])])
 
 (define-macro-cases with-pattern
   [(_ () . BODY) #'(begin . BODY)]

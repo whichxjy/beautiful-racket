@@ -2,11 +2,24 @@
 (require "go.rkt")
 (provide b-if b-comp-expr b-logic-expr)
 
-;; b-if : /"if" b-expr /"then" b-expr [/"else" b-expr]
-(define (b-if cond-expr then-expr [else-expr #f])
-  (cond
-    [(not (zero? cond-expr)) (b-goto then-expr)]
-    [else-expr => b-goto]))
+
+#|
+explain why this won't work due to premature eval of THEN & ELSE
+(define (b-if COND THEN ELSE)
+  (let ([result (if (not (zero? COND))
+                     THEN
+                     ELSE)])
+    (when (exact-positive-integer? result)
+      (b-goto result))))
+|#
+
+(define-macro-cases b-if
+  [(_ COND THEN) #'(b-if COND THEN #f)]
+  [(_ COND THEN ELSE) #'(let ([result (if (not (zero? COND))
+                                          THEN
+                                          ELSE)])
+                          (when (exact-positive-integer? result)
+                            (b-goto result)))])
 
 (define bool-int (λ (val) (if val 1 0)))
 (define bi= (compose1 bool-int =))
