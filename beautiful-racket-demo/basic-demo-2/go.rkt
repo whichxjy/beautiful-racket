@@ -7,18 +7,18 @@
 (define (b-goto num-expr)
   (raise (change-line-signal num-expr)))
 
-(define return-stack empty)
+(define return-ccs empty)
 
 (define (b-gosub num-expr)
-  (let/cc return-cc
-    (push! return-stack return-cc)
+  (let/cc here-cc
+    (push! return-ccs here-cc)
     (b-goto num-expr)))
 
 (define (b-return)
-  (unless (pair? return-stack)
+  (unless (pair? return-ccs)
     (raise-line-error "return without gosub"))
-  (define top-return-k (pop! return-stack))
-  (top-return-k))
+  (define top-return-cc (pop! return-ccs))
+  (top-return-cc (void)))
 
 (define thunk-table (make-hasheq))
 
