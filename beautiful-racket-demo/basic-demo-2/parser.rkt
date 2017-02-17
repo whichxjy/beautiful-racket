@@ -19,8 +19,7 @@ b-input : /"input" b-id
 b-gosub : /"gosub" b-expr
 b-return : /"return"
 b-for : /"for" b-id /"=" b-expr /"to" b-expr [/"step" b-expr]
-b-next : /"next" [b-id]
-
+b-next : /"next" b-id
 b-expr : b-or-expr
 b-or-expr : [b-or-expr "or"] b-and-expr
 b-and-expr : [b-and-expr "and"] b-not-expr
@@ -30,6 +29,5 @@ b-sum : [b-sum ("+"|"-")] b-product
 b-product : [b-product ("*"|"/"|"mod")] b-neg
 b-neg : ["-"] b-expt
 b-expt : [b-expt ("^")] b-value
-
 @b-value : b-number | b-id | /"(" b-expr /")"
 @b-number : INTEGER | DECIMAL
