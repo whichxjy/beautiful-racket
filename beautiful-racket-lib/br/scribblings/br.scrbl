@@ -108,6 +108,15 @@ Like @racket[format-datum], but applies @racket[datum-form] to the lists of @rac
 ]
 }
 
+@defproc[(datum? [x any/c]) boolean?]{
+Return @racket[#t] if @racket[x] is a @racket[list?] or a @racket[symbol?].
+
+ @examples[#:eval my-eval
+(datum? '(a b c d e f))
+(datum? 'a)
+(datum? "a")
+]
+}
 
 @section{Debugging}
 
@@ -637,15 +646,26 @@ Convert @racket[values] to a simple list.
 ]
 }
 
+@defform[(push! list-id val)]{
+Mutate @racket[list-id] by putting @racket[val] on top.
 
-@defmodule[br/datum]
-
-@defproc[(datum? [x any/c]) boolean?]{
-Return @racket[#t] if @racket[x] is a @racket[list?] or a @racket[symbol?].
-
- @examples[#:eval my-eval
-(datum? '(a b c d e f))
-(datum? 'a)
-(datum? "a")
+@examples[#:eval my-eval
+(define xs '(2 3 4))
+(push! xs 1)
+xs
 ]
 }
+
+@defform[(pop! list-id)]{
+Mutate @racket[list-id] by removing the topmost element, and return this element as the result.
+
+@examples[#:eval my-eval
+(define xs '(1 2 3 4))
+(define top (pop! xs))
+top
+xs
+]
+}
+
+
+
