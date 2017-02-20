@@ -5,5 +5,5 @@
 40 print 1 / 4 = .25
 50 print 2 ^ 3 = 8
 60 print 9 ^ 0.5 = 3
-70 print 6 % 2 = 0
-80 print 5 % 2 = 1
+70 print 6 mod 2 = 0
+80 print 5 mod 2 = 1
