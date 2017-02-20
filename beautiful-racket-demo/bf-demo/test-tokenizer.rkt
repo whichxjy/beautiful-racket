@@ -1,7 +1,8 @@
 #lang br
 (require brag/support)
+(provide tokenize)
 
-(define+provide (tokenize ip)
+(define (tokenize ip)
   (define get-token
     (lexer
      [(char-set "><-.,+[]") lexeme]

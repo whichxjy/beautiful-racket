@@ -1,31 +1,32 @@
 #lang racket/base
-(require (for-syntax racket/base br/syntax) br/define)
-(provide (except-out (all-defined-out) string->datum))
+(provide format-datum format-datums)
 
 (define (blank? str)
-  (or (zero? (string-length str))
-      (andmap char-blank? (string->list str))))
+  (for/and ([c (in-string str)])
+    (char-blank? c)))
 
 ;; read "foo bar" the same way as "(foo bar)" 
 ;; otherwise "bar" is dropped, which is too astonishing
 (define (string->datum str)
-  (if (blank? str)
-      (void)
-      (let ([result (read (open-input-string (format "(~a)" str)))])
-        (if (= (length result) 1)
-            (car result)
-            result))))
+  (unless (blank? str)
+    (let ([result (read (open-input-string (format "(~a)" str)))])
+      (if (= (length result) 1)
+          (car result)
+          result))))
 
-(define (datum? x)
-  (or (list? x) (symbol? x)))
+(define (datum? x) (or (list? x) (symbol? x)))
 
 (define (format-datum datum-template . args)
-  (string->datum (apply format (format "~a" datum-template) (map (λ(arg) (if (syntax? arg)
-                                                                             (syntax->datum arg)
-                                                                             arg)) args))))
+  (unless (datum? datum-template)
+    (raise-argument-error 'format-datums "datum?" datum-template))
+  (string->datum (apply format (format "~a" datum-template)
+                        (map (λ (arg) (if (syntax? arg)
+                                          (syntax->datum arg)
+                                          arg)) args))))
 
-;; todo: rephrase errors from `format` or `map` in terms of `format-datums`
 (define (format-datums datum-template . argss)
+  (unless (datum? datum-template)
+    (raise-argument-error 'format-datums "datum?" datum-template))
   (apply map (λ args (apply format-datum datum-template args)) argss))
 
 (module+ test

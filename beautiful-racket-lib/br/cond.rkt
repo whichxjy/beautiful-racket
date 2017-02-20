@@ -1,6 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base br/syntax)
-         br/define)
+(require (for-syntax racket/base) br/define)
 (provide (all-defined-out))
 
 (define-macro (until COND EXPR ...)
@@ -14,13 +13,6 @@
       (when COND
         EXPR ...
         (loop))))
-
-(define-macro (forever . EXPRS)
-  ;; todo: would be better with a syntax parameter
-  (with-pattern
-   ([STOP (datum->syntax #'EXPRS 'stop)])
-   #'(let/ec STOP
-       (while #t . EXPRS))))
 
 (module+ test
   (require rackunit)

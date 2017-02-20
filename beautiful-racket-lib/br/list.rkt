@@ -10,5 +10,15 @@
 
 (define-macro (pop! ID)
   #'(let ([x (car ID)])
-    (set! ID (cdr ID))
-    x))
+      (set! ID (cdr ID))
+      x))
+
+(module+ test
+  (require rackunit)
+  (check-equal? '(1 2 3) (values->list (values 1 2 3)))
+  (check-equal? (let ([xs '(2 3)])
+                  (push! xs 1)
+                  xs) '(1 2 3))
+  (check-equal? (let ([xs '(1 2 3)])
+                  (define x (pop! xs))
+                  (cons x xs)) '(1 2 3)))

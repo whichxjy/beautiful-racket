@@ -1,6 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base br/syntax)
-         br/define)
+(require (for-syntax racket/base br/syntax) br/define)
 (provide (all-defined-out))
 
 (define-macro-cases report
@@ -11,9 +10,7 @@
        expr-result)])
 
 (define-macro-cases report-datum
-  [(_ STX-EXPR)
-   (with-pattern ([datum (syntax->datum #'STX-EXPR)])
-     #'(report-datum STX-EXPR datum))]
+  [(_ STX-EXPR) #`(report-datum STX-EXPR #,(syntax->datum #'STX-EXPR))]
   [(_ STX-EXPR NAME)
    #'(let () 
        (eprintf "~a = ~v\n" 'NAME (syntax->datum STX-EXPR))

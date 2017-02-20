@@ -1,33 +1,19 @@
 #lang racket/base
-(require
-  racket/function
-  (for-syntax racket/base
-              syntax/parse
-              br/private/syntax-flatten
-              br/private/generate-literals
-              syntax/define))
+(require racket/function
+         (for-syntax racket/base
+                     syntax/parse
+                     br/private/generate-literals
+                     syntax/define))
 (provide (all-defined-out)
          (for-syntax with-shared-id))
 
-(module+ test
-  (require rackunit))
-
-
-(define-syntax (define+provide stx)
-  (with-syntax ([(id lambda-exp)
-                 (let-values ([(id-stx body-exp-stx)
-                               (normalize-definition stx (datum->syntax stx 'λ) #t #t)])
-                   (list id-stx body-exp-stx))])
-    #'(begin
-        (provide id)
-        (define id lambda-exp))))
+(module+ test (require rackunit))
 
 (begin-for-syntax
   ;; expose the caller context within br:define macros with syntax parameter
   (require (for-syntax racket/base) racket/stxparam)
   (provide caller-stx)
   (define-syntax-parameter caller-stx (λ(stx) (error 'caller-stx-not-parameterized))))
-
 
 (define-syntax (define-cases stx)
   (syntax-parse stx
@@ -73,7 +59,7 @@
 
 
 (module+ test
-  (require rackunit racket/port)
+  (require racket/port)
   (parameterize ([current-output-port (open-output-nowhere)])
     (check-equal? (let ()
                     (debug-define-macro (foo X Y Z)
@@ -180,7 +166,7 @@
 
 
 (module+ test
-  (define-macro plus (λ(stx) #'+))
+  (define-macro plus (λ (stx) #'+))
   (check-equal? (plus 42) +)
   (define-macro plusser #'plus)
   (check-equal? (plusser 42) +)
@@ -238,11 +224,11 @@
   (check-equal? (elseop "+") 'got-arg)
   (check-equal? (elseop "+" 42) 'got-else)
 
-  (check-exn exn:fail:syntax? (λ _ (expand-once #'(define-macro-cases no-cases))))
+  (check-exn exn:fail:syntax? (λ () (expand-once #'(define-macro-cases no-cases))))
 
-  (check-exn exn:fail:syntax? (λ _ (expand-once #'(define-macro-cases badelseop
-                                                    [else #''got-else]
-                                                    [(_ _arg) #''got-arg]))))
+  (check-exn exn:fail:syntax? (λ () (expand-once #'(define-macro-cases badelseop
+                                                     [else #''got-else]
+                                                     [(_ _arg) #''got-arg]))))
 
   (define-macro-cases no-else-macro
     [(_ ARG) #''got-arg])
