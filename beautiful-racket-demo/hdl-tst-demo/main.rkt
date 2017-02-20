@@ -1,8 +1,9 @@
 #lang br
 
 (module reader br
-  (require br/reader-utils "parser.rkt" "tokenizer.rkt")
-  (define-read-and-read-syntax (source-path port)
+  (require "parser.rkt" "tokenizer.rkt")
+  (provide read-syntax)
+  (define (read-syntax source-path port)
     (define-values (line col pos) (port-next-location port))
     (define port+newline (input-port-append #f port (open-input-string "\n")))
     (port-count-lines! port+newline)

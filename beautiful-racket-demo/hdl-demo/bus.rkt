@@ -120,8 +120,8 @@ base bus:
              #f BUS-TYPE #t)))
         #,(when (syntax-property caller-stx 'writer)
             (with-pattern
-             ([_id-write (suffix-id #'ID "-write")])
-             #'(define _id-write
+             ([ID-WRITE (suffix-id #'ID "-write")])
+             #'(define ID-WRITE
                  (let ([writer (make-bus-writer 'id-write bus-width)])
                    (λ args
                      (define result (apply writer (ID-THUNK) args))
@@ -191,9 +191,10 @@ input bus:
   [(MACRO-NAME ID)
    #'(MACRO-NAME ID default-bus-width)]
   [(MACRO-NAME ID BUS-WIDTH)
-   (syntax-property* #'(define-base-bus ID (λ () 0) BUS-WIDTH)
-                     ['impersonate #'input-bus]
-                     ['writer #t])])
+   (syntax-property
+    (syntax-property #'(define-base-bus ID (λ () 0) BUS-WIDTH)
+                     'impersonate #'input-bus)
+                     'writer #t)])
 
 (module+ test
   (define-input-bus ib 4)

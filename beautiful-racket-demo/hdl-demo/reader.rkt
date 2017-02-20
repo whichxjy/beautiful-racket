@@ -1,6 +1,6 @@
 #lang br
-(require br/reader-utils "parser.rkt" "tokenizer.rkt")
-
-(define-read-and-read-syntax (source-path input-port)
+(require "parser.rkt" "tokenizer.rkt")
+(provide read-syntax)
+(define (read-syntax source-path input-port)
   #`(module hdl-mod hdl-demo/expander
       #,(parse source-path (tokenize input-port))))
