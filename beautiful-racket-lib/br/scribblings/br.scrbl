@@ -391,52 +391,6 @@ A special variable only available inside the body of @racket[define-macro] or @r
 ]{
 Like @racket[define-macro], but moves @racket[result-expr] into the lexical context of the calling site. For demonstration purposes only. If you really need to write an unhygienic macro, this is a rather blunt instrument.
 }
-  
-@section{Reader utilities}
-
-@defmodule[br/reader-utils]
-
-
-@defproc[
-(test-reader
-[read-syntax-proc procedure?]
-[source-str string?])
-datum?]{
-Applies @racket[read-syntax-proc] to @racket[source-str] as if it were being read in from a source file. 
-}
-
-
-@defform[
-(define-read-and-read-syntax (path-id port-id) 
-  reader-result-expr ...+)
-]{
-For use within a language reader. Automatically @racket[define] and @racket[provide] the @racket[read] and @racket[read-syntax] functions needed for the reader's public interface. @racket[reader-result-expr] can return either a syntax object or a datum (which will be converted to a syntax object). 
-
-The generated @racket[read-syntax] function takes two arguments, a path and an input port. It returns a syntax object stripped of all bindings.
-
-The generated @racket[read] function takes one argument, an input port. It calls @racket[read-syntax] and converts the result to a datum.
-
-
-@examples[#:eval my-eval
-(module sample-reader racket/base
-  (require br/reader-utils racket/list)
-  (define-read-and-read-syntax (path port)
-    (add-between
-     (for/list ([datum (in-port read port)])
-              datum)
-     'whee)))
-
-(require (prefix-in sample: 'sample-reader))
-
-(define string-port (open-input-string "(+ 2 2) 'hello"))
-(sample:read-syntax 'no-path string-port)
-
-(define string-port-2 (open-input-string "(+ 2 2) 'hello"))
-(sample:read string-port-2)
-]
-
-
-}
 
 
 @section{Syntax}
