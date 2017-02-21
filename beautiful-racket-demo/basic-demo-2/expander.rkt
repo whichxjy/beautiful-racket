@@ -19,7 +19,7 @@
   (require racket/list)
   (define (find-unique-var-ids line-stxs)
     (remove-duplicates
-     (for/list ([stx (in-list (syntax-flatten line-stxs))]
+     (for/list ([stx (in-list (stx-flatten line-stxs))]
                 #:when (syntax-property stx 'b-id))
        stx)
      #:key syntax->datum)))
