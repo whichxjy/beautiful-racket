@@ -1,3 +1,6 @@
 #lang br
-(require basic-demo-3/sample-var)
-(* a a)
+(require "sample-export.rkt")
+f
+a
+b
+(f a b)

@@ -1,5 +1,6 @@
 #lang basic-demo-3
-10 a = 1 : a = 5
+5 def f(x, y) = x * y
+10 a = 1 : a = 5 : b = 10
 20 gosub 150
 30 a = 25
 40 gosub 150
