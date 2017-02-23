@@ -7,13 +7,13 @@
 (define (read-syntax path port)
   (define parse-tree (parse path (make-tokenizer port path)))
   (strip-bindings
-   #`(module basic-mod basic-demo-2/expander
+   #`(module basic-mod basic-demo-3/expander
        #,parse-tree)))
 
 (define (get-info port mod line col pos)
     (define (handle-query key default)
       (case key
         [(color-lexer)
-         (dynamic-require 'basic-demo-2/colorer 'color-basic)]
+         (dynamic-require 'basic-demo-3/colorer 'basic-colorer)]
         [else default]))
     handle-query)

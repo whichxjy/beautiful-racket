@@ -1,6 +1,6 @@
 #lang br
-(require "structs.rkt")
-(provide (all-defined-out))
+(require "struct.rkt")
+(provide b-rem b-print b-let b-input)
 
 (define (b-rem val) (void))
 
@@ -13,5 +13,3 @@
   #'(b-let ID (let* ([str (read-line)]
                      [num (string->number (string-trim str))])
                 (or num str))))
-
-(define (b-end) (raise (end-program-signal)))

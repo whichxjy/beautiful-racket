@@ -1,5 +1,5 @@
 #lang br
-(require "line.rkt" "structs.rkt")
+(require "line.rkt" "struct.rkt")
 (provide run)
 
 (define (run line-table)

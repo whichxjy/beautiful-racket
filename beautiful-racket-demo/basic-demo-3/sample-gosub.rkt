@@ -1,4 +1,4 @@
-#lang basic-demo-2
+#lang basic-demo-3
 10 gosub 41
 20 print "world"
 30 gosub 100

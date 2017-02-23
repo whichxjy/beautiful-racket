@@ -1,4 +1,4 @@
-#lang basic-demo-2
+#lang basic-demo-3
 10 rem all results should be 1
 20 a = 5
 30 b = 10
