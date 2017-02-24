@@ -1,6 +1,5 @@
 #lang brag
-;; program & lines
-b-program : [b-line] (/NEWLINE [b-line])*
+b-program : [b-line] (/NEWLINE [b-line])* | b-statement /NEWLINE
 b-line : b-line-num [b-statement] (/":" [b-statement])* [b-rem]
 @b-line-num : INTEGER
 b-rem : REM
