@@ -1,6 +1,6 @@
 #lang br
 (require "struct.rkt")
-(provide b-rem b-print b-let b-input b-statement b-require)
+(provide b-rem b-print b-let b-input b-statements b-require)
 
 (define (b-rem val) (void))
 
@@ -14,6 +14,6 @@
                      [num (string->number (string-trim str))])
                 (or num str))))
 
-(define-macro (b-statement STMT) #'STMT)
+(define-macro (b-statements STMT ...) #'(begin STMT ...))
 
 (define-macro (b-require ID) #'(void))
