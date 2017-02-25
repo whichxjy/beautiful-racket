@@ -19,15 +19,6 @@ This library provides the @tt{#lang br} teaching language used in the book, as w
 
 This library is designed to smooth over some of the small idiosyncrasies and inconsistencies in Racket, so that those new to Racket are more likely to say ``ah, that makes sense'' rather than ``huh? what?''
 
-@;{
-@section{The @tt{br} language(s)}
-
-@defmodulelang[br]
-
-
-@defmodulelang[br/quicklang]
-}
-
 
 @section{Conditionals}
 
@@ -622,4 +613,12 @@ xs
 }
 
 
+
+
+@section{The @tt{br} language(s)}
+
+@defmodulelang[br]
+
+
+@defmodulelang[br/quicklang]
 
