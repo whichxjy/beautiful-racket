@@ -1,6 +1,6 @@
 #lang br
-(require "struct.rkt")
-(provide b-rem b-print b-let b-input b-statements b-require)
+(require "struct.rkt" "expr.rkt")
+(provide b-rem b-print b-let b-input b-repl b-require)
 
 (define (b-rem val) (void))
 
@@ -14,6 +14,10 @@
                      [num (string->number (string-trim str))])
                 (or num str))))
 
-(define-macro (b-statements STMT ...) #'(begin STMT ...))
+(define-macro (b-repl . ARGS)
+  (with-pattern ([STMTS (pattern-case-filter #'ARGS
+                          [(b-expr . EXPR-ARGS) #'(b-print (b-expr . EXPR-ARGS))]
+                          [OTHER-STMT #'OTHER-STMT])])
+    #'(begin . STMTS)))
 
 (define-macro (b-require ID) #'(void))
