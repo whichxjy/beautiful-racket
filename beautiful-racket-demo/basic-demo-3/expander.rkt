@@ -10,8 +10,8 @@
        [(VAR-ID ...) (find-property 'b-id #'(LINE ...))]
        [(REQ-SPEC ...) (find-property 'b-require-spec #'(LINE ...))]
        [((SHELL-ID SHELL-VAL) ...)
-        (for/list ([(arg idx) (in-indexed (current-command-line-arguments))])
-                  (list (format-id caller-stx "arg~a" idx) arg))]) ; explain why (format-datum 'arg~a idx) won't work
+        (for/list ([(val idx) (in-indexed (current-command-line-arguments))])
+                  (list (suffix-id #'arg idx #:context caller-stx) val))])
     #'(#%module-begin
        (module configure-runtime br
          (require "runtime.rkt")
