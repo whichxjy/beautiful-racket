@@ -35,9 +35,9 @@
                                [else . ELSEBODY]))]
   [(_ STX-ARG
       PAT+BODY ...) #'(case-pattern STX-ARG
-                           PAT+BODY ...
-                           [else (raise-syntax-error 'case-pattern
-                                                     (format "unable to match pattern for ~v" (syntax->datum STX-ARG)))])])
+                                    PAT+BODY ...
+                                    [else (raise-syntax-error 'case-pattern
+                                                              (format "unable to match pattern for ~v" (syntax->datum STX-ARG)))])])
 
 (define-macro-cases with-pattern
   [(_ () . BODY) #'(begin . BODY)]
@@ -54,29 +54,29 @@
 
 (define (->unsyntax x) (if (syntax? x) (syntax->datum x) x))
 
-(define (*fix-base loc-arg prefixes base-or-bases suffixes)
-  (define single-mode? (and (not (list? base-or-bases)) (not (syntax->list base-or-bases))))
-  (define bases (if single-mode? (list base-or-bases) (or (syntax->list base-or-bases) base-or-bases)))
+(define (*fix-base loc-arg ctx-arg prefixes base-or-bases suffixes)
+  (define list-mode? (or (list? base-or-bases) (syntax->list base-or-bases)))
+  (define bases (if list-mode? (or (syntax->list base-or-bases) base-or-bases) (list base-or-bases)))
   (define (stx-join stxs) (apply string-append (map (compose1 ~a ->unsyntax) stxs)))
-  (define result (map (λ (base) (format-id base "~a~a~a" (stx-join prefixes) (syntax-e base) (stx-join suffixes)
+  (define result (map (λ (base) (format-id (or ctx-arg base) "~a~a~a" (stx-join prefixes) (syntax-e base) (stx-join suffixes)
                                            #:source loc-arg)) bases))
-  (if single-mode? (car result) result))
+  (if list-mode? result (car result)))
 
 
-(define (prefix-id #:source [loc-arg #f] . args)
+(define (prefix-id #:source [loc-arg #f] #:context [ctx-arg #f] . args)
   ((match-lambda
      [(list prefixes ... base-or-bases)
-      (*fix-base loc-arg prefixes base-or-bases empty)]) args))
+      (*fix-base loc-arg ctx-arg prefixes base-or-bases empty)]) args))
 
-(define (infix-id #:source [loc-arg #f] . args)
+(define (infix-id #:source [loc-arg #f] #:context [ctx-arg #f] . args)
   ((match-lambda
      [(list prefix base-or-bases suffixes ...)
-      (*fix-base loc-arg (list prefix) base-or-bases suffixes)]) args))
+      (*fix-base loc-arg ctx-arg (list prefix) base-or-bases suffixes)]) args))
 
-(define (suffix-id #:source [loc-arg #f] . args)
+(define (suffix-id #:source [loc-arg #f] #:context [ctx-arg #f] . args)
   ((match-lambda
      [(list base-or-bases suffixes ...)
-      (*fix-base loc-arg empty base-or-bases suffixes)]) args))
+      (*fix-base loc-arg ctx-arg empty base-or-bases suffixes)]) args))
 
 (module+ test
   (define-check (check-stx-equal? stx1 stx2)
