@@ -7,7 +7,9 @@
     (send t compute-racket-amount-to-indent pos (λ(x)
                                                   (case x
                                                     [("with-pattern"
-                                                      "with-shared-id") 'lambda]
+                                                      "with-shared-id"
+                                                      "pattern-case"
+                                                      "pattern-case-filter") 'lambda]
                                                     [("define-macro"
                                                       "define-macro-cases"
                                                       "define-cases") 'define]

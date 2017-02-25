@@ -25,19 +25,29 @@
 (module+ test
   (require rackunit))
 
+(define-macro (pattern-case-filter STX-ARG PAT+BODY ...)
+  #'(let* ([arg STX-ARG]
+           [stxs (or (and (syntax? arg) (syntax->list arg)) arg)])
+      (unless (and (list? stxs) (andmap syntax? stxs))
+        (raise-syntax-error 'pattern-case-filter
+                            (format "~v cannot be made into a list of syntax objects" (syntax->datum arg))))
+      (for*/list ([stx (in-list stxs)]
+                  [result (in-value (pattern-case stx PAT+BODY ... [else #f]))]
+                  #:when result)
+        result)))
 
-(define-macro-cases case-pattern
+(define-macro-cases pattern-case
   [(_ STX-ARG
       [PAT . BODY] ...
       [else . ELSEBODY]) (with-syntax ([(LITERAL ...) (generate-literals #'(PAT ...))])
                            #'(syntax-case STX-ARG (LITERAL ...)
                                [PAT . BODY] ...
                                [else . ELSEBODY]))]
-  [(_ STX-ARG
-      PAT+BODY ...) #'(case-pattern STX-ARG
-                                    PAT+BODY ...
-                                    [else (raise-syntax-error 'case-pattern
-                                                              (format "unable to match pattern for ~v" (syntax->datum STX-ARG)))])])
+  [(_ STX-ARG PAT+BODY ...)
+   #'(pattern-case STX-ARG
+                   PAT+BODY ...
+                   [else (raise-syntax-error 'pattern-case
+                                             (format "unable to match pattern for ~v" (syntax->datum STX-ARG)))])])
 
 (define-macro-cases with-pattern
   [(_ () . BODY) #'(begin . BODY)]
