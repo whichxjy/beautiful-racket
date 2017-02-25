@@ -11,12 +11,11 @@
        [(REQ-SPEC ...) (find-property 'b-require-spec #'(LINE ...))]
        [((SHELL-ID SHELL-VAL) ...)
         (for/list ([(arg idx) (in-indexed (current-command-line-arguments))])
-          (list (format-id caller-stx "arg~a" idx) arg))]) ; explain why (format-datum 'arg~a idx) won't work
+                  (list (format-id caller-stx "arg~a" idx) arg))]) ; explain why (format-datum 'arg~a idx) won't work
     #'(#%module-begin
        (module configure-runtime br
          (require "runtime.rkt")
-         (current-basic-port (current-output-port))
-         (configure-repl!))
+         (configure-this!))
        (require REQ-SPEC) ...
        (define VAR-ID 0) ...
        (provide VAR-ID ...)
@@ -24,8 +23,7 @@
        LINE ...
        (define line-table
          (apply hasheqv (append (list NUM LINE-FUNC) ...)))
-       (parameterize ([current-output-port
-                       (or (current-basic-port) (open-output-nowhere))])
+       (parameterize ([current-output-port (basic-output-port)])
          (void (run line-table))))))
 
 (begin-for-syntax
@@ -34,6 +32,6 @@
     (remove-duplicates
      (for/list ([stx (in-list (stx-flatten line-stxs))]
                 #:when (syntax-property stx which))
-       stx)
+               stx)
      #:key syntax->datum)))
 

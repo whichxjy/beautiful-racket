@@ -1,10 +1,12 @@
 #lang br
 (require "parser.rkt" "tokenizer.rkt")
-(provide current-basic-port configure-repl!)
+(provide basic-output-port configure-this!)
 
-(define current-basic-port (make-parameter #f))
+(define basic-output-port (make-parameter (open-output-nowhere)))
 
-(define (configure-repl!)
+(define (configure-this!)
+  (basic-output-port (current-output-port))
+  
   (define statement-parser (make-rule-parser b-statement))
   (define (read-one-line path port)
     (define one-line (read-line port))
