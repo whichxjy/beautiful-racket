@@ -21,4 +21,5 @@ scribblings/*.css
 !scribblings/mb.css
 scribblings/*.html
 scribblings/pollen/*
-doc/*
+beautiful-racket-lib/br/doc/*
+beautiful-racket-demo/jsonic-demo-3/doc/*
