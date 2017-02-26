@@ -214,7 +214,7 @@ Create a macro using one of the subforms above, which are explained below:
 (define-macro (id pat-arg ...) result-expr ...+)]{
 If the first argument is a @seclink["stx-patterns" #:doc '(lib "scribblings/reference/reference.scrbl")]{syntax pattern} starting with @racket[id], then create a syntax transformer for this pattern using @racket[result-expr ...] as the return value. As usual, @racket[result-expr ...] needs to return a @seclink["stx-obj" #:doc '(lib "scribblings/guide/guide.scrbl")]{syntax object} or you'll get an error.
 
-The syntax-pattern notation is the same as @racket[syntax-case], with one key difference. If a @racket[pat-arg] has a @tt{CAPITALIZED-NAME}, it's treated as a named wildcard (meaning, it will match any expression in that position, and can be subsequently referred to by that name). Otherwise, @racket[pat-arg] is treated as a literal (meaning, it will only match the same expression). 
+The syntax-pattern notation is the same as @racket[syntax-case], with one key difference. If a @racket[pat-arg] has a name written in @tt{CAPS}, it's treated as a named wildcard (meaning, it will match any expression in that position, and can be subsequently referred to by that name). Otherwise, @racket[pat-arg] is treated as a literal (meaning, it will only match the same expression). If @racket[pat-arg] is a literal identifier, it will only match another identifier with the same name @italic{and} the same binding (in other words, identifiers are tested with @racket[free-identifier=?]).
 
 For instance, the @racket[sandwich] macro below requires three arguments, and the third must be @racket[please], but the other two are wildcards:
 
@@ -242,7 +242,7 @@ The ellipsis @racket[...] can be used with a wildcard to match a list of argumen
 (pizza)
 ]
 
-The capitalization requirement for a wildcard @racket[pat-arg] makes it easy to mix literals and wildcards in one pattern. But it also makes it easy to mistype a pattern and not get the wildcard you were expecting. Below, @racket[bad-squarer] doesn't work because @racket[any-number] is meant to be a wildcard. But it's not capitalized, so it's considered a literal, and it triggers an error:
+The capitalization requirement for a wildcard @racket[pat-arg] makes it easy to mix literals and wildcards in one pattern. But it also makes it easy to mistype a pattern and not get the wildcard you were expecting. Below, @racket[bad-squarer] doesn't work because @racket[any-number] is meant to be a wildcard. But it's not in caps, so it's considered a literal, and it triggers an error:
 
 @examples[#:eval my-eval
 (define-macro (bad-squarer any-number)
@@ -250,7 +250,7 @@ The capitalization requirement for a wildcard @racket[pat-arg] makes it easy to 
 (bad-squarer +10i)
 ]
 
-The error is cleared when the argument is capitalized, thus making it a wildcard:
+The error is cleared when the argument is in caps, thus making it a wildcard:
 
 @examples[#:eval my-eval
 (define-macro (good-squarer ANY-NUMBER)
@@ -350,7 +350,7 @@ bad-listener
 ]{
 Create a macro called @racket[id] with multiple branches, each with a @racket[pattern] on the left and @racket[result-expr]  on the right. The input to the macro is tested against each @racket[pattern]. If it matches, then @racket[result-expr] is evaluated.
 
-As with @racket[define-macro], wildcards in each syntax pattern must be @tt{CAPITALIZED}. Everything else is treated as a literal match, except for the ellipsis @racket[...] and the wildcard @racket[_].
+As with @racket[define-macro], wildcards in each syntax pattern must be in @tt{CAPS}. Everything else is treated as a literal match, except for the ellipsis @racket[...] and the wildcard @racket[_].
 
 @examples[#:eval my-eval
 (define-macro-cases yogurt
@@ -388,8 +388,8 @@ Like @racket[define-macro], but moves @racket[result-expr] into the lexical cont
 
 @defmodule[br/syntax]
 
-@defform[(with-pattern ([stx-pattern stx-expr] ...) body ...+)]{
-Bind pattern variables within each @racket[stx-pattern] by matching the pattern to its respective @racket[stx-expr]. These pattern variables can be used in later pattern–expression clauses, or in @racket[body].
+@defform[(with-pattern ([pattern stx-expr] ...) body ...+)]{
+Bind pattern variables within each @racket[pattern] by matching the pattern to its respective @racket[stx-expr]. These pattern variables can be used in later pattern–expression clauses, or in @racket[body]. Uses the same pattern conventions as @racket[define-macro] (i.e., wildcard variables must be in @tt{CAPS}; everything else is treated as a literal).
 
 @examples[#:eval my-eval
 (define-macro (m ARG)
@@ -400,16 +400,43 @@ Bind pattern variables within each @racket[stx-pattern] by matching the pattern 
 ]
 }
 
+@defform[(pattern-case stx ([pattern result-expr ...+] ...))]{
+Like @racket[case], but for syntax patterns. Attempt to match @racket[stx] to each successive syntax @racket[pattern]. If a match is found, evaluate the @racket[result-expr] on the right. Uses the same pattern conventions as @racket[define-macro] (i.e., wildcard variables must be in @tt{CAPS}; everything else is treated as a literal). If no match is found a syntax error is raised.
+
+@examples[#:eval my-eval
+(define (pc stx)
+  (pattern-case stx
+    [(1ST 2ND 3RD) #'2ND]
+    [(LEFT RIGHT) #'LEFT]))
+(pc #'(a b c))
+(pc #'(x y))
+(pc #'(f))
+]
+}
+
+@defform[(pattern-case-filter stxs ([pattern result-expr ...+] ...))]{
+Attempt to match each element of @racket[stxs] (which is either a list of syntax objects, or a syntaxed list) to each successive syntax @racket[pattern]. Uses the same pattern conventions as @racket[define-macro] (i.e., wildcard variables must be in @tt{CAPS}; everything else is treated as a literal).  If a match is found, evaluate the @racket[result-expr] on the right. If @racket[result-expr] is @racket[#f], or no match is found, then the element is skipped. The result is a list of syntax objects.
+
+@examples[#:eval my-eval
+(pattern-case-filter #'((a b c) (x y) (f))
+  [(1ST 2ND 3RD) #'2ND]
+  [(LEFT RIGHT) #'LEFT])
+]
+}
+
 
 @defproc[
  (prefix-id
-  [prefix string?] ...
+  [prefix (or string? symbol?)] ...
   [id-or-ids (or/c identifier? (listof identifier?))]
-  [#:source loc-stx syntax? #f])
+  [#:source loc-stx syntax? #f]
+  [#:context ctxt-stx syntax? #f])
   (or/c identifier? (listof identifier?))]{
-Create a new identifier within the lexical context of @racket[id-or-ids] with the same name, but prefixed with @racket[prefix]. If there's more than one @racket[prefix], they are concatenated. If @racket[id-or-ids] is a single identifier, then the function returns  a single identifier. Likewise, if it's a list of identifiers, the function returns a list of identifiers, all prefixed.
+Create a new identifier within the lexical context of @racket[id-or-ids] with the same name, but prefixed with @racket[prefix]. If there's more than one @racket[prefix] argument, they are concatenated. If @racket[id-or-ids] is a single identifier, then the function returns  a single identifier. Likewise, if it's a list of identifiers, the function returns a list of identifiers, all prefixed.
 
 The optional @racket[loc-stx] argument supplies the source location for the resulting identifier (or identifiers).
+
+The optional @racket[ctxt-stx] argument supplies the lexical context for the resulting identifier (or identifiers).
 
 @examples[#:eval my-eval
 (define-macro ($-define ID VAL)
@@ -420,8 +447,18 @@ $foo
 ]
 }
 
-@defform[(suffix-id id suffix)]{
-Create a new identifier within the lexical context of @racket[id] with the same name, but suffixed with @racket[suffix].
+@defproc[
+(suffix-id
+  [id-or-ids (or/c identifier? (listof identifier?))]
+  [suffix (or string? symbol?)] ...
+  [#:source loc-stx syntax? #f]
+  [#:context ctxt-stx syntax? #f])
+  (or/c identifier? (listof identifier?))]{
+Create a new identifier within the lexical context of @racket[id-or-ids] with the same name, but suffixed with @racket[suffix]. If there's more than one @racket[suffix] argument, they are concatenated. If @racket[id-or-ids] is a single identifier, then the function returns  a single identifier. Likewise, if it's a list of identifiers, the function returns a list of identifiers, all suffixed.
+
+The optional @racket[loc-stx] argument supplies the source location for the resulting identifier (or identifiers).
+
+The optional @racket[ctxt-stx] argument supplies the lexical context for the resulting identifier (or identifiers).
 
 @examples[#:eval my-eval
 (define-macro (define-% ID VAL)
@@ -431,6 +468,30 @@ Create a new identifier within the lexical context of @racket[id] with the same 
 foo%
 ]
 }
+
+@defproc[
+(infix-id
+  [prefix (or string? symbol?)]
+  [id-or-ids (or/c identifier? (listof identifier?))]
+  [suffix (or string? symbol?)] ...
+  [#:source loc-stx syntax? #f]
+  [#:context ctxt-stx syntax? #f])
+  (or/c identifier? (listof identifier?))]{
+Create a new identifier within the lexical context of @racket[id-or-ids] with the same name, but prefixed with @racket[prefix] and suffixed with @racket[suffix]. If there's more than one @racket[suffix] argument, they are concatenated. If @racket[id-or-ids] is a single identifier, then the function returns  a single identifier. Likewise, if it's a list of identifiers, the function returns a list of identifiers, all suffixed.
+
+The optional @racket[loc-stx] argument supplies the source location for the resulting identifier (or identifiers).
+
+The optional @racket[ctxt-stx] argument supplies the lexical context for the resulting identifier (or identifiers).
+
+@examples[#:eval my-eval
+(define-macro ($-define-% ID VAL)
+  (with-pattern ([ID-INFIXED (infix-id '$ #'ID '%)]) 
+    #'(define ID-INFIXED VAL)))
+($-define-% foo 42)
+$foo%
+]
+}
+
 
 @(require (for-label syntax/strip-context))
 @defproc[(strip-bindings [stx syntax?]) syntax?]{
@@ -613,12 +674,13 @@ xs
 }
 
 
+@section{The @tt{br} teaching languages}
 
+@defmodulelang*[(br
+br/quicklang)]{
+The @racketmodname[br] language is designed to be used for the samples and tutorials in @italic{Beautiful Racket}. The language is a convenience variant of @racketmodname[racket/base] that includes the modules listed above, plus a number of other Racket libraries. The specifics are not hugely relevant. Why not? Because in the future, @racketmodname[br] will grow depending on the needs of the @italic{Beautiful Racket} book. Therefore, it's probably not what you want to use for your own projects. See the @link["http://beautifulracket.com/appendix/from-br-to-racket-base.html"]{appendix of @italic{Beautiful Racket}} for more information.
 
-@section{The @tt{br} language(s)}
+@racketmodname[br/quicklang] is a variant of the @racketmodname[br] language that automatically exports @racket[#%top], @racket[#%app], @racket[#%datum], and @racket[#%top-interaction]. As above, if you're making your own language, you should build on @racketmodname[racket/base], because @racketmodname[br/quicklang] does nothing that you couldn't do yourself in two lines of code.
 
-@defmodulelang[br]
-
-
-@defmodulelang[br/quicklang]
+}
 

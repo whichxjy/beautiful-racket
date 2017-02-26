@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax
           racket/base
-          racket/syntax
           br/private/generate-literals)
          racket/list
          racket/match
@@ -64,10 +63,14 @@
 
 (define (->unsyntax x) (if (syntax? x) (syntax->datum x) x))
 
+(define (stx-join stxs)
+  (apply string-append (map (compose1 ~a ->unsyntax) stxs)))
+
 (define (*fix-base loc-arg ctx-arg prefixes base-or-bases suffixes)
   (define list-mode? (or (list? base-or-bases) (syntax->list base-or-bases)))
-  (define bases (if list-mode? (or (syntax->list base-or-bases) base-or-bases) (list base-or-bases)))
-  (define (stx-join stxs) (apply string-append (map (compose1 ~a ->unsyntax) stxs)))
+  (define bases (if list-mode?
+                    (or (syntax->list base-or-bases) base-or-bases)
+                    (list base-or-bases)))
   (define result (map (λ (base) (format-id (or ctx-arg base) "~a~a~a" (stx-join prefixes) (syntax-e base) (stx-join suffixes)
                                            #:source loc-arg)) bases))
   (if list-mode? result (car result)))
