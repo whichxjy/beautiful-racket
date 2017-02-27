@@ -2,7 +2,8 @@
 (require "parser.rkt" "tokenizer.rkt")
 (provide basic-output-port configure-this!)
 
-(define basic-output-port (make-parameter (open-output-nowhere)))
+(define basic-output-port
+  (make-parameter (open-output-nowhere)))
 
 (define repl-parser (make-rule-parser b-repl))
 
@@ -13,7 +14,8 @@
     (define one-line (read-line port))
     (if (eof-object? one-line)
         eof
-        (repl-parser (make-tokenizer (open-input-string one-line)))))
+        (repl-parser
+         (make-tokenizer (open-input-string one-line)))))
   (current-read-interaction read-one-line))
 
 

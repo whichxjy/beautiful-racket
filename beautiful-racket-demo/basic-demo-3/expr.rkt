@@ -23,11 +23,12 @@
   [(_ VAL) #'VAL]
   [(_ LEFT "^" RIGHT) #'(expt LEFT RIGHT)])
 
-(define-macro (b-def ID VAR-ID ... EXPR)
-  #'(set! ID (λ (VAR-ID ...) EXPR)))
+(define-macro (b-def FUNC-ID VAR-ID ... EXPR)
+  (syntax-local-lift-expression
+   #'(set! FUNC-ID (λ (VAR-ID ...) EXPR))))
 
-(define-macro (b-func ID EXPR ...)
-  #'(let ([result (ID EXPR ...)])
+(define-macro (b-func FUNC-ID ARG ...)
+  #'(let ([result (FUNC-ID ARG ...)])
       (if (boolean? result)
           (if result 1 0)
           result)))

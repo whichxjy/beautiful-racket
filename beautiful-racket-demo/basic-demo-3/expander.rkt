@@ -8,13 +8,13 @@
       ([((b-line NUM STMT ...) ...) #'(LINE ...)]
        [(LINE-FUNC ...) (prefix-id "line-" #'(NUM ...))]
        [(VAR-ID ...) (find-property 'b-id #'(LINE ...))]
-       [(REQ-SPEC ...) (find-property 'b-require-spec #'(LINE ...))]
+       [(REQ-SPEC ...) (find-property 'b-import-spec #'(LINE ...))]
        [((SHELL-ID SHELL-VAL) ...)
         (for/list ([(val idx) (in-indexed (current-command-line-arguments))])
                   (list (suffix-id #'arg idx #:context caller-stx) val))])
     #'(#%module-begin
        (module configure-runtime br
-         (require "runtime.rkt")
+         (require basic-demo-3/runtime)
          (configure-this!))
        (require REQ-SPEC) ...
        (define VAR-ID 0) ...

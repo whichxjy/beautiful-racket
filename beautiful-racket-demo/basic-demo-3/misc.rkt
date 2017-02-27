@@ -1,6 +1,6 @@
 #lang br
 (require "struct.rkt" "expr.rkt")
-(provide b-rem b-print b-let b-input b-repl b-require)
+(provide b-rem b-print b-let b-input b-repl b-import)
 
 (define (b-rem val) (void))
 
@@ -16,8 +16,9 @@
 
 (define-macro (b-repl . ARGS)
   (with-pattern ([STMTS (pattern-case-filter #'ARGS
-                          [(b-expr . EXPR-ARGS) #'(b-print (b-expr . EXPR-ARGS))]
+                          [(b-expr . EXPR-ARGS)
+                           #'(b-print (b-expr . EXPR-ARGS))]
                           [OTHER-STMT #'OTHER-STMT])])
     #'(begin . STMTS)))
 
-(define-macro (b-require ID) #'(void))
+(define-macro (b-import VAL) #'(void))
