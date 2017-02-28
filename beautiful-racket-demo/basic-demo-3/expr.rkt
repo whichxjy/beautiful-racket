@@ -1,4 +1,5 @@
 #lang br
+(require "line.rkt")
 (provide b-expr b-sum b-product b-neg b-expt b-def b-func)
 
 (define (b-expr expr)
@@ -28,7 +29,10 @@
    #'(set! FUNC-ID (λ (VAR-ID ...) EXPR))))
 
 (define-macro (b-func FUNC-ID ARG ...)
-  #'(let ([result (FUNC-ID ARG ...)])
-      (if (boolean? result)
-          (if result 1 0)
-          result)))
+  #'(if (procedure? FUNC-ID)
+        (let ([result (FUNC-ID ARG ...)])
+          (if (boolean? result)
+              (if result 1 0)
+              result))
+        (raise-line-error
+         (format "undefined function: ~a" 'FUNC-ID))))
