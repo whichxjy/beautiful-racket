@@ -35,4 +35,5 @@
               (if result 1 0)
               result))
         (raise-line-error
-         (format "undefined function: ~a" 'FUNC-ID))))
+         (format "expected ~a to be a function, got ~v"
+                 'FUNC-ID FUNC-ID))))
