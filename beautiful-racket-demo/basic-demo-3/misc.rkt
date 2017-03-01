@@ -14,9 +14,9 @@
                      [num (string->number (string-trim str))])
                 (or num str))))
 
-(define-macro (b-import IMPORT-NAME) #'(void))
+(define-macro (b-import NAME) #'(void))
 
-(define-macro (b-export EXPORT-NAME) #'(void))
+(define-macro (b-export NAME) #'(void))
 
 (define-macro (b-repl . ARGS)
   (with-pattern ([STMTS (pattern-case-filter #'ARGS
