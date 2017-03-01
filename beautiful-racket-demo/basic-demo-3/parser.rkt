@@ -6,7 +6,7 @@ b-rem : REM
 @b-statement : b-end | b-print | b-goto
              | b-let | b-input | b-if
              | b-gosub | b-return | b-for | b-next
-             | b-def | b-import
+             | b-def | b-import | b-export
 b-end : /"end"
 b-print : /"print" [b-printable] (/";" [b-printable])*
 @b-printable : STRING | b-expr
@@ -23,6 +23,8 @@ b-next : /"next" b-id
 b-def : /"def" b-id /"(" ID [/"," ID]* /")" /"=" b-expr
 b-import : /"import" b-import-name
 @b-import-name : ID | STRING
+b-export : /"export" b-export-name
+@b-export-name : ID
 b-expr : b-or-expr
 b-or-expr : [b-or-expr "or"] b-and-expr
 b-and-expr : [b-and-expr "and"] b-not-expr

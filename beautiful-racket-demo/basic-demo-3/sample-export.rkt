@@ -1,9 +1,9 @@
 #lang basic-demo-3
-5 def f(x, y) = x * y
-10 a = 1 : a = 5 : b = 10
-20 gosub 150
-30 a = 25
-40 gosub 150
-50 end
-150 print a + a + a
-160 return
+10 def div(num, denom) = num / denom
+20 x = 5 : y = 10
+30 print x - 4
+40 x = 15 : y = 30
+50 print div(y, x)
+60 x = 20
+70 print div((x + x + x), x)
+80 export div : export x

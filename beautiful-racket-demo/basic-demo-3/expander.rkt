@@ -10,6 +10,8 @@
        [(VAR-ID ...) (find-property 'b-id #'(LINE ...))]
        [(IMPORT-NAME ...)
         (find-property 'b-import-name #'(LINE ...))]
+       [(EXPORT-NAME ...)
+        (find-property 'b-export-name #'(LINE ...))]
        [((SHELL-ID SHELL-VAL) ...)
         (for/list ([(val idx) (in-indexed (current-command-line-arguments))])
           (list (suffix-id #'arg idx #:context caller-stx) val))])
@@ -19,7 +21,7 @@
          (configure-this!))
        (require IMPORT-NAME) ...
        (define VAR-ID 0) ...
-       (provide VAR-ID ...)
+       (provide EXPORT-NAME ...)
        (set! SHELL-ID SHELL-VAL) ...
        LINE ...
        (define line-table
