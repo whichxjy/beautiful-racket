@@ -8,15 +8,16 @@
       ([((b-line NUM STMT ...) ...) #'(LINE ...)]
        [(LINE-FUNC ...) (prefix-id "line-" #'(NUM ...))]
        [(VAR-ID ...) (find-property 'b-id #'(LINE ...))]
-       [(REQ-SPEC ...) (find-property 'b-import-name #'(LINE ...))]
+       [(IMPORT-NAME ...)
+        (find-property 'b-import-name #'(LINE ...))]
        [((SHELL-ID SHELL-VAL) ...)
         (for/list ([(val idx) (in-indexed (current-command-line-arguments))])
-                  (list (suffix-id #'arg idx #:context caller-stx) val))])
+          (list (suffix-id #'arg idx #:context caller-stx) val))])
     #'(#%module-begin
        (module configure-runtime br
          (require basic-demo-3/runtime)
          (configure-this!))
-       (require REQ-SPEC) ...
+       (require IMPORT-NAME) ...
        (define VAR-ID 0) ...
        (provide VAR-ID ...)
        (set! SHELL-ID SHELL-VAL) ...
@@ -32,6 +33,6 @@
     (remove-duplicates
      (for/list ([stx (in-list (stx-flatten line-stxs))]
                 #:when (syntax-property stx which))
-               stx)
+       stx)
      #:key syntax->datum)))
 

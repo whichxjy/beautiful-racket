@@ -22,7 +22,7 @@ b-for : /"for" b-id /"=" b-expr /"to" b-expr [/"step" b-expr]
 b-next : /"next" b-id
 b-def : /"def" b-id /"(" ID [/"," ID]* /")" /"=" b-expr
 b-import : /"import" b-import-name
-@b-import-name : (ID | STRING)
+@b-import-name : ID | STRING
 b-expr : b-or-expr
 b-or-expr : [b-or-expr "or"] b-and-expr
 b-and-expr : [b-and-expr "and"] b-not-expr
