@@ -8,6 +8,9 @@
 (define-lex-abbrev id-kapu
   (:or whitespace (char-set "()[]{}\",'`;#|\\")))
 
+(define-lex-abbrev id
+  (:seq (:~ (:or "-" id-kapu)) (:* (:~ id-kapu))))
+
 (define basic-lexer
   (lexer-srcloc
    [(eof) (return-without-srcloc eof)]
@@ -19,8 +22,7 @@
    [(:or (:seq (:? digits) "." digits)
          (:seq digits "."))
     (token 'DECIMAL (string->number lexeme))]
-   [(:seq (:~ (:or "-" id-kapu)) (:* (:~ id-kapu)))
-    (token 'ID (string->symbol lexeme))]
+   [id (token 'ID (string->symbol lexeme))]
    [(:or (from/to "\"" "\"") (from/to "'" "'"))
     (token 'STRING
            (substring lexeme
