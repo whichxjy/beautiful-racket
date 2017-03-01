@@ -19,7 +19,8 @@
    [(:or (:seq (:? digits) "." digits)
          (:seq digits "."))
     (token 'DECIMAL (string->number lexeme))]
-   [(:+ (:~ id-kapu)) (token 'ID (string->symbol lexeme))]
+   [(:seq (:~ (:or "-" id-kapu)) (:* (:~ id-kapu)))
+    (token 'ID (string->symbol lexeme))]
    [(:or (from/to "\"" "\"") (from/to "'" "'"))
     (token 'STRING
            (substring lexeme
