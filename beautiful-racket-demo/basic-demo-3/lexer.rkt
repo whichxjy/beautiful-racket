@@ -5,6 +5,9 @@
 
 (define-lex-abbrev reserved-terms (:or "print" "goto" "end" "+" ":" ";" "let" "=" "input" "-" "*" "/" "^" "mod" "(" ")" "def" "if" "then" "else" "<" ">" "<>" "and" "or" "not" "gosub" "return" "for" "to" "step" "next" "def" "," "import"))
 
+(define-lex-abbrev id-kapu
+  (:or whitespace (char-set "()[]{}\",'`;#|\\")))
+
 (define basic-lexer
   (lexer-srcloc
    [(eof) (return-without-srcloc eof)]
@@ -12,12 +15,11 @@
    [whitespace (token lexeme #:skip? #t)]
    [(from/stop-before "rem" "\n") (token 'REM lexeme)]
    [reserved-terms (token lexeme lexeme)]
-   [(:seq alphabetic (:* (:or alphabetic numeric "$" "/" "-" "?")))
-    (token 'ID (string->symbol lexeme))]
    [digits (token 'INTEGER (string->number lexeme))]
    [(:or (:seq (:? digits) "." digits)
          (:seq digits "."))
     (token 'DECIMAL (string->number lexeme))]
+   [(:+ (:~ id-kapu)) (token 'ID (string->symbol lexeme))]
    [(:or (from/to "\"" "\"") (from/to "'" "'"))
     (token 'STRING
            (substring lexeme
