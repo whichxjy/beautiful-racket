@@ -8,8 +8,8 @@
 (define-lex-abbrev id-kapu
   (:or whitespace (char-set "()[]{}\",'`;#|\\")))
 
-(define-lex-abbrev id
-  (:seq (:~ (:or "-" id-kapu)) (:* (:~ id-kapu))))
+(define-lex-abbrev racket-id
+  (:seq "[" (:~ (:or "-" id-kapu)) (:* (:~ id-kapu)) "]"))
 
 (define basic-lexer
   (lexer-srcloc
@@ -17,12 +17,14 @@
    ["\n" (token 'NEWLINE lexeme)]
    [whitespace (token lexeme #:skip? #t)]
    [(from/stop-before "rem" "\n") (token 'REM lexeme)]
+   [racket-id (token 'RACKET-ID (string->symbol (trim-ends "[" lexeme "]")))] 
    [reserved-terms (token lexeme lexeme)]
+   [(:seq alphabetic (:* (:or alphabetic numeric "$")))
+    (token 'ID (string->symbol lexeme))]
    [digits (token 'INTEGER (string->number lexeme))]
    [(:or (:seq (:? digits) "." digits)
          (:seq digits "."))
     (token 'DECIMAL (string->number lexeme))]
-   [id (token 'ID (string->symbol lexeme))]
    [(:or (from/to "\"" "\"") (from/to "'" "'"))
     (token 'STRING
            (substring lexeme

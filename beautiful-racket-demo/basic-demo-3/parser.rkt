@@ -22,7 +22,7 @@ b-for : /"for" b-id /"=" b-expr /"to" b-expr [/"step" b-expr]
 b-next : /"next" b-id
 b-def : /"def" b-id /"(" ID [/"," ID]* /")" /"=" b-expr
 b-import : /"import" b-import-name
-@b-import-name : ID | STRING
+@b-import-name : RACKET-ID | STRING
 b-export : /"export" b-export-name
 @b-export-name : ID
 b-expr : b-or-expr
@@ -35,6 +35,6 @@ b-product : [b-product ("*"|"/"|"mod")] b-neg
 b-neg : ["-"] b-expt
 b-expt : [b-expt ("^")] b-value
 @b-value : b-number | b-id | /"(" b-expr /")" | b-func
-b-func : ID /"(" b-expr [/"," b-expr]* /")"
+b-func : (ID | RACKET-ID) /"(" b-expr [/"," b-expr]* /")"
 @b-number : INTEGER | DECIMAL
 b-repl : (b-statement | b-expr) (/":" [b-repl])*
