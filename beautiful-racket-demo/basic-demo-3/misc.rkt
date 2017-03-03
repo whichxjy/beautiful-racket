@@ -18,9 +18,12 @@
 
 (define-macro (b-export NAME) #'(void))
 
-(define-macro (b-repl . ARGS)
-  (with-pattern ([STMTS (pattern-case-filter #'ARGS
-                          [(b-expr . EXPR-ARGS)
-                           #'(b-print (b-expr . EXPR-ARGS))]
-                          [OTHER-STMT #'OTHER-STMT])])
-    #'(begin . STMTS)))
+(define-macro (b-repl . REPL-INPUTS)
+  (with-pattern ([INPUTS (pattern-case-filter #'REPL-INPUTS
+                           [(b-expr . EXPR-ARGS)
+                            #'(b-print (b-expr . EXPR-ARGS))]
+                           [(b-print . PRINT-ARGS)
+                            #'(b-print . PRINT-ARGS)]
+                           [OTHER
+                            #'(error 'invalid-repl-input)])])
+    #'(begin . INPUTS)))

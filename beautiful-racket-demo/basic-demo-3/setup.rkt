@@ -5,17 +5,15 @@
 (define basic-output-port
   (make-parameter (open-output-nowhere)))
 
-(define (do-setup! [where #f])
-  (basic-output-port (current-output-port))
-  #;(current-read-interaction read-one-line))
+(define repl-parse (make-rule-parser b-repl))
 
-(define repl-parser (make-rule-parser b-repl))
-
-(define (read-one-line path port)
+(define (read-one-line origin port)
   (define one-line (read-line port))
   (if (eof-object? one-line)
       eof
-      (repl-parser
+      (repl-parse
        (make-tokenizer (open-input-string one-line)))))
 
-
+(define (do-setup! [where #f])
+  (basic-output-port (current-output-port))
+  (current-read-interaction read-one-line))
