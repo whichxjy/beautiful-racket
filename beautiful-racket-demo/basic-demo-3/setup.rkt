@@ -5,9 +5,9 @@
 (define basic-output-port
   (make-parameter (open-output-nowhere)))
 
-(define (do-setup!)
+(define (do-setup! [where #f])
   (basic-output-port (current-output-port))
-  (current-read-interaction read-one-line))
+  #;(current-read-interaction read-one-line))
 
 (define repl-parser (make-rule-parser b-repl))
 
