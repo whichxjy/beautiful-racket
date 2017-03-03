@@ -18,12 +18,17 @@
 
 (define-macro (b-export NAME) #'(void))
 
-(define-macro (b-repl . REPL-INPUTS)
-  (with-pattern ([INPUTS (pattern-case-filter #'REPL-INPUTS
-                           [(b-expr . EXPR-ARGS)
-                            #'(b-print (b-expr . EXPR-ARGS))]
-                           [(b-print . PRINT-ARGS)
-                            #'(b-print . PRINT-ARGS)]
-                           [OTHER
-                            #'(error 'invalid-repl-input)])])
+(define-macro (b-repl . ALL-INPUTS)
+  (with-pattern
+      ([INPUTS (pattern-case-filter #'ALL-INPUTS
+                 [(b-print . PRINT-ARGS)
+                  #'(b-print . PRINT-ARGS)]
+                 [(b-expr . EXPR-ARGS)
+                  #'(b-print (b-expr . EXPR-ARGS))]
+                 [(b-let ID VAL)
+                  #'(define ID VAL)]
+                 [(b-def FUNC-ID VAR-ID ... EXPR)
+                  #'(define (FUNC-ID VAR-ID ...) EXPR)]
+                 [ANYTHING-ELSE
+                  #'(error 'invalid-repl-input)])])
     #'(begin . INPUTS)))
