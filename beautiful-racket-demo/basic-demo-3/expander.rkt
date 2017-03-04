@@ -12,9 +12,7 @@
         (find-property 'b-import-name #'(LINE ...))]
        [(EXPORT-NAME ...)
         (find-property 'b-export-name #'(LINE ...))]
-       [((SHELL-ID SHELL-VAL) ...)
-        (for/list ([(val idx) (in-indexed (current-command-line-arguments))])
-          (list (suffix-id #'arg idx #:context caller-stx) val))])
+       [((SHELL-ID SHELL-VAL) ...) (handle-shell caller-stx)])
     #'(#%module-begin
        (module configure-runtime br
          (require basic-demo-3/setup)
@@ -37,5 +35,11 @@
      (for/list ([stx (in-list (stx-flatten line-stxs))]
                 #:when (syntax-property stx which))
        stx)
-     #:key syntax->datum)))
+     #:key syntax->datum))
+
+  (define (handle-shell ctxt)
+    (for/list
+        ([(val idx)
+          (in-indexed (current-command-line-arguments))])
+      (list (suffix-id #'arg idx #:context ctxt) val))))
 
