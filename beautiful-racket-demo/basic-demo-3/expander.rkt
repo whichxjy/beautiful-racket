@@ -41,5 +41,6 @@
     (for/list
         ([(val idx)
           (in-indexed (current-command-line-arguments))])
-      (list (suffix-id #'arg idx #:context ctxt) val))))
+      (list (suffix-id #'arg idx #:context ctxt)
+            (or (string->number val) val)))))
 
