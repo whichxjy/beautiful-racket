@@ -13,9 +13,7 @@
        [(EXPORT-NAME ...)
         (find-property 'b-export-name #'(LINE ...))]
        [((SHELL-ID SHELL-IDX) ...)
-        (for/list ([idx (in-range 10)])
-          (list (suffix-id #'arg idx #:context caller-stx)
-                idx))] 
+        (make-shell-ids-and-idxs caller-stx)] 
        [(UNIQUE-ID ...)
         (unique-ids
          (syntax->list #'(VAR-ID ... SHELL-ID ...)))])
@@ -36,9 +34,10 @@
          (void (run line-table))))))
 
 (define (get-clarg clargs idx)
-  (with-handlers ([exn:fail? (λ (exn) 0)])
-    (let ([val (vector-ref clargs idx)])
-      (or (string->number val) val))))
+  (if (<= (vector-length clargs) idx)
+      0
+      (let ([val (vector-ref clargs idx)])
+        (or (string->number val) val))))
 
 (begin-for-syntax
   (require racket/list)
@@ -50,5 +49,10 @@
     (unique-ids
      (for/list ([stx (in-list (stx-flatten line-stxs))]
                 #:when (syntax-property stx which))
-       stx))))
+       stx)))
+
+  (define (make-shell-ids-and-idxs ctxt)
+    (define arg-count 10)
+    (for/list ([idx (in-range arg-count)])
+      (list (suffix-id #'arg idx #:context ctxt) idx))))
 
