@@ -30,14 +30,16 @@
 
 (define-macro (b-func FUNC-ID ARG ...)
   #'(if (procedure? FUNC-ID)
-        (let ([result (FUNC-ID ARG ...)])
-          (cond
-            [(number? result) (b-expr result)]
-            [(string? result) result]
-            [(boolean? result) (if result 1 0)]
-            [else
-             (raise-line-error
-              (format "unknown data type: ~v" result))]))
+        (convert-result (FUNC-ID ARG ...))
         (raise-line-error
          (format "expected ~a to be a function, got ~v"
                  'FUNC-ID FUNC-ID))))
+
+(define (convert-result result)
+  (cond
+    [(number? result) (b-expr result)]
+    [(string? result) result]
+    [(boolean? result) (if result 1 0)]
+    [else
+     (raise-line-error
+      (format "unknown data type: ~v" result))]))
