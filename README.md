@@ -21,6 +21,9 @@ Update
 
 `raco pkg update beautiful-racket`
 
+Documentation
+-
+http://docs.racket-lang.org/br
 
 License
 -
