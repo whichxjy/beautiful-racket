@@ -1,10 +1,9 @@
 #lang br/quicklang
 (provide + *)
 
-(define-macro (stackerizer-mb EXPR ...)
+(define-macro (stackerizer-mb EXPR)
   #'(#%module-begin
-     (for-each displayln
-               (reverse (flatten (list EXPR ...))))))
+     (for-each displayln (reverse (flatten EXPR)))))
 (provide (rename-out [stackerizer-mb #%module-begin]))
 
 (define-macro (define-ops OP ...)

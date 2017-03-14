@@ -17,12 +17,12 @@
 (define stack empty)
 
 (define (pop-stack!)
-  (define item (first stack))
+  (define arg (first stack))
   (set! stack (rest stack))
-  item)
+  arg)
 
-(define (push-stack! item)
-  (set! stack (cons item stack)))
+(define (push-stack! arg)
+  (set! stack (cons arg stack)))
 
 (define (handle [arg #f])
   (cond
