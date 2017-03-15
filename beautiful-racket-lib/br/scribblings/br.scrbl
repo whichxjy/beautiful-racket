@@ -639,7 +639,7 @@ Lists the indents at the beginning of each line in @racket[str]. Useful for unit
 }
 
 
-@section{Other helpers}
+@section{Lists}
 
 @defmodule[br/list]
 
@@ -672,6 +672,8 @@ top
 xs
 ]
 }
+
+@section{Reader utilities}
 
 @defmodule[br/reader-utils]
 
