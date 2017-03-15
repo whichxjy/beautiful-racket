@@ -4,14 +4,14 @@
 (module+ test
   (require rackunit))
 
-(define (token? x)
+(define (jsonic-token? x)
   (or (eof-object? x) (string? x) (token-struct? x)))
 
 (module+ test
-  (check-true (token? eof))
-  (check-true (token? "a string"))
-  (check-true (token? (token 'A-TOKEN-STRUCT "hi")))
-  (check-false (token? 42)))
+  (check-true (jsonic-token? eof))
+  (check-true (jsonic-token? "a string"))
+  (check-true (jsonic-token? (token 'A-TOKEN-STRUCT "hi")))
+  (check-false (jsonic-token? 42)))
 
 (define (make-tokenizer port)
   (port-count-lines! port)
@@ -35,8 +35,9 @@
                                   (pos lexeme-start)))]))
     (jsonic-lexer port))
   next-token)
-(provide (contract-out
-          [make-tokenizer (input-port? . -> . (-> token?))]))
+(provide
+ (contract-out
+  [make-tokenizer (input-port? . -> . (-> jsonic-token?))]))
 
 (module+ test
   (check-equal?
