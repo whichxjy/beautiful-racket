@@ -18,7 +18,8 @@
         (line-first-visible-char tbox current-line))
        (- prev-indent indent-width)]
       [else prev-indent]))
-  (and (exact-positive-integer? current-indent) current-indent))
+  (and (exact-positive-integer? current-indent)
+       current-indent))
 (provide
  (contract-out
   [indent-jsonic (((is-a?/c text%)) 

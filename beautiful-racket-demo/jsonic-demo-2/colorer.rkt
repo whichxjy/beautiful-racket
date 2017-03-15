@@ -1,5 +1,6 @@
 #lang br
-(require brag/support syntax-color/racket-lexer racket/contract)
+(require brag/support syntax-color/racket-lexer
+         racket/contract)
 
 (define jsonic-lexer
   (lexer
