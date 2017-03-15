@@ -12,7 +12,9 @@
                                                       "pattern-case-filter") 'lambda]
                                                     [("define-macro"
                                                       "define-macro-cases"
-                                                      "define-cases") 'define]
+                                                      "define-cases"
+                                                      "while"
+                                                      "until") 'define]
                                                     [else #f])))))
 
 (define (br-get-info key default default-filter)

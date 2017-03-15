@@ -11,7 +11,7 @@
 
 (define-macro (bf-loop "[" OP-OR-LOOP-ARG ... "]")
   #'(until (zero? (current-byte))
-           OP-OR-LOOP-ARG ...))
+      OP-OR-LOOP-ARG ...))
 (provide bf-loop)
 
 (define-macro-cases bf-op
