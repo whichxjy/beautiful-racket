@@ -46,4 +46,3 @@ HERE
   (check-equal?
    (string-indents (apply-indenter indent-jsonic test-str))
    '(#f #f 2 2 2 4 6 6 4 2 2 #f)))
-  
