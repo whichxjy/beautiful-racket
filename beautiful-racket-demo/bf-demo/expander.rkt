@@ -44,12 +44,14 @@
 (define (lt arr ptr) (list arr (sub1 ptr)))
 
 (define (plus arr ptr)
-  (list (set-current-byte arr ptr (add1 (current-byte arr ptr)))
-        ptr))
+  (list
+   (set-current-byte arr ptr (add1 (current-byte arr ptr)))
+   ptr))
 
 (define (minus arr ptr)
-  (list (set-current-byte arr ptr (sub1 (current-byte arr ptr)))
-        ptr))
+  (list
+   (set-current-byte arr ptr (sub1 (current-byte arr ptr)))
+   ptr))
 
 (define (period arr ptr)
   (write-byte (current-byte arr ptr))
