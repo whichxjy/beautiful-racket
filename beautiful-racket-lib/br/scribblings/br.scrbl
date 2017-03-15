@@ -673,6 +673,17 @@ xs
 ]
 }
 
+@defmodule[br/reader-utils]
+
+
+@defproc[
+(test-reader
+[read-syntax-proc procedure?]
+[source-str string?])
+datum?]{
+Applies @racket[read-syntax-proc] to @racket[source-str] as if it were being read in from a source file. 
+}
+
 
 @section{The @tt{br} teaching languages}
 

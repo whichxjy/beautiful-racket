@@ -1,10 +1,10 @@
 #lang racket/base
-(require racket/provide racket/list racket/string racket/format racket/match racket/port  racket/function racket/provide
-         br/define br/syntax br/datum br/debug br/cond br/list racket/class racket/vector
+(require racket/provide racket/list racket/string racket/format racket/match racket/port racket/function racket/provide
+         br/define br/syntax br/datum br/debug br/cond br/list br/reader-utils racket/class racket/vector
          (for-syntax racket/base racket/syntax br/syntax br/debug br/define br/datum))
 (provide (all-from-out racket/base)
          (all-from-out racket/list racket/string racket/format racket/match racket/port racket/function racket/provide
-                       br/syntax br/datum br/debug br/cond br/list racket/class racket/vector br/define)
+                       br/syntax br/datum br/debug br/cond br/list br/reader-utils racket/class racket/vector br/define)
          (for-syntax (all-from-out racket/base racket/syntax br/syntax br/debug br/datum))
          (for-syntax caller-stx with-shared-id)) ; from br/define
          
