@@ -1,7 +1,7 @@
 beautiful-racket [![Build Status](https://travis-ci.org/mbutterick/beautiful-racket.svg?branch=master)](https://travis-ci.org/mbutterick/beautiful-racket)
 -
 
-Resources for the upcoming “Beautiful Racket” book, including:
+Resources for the “Beautiful Racket” book, including:
 
 * `#lang br` teaching language
  
