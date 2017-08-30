@@ -1,5 +1,5 @@
 #lang racket/base
-(provide format-datum format-datums)
+(provide format-datum format-datums datum?)
 
 (define (blank? str)
   (for/and ([c (in-string str)])

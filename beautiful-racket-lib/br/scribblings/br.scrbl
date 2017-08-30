@@ -66,9 +66,9 @@ When I use ``datum'' in its specific Racket sense, I use ``datums'' as its plura
 
 @defproc[
 (format-datum
-[datum-form (or/c list? symbol?)]
+[datum-form datum?]
 [val any/c?] ...)
-(or/c list? symbol?)]{
+(or/c datum? void?)]{
 Similar to @racket[format], but the template @racket[datum-form] is a datum, rather than a string, and the function returns a datum, rather than a string. Otherwise, the same formatting escapes can be used in the template (see @racket[fprintf]).
 
 Two special cases. First, a string that describes a list of datums is parenthesized so the result is a single datum. Second, an empty string returns @racket[void] (not @racket[#f], because that's a legitimate datum).
