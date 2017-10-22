@@ -24,7 +24,7 @@
  (contract-out
   [indent-jsonic (((is-a?/c text%)) 
                   (exact-nonnegative-integer?) . ->* .
-                  (or/c exact-nonnegative-integer? #f))]))
+                  (or/c exact-positive-integer? #f))]))
 
 (module+ test
   (require rackunit)
