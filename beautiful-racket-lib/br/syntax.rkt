@@ -8,6 +8,7 @@
          racket/format
          syntax/stx
          syntax/strip-context
+         syntax/parse
          br/define
          br/private/syntax-flatten)
 (provide (all-defined-out)
@@ -33,15 +34,22 @@
       (for*/list ([stx (in-list stxs)]
                   [result (in-value (pattern-case stx PAT+BODY ... [else #f]))]
                   #:when result)
-        result)))
+                 result)))
+
+
+(define-macro (syntax-parse/easy STX LITS . EXPS)
+  (with-syntax ([(BOUND-LITS UNBOUND-LITS) (generate-bound-and-unbound-literals #'LITS)])
+    #'(syntax-parse (syntax-case STX () [any #'any])
+        #:literals BOUND-LITS
+        #:datum-literals UNBOUND-LITS
+        . EXPS)))
 
 (define-macro-cases pattern-case
   [(_ STX-ARG
       [PAT . BODY] ...
-      [else . ELSEBODY]) (with-syntax ([(LITERAL ...) (generate-literals #'(PAT ...))])
-                           #'(syntax-case STX-ARG (LITERAL ...)
-                               [PAT . BODY] ...
-                               [else . ELSEBODY]))]
+      [else . ELSEBODY]) #'(syntax-parse/easy STX-ARG (PAT ...)
+                                              [PAT . BODY] ...
+                                              [else . ELSEBODY])]
   [(_ STX-ARG PAT+BODY ...)
    #'(pattern-case STX-ARG
                    PAT+BODY ...
@@ -51,11 +59,10 @@
 (define-macro-cases with-pattern
   [(_ () . BODY) #'(begin . BODY)]
   [(_ ([PAT0 STX0] PAT+STX ...) . BODY)
-   (with-syntax ([(LITERAL ...) (generate-literals #'PAT0)])
-     #'(syntax-case STX0 (LITERAL ...)
-         [PAT0 (with-pattern (PAT+STX ...) (let () . BODY))]
-         [else (raise-syntax-error 'with-pattern
-                                   (format "unable to match pattern ~a" 'PAT0) STX0)]))])
+   #'(syntax-parse/easy STX0 PAT0
+                        [PAT0 (with-pattern (PAT+STX ...) (let () . BODY))]
+                        [else (raise-syntax-error 'with-pattern
+                                                  (format "unable to match pattern ~a" 'PAT0) STX0)])])
 
 
 (define-macro (format-string FMT ID0 ID ...)

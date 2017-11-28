@@ -97,6 +97,7 @@
 ;; `syntax-parse` classes shared by `define-macro` and `define-macro-cases`
 (begin-for-syntax
   (require syntax/parse)
+  
   (define-syntax-class syntaxed-id
     #:literals (syntax quasisyntax)
     #:description "id in syntaxed form"
@@ -133,7 +134,6 @@
            "no matching case for calling pattern"
            (syntax->datum stx))]))
 
-
 (define-syntax (define-macro-cases stx)  
   (syntax-parse stx
     [(_ id:id)
@@ -143,12 +143,15 @@
     [(_ id:id (pat:expr . result-exprs:expr) ... else-clause:else-clause)
      (unless (all-...-follow-wildcards #'(pat ...))
        (raise-syntax-error 'define-macro-cases "found ellipses after non-wildcard variable" (syntax->datum stx)))
-     (with-syntax ([(LITERAL ...) (generate-literals #'(pat ...))])
+     (with-syntax ([(BOUND-LITS UNBOUND-LITS)
+                    (generate-bound-and-unbound-literals #'(pat ...) #:treat-as-bound #'id)])
        #'(define-macro id
            (λ (stx)
              (define result
                (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
-                 (syntax-case stx (LITERAL ...)
+                 (syntax-parse (syntax-case stx () [any #'any])
+                     #:literals BOUND-LITS
+                     #:datum-literals UNBOUND-LITS
                    [pat . result-exprs] ...
                    else-clause)))
              (if (syntax? result)
