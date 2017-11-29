@@ -39,10 +39,11 @@
 
 (define-macro (syntax-parse/easy STX LITS . EXPS)
   (with-syntax ([(BOUND-LITS UNBOUND-LITS) (generate-bound-and-unbound-literals #'LITS)])
-    #'(syntax-parse (syntax-case STX () [any #'any])
+    #'(let ([stx STX])
+        (syntax-parse (if (syntax? stx) stx (datum->syntax #'here stx))
         #:literals BOUND-LITS
         #:datum-literals UNBOUND-LITS
-        . EXPS)))
+        . EXPS))))
 
 (define-macro-cases pattern-case
   [(_ STX-ARG

@@ -22,13 +22,13 @@
              pat-arg))
 
 (define (generate-bound-and-unbound-literals pats #:treat-as-bound [bound-id #f])
+  (define literals (generate-literals pats))
   (define-values (bound-literals unbound-literals)
-    (partition identifier-binding (for/list ([pat (in-list (generate-literals pats))]
-                                             #:unless (and bound-id (bound-identifier=? pat bound-id)))
-                                            pat)))
+    (partition (λ (i) (or (identifier-binding i)
+                          (and bound-id (bound-identifier=? i bound-id)))) literals))
   ;; return as list of two lists so it's easy to match them in syntax pattern
-  (list (if bound-id (cons bound-id bound-literals) bound-literals)
-        unbound-literals))
+  ;; `syntax-parse` crabs if there are any duplicate ids, so remove them
+  (map (λ (ids) (remove-duplicates ids bound-identifier=?)) (list bound-literals unbound-literals)))
 
 (define (all-...-follow-wildcards pats)
   (define prev-datum (box #f))
