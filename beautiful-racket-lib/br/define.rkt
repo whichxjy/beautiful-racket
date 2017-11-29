@@ -149,7 +149,7 @@
            (λ (stx)
              (define result
                (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
-                 (syntax-parse (if (syntax? stx) stx (datum->syntax #'here stx))
+                 (syntax-parse (syntax-case stx () [any #'any])
                      #:literals BOUND-LITS
                      #:datum-literals UNBOUND-LITS
                    [pat . result-exprs] ...
