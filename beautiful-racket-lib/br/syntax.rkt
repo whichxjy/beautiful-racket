@@ -60,7 +60,7 @@
   [(_ () . BODY) #'(begin . BODY)]
   [(_ ([PAT0 STX0] PAT+STX ...) . BODY)
    #'(syntax-parse/easy STX0 PAT0
-                        [PAT0 (with-pattern (PAT+STX ...) (let () . BODY))]
+                        [PAT0 (with-pattern (PAT+STX ...) (let () (void) . BODY))]
                         [else (raise-syntax-error 'with-pattern
                                                   (format "unable to match pattern ~a" 'PAT0) STX0)])])
 
