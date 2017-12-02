@@ -141,8 +141,6 @@
     [(_ id:id leading-pat:expr ... else-pat:else-clause trailing-pat0:expr trailing-pat:expr ...)
      (raise-syntax-error 'define-macro-cases "`else` clause must be last" (syntax->datum #'id))]
     [(_ id:id (pat:expr . result-exprs:expr) ... else-clause:else-clause)
-     (unless (all-...-follow-wildcards #'(pat ...))
-       (raise-syntax-error 'define-macro-cases "found ellipses after non-wildcard variable" (syntax->datum stx)))
      (with-syntax ([(BOUND-LITS UNBOUND-LITS)
                     (generate-bound-and-unbound-literals #'(pat ...) #:treat-as-bound #'id)])
        #'(define-macro id
