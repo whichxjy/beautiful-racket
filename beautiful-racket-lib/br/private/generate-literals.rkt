@@ -19,7 +19,7 @@
   (for*/list ([pat-arg (in-list (syntax-flatten pats))]
               [pat-datum (in-value (syntax->datum pat-arg))]
               #:when (literal-identifier? pat-datum))
-    pat-arg))
+             pat-arg))
 
 
 (define (generate-bound-and-unbound-literals pats #:treat-as-bound [bound-id #f])
@@ -31,18 +31,19 @@
   ;; `syntax-parse` crabs if there are any duplicate ids, so remove them
   (map (λ (ids) (remove-duplicates ids bound-identifier=?)) (list bound-literals unbound-literals)))
 
+
 (define (ellipses-follow-wildcards-or-subpatterns? pat)
-  (define atom? (compose1 not pair?))
   (let loop ([datum (syntax->datum pat)])
-    (or (atom? datum)
-        (and (andmap loop datum)
-             (cond
-               [(equal? datum '(...)) #f]
-               [(<= 0 (length datum) 1)]
-               [else (for/and ([datum-left (in-list datum)]
-                               [datum-right (in-list (cdr datum))]
-                               #:when (and (atom? datum-left) (eq? datum-right '...)))
-                       (wildcard? datum-left))])))))
+    (cond
+      [(null? datum) #t]
+      [(equal? datum '(...)) #f]
+      [(list? datum) (and (andmap loop datum)
+                          (for/and ([datum-left (in-list datum)]
+                                    [datum-right (in-list (cdr datum))]
+                                    #:when (eq? datum-right '...))
+                                   (or (wildcard? datum-left) (pair? datum-left))))]
+      [(pair? datum) (loop (flatten datum))]
+      [else #t])))
 
 
 (module+ test
@@ -59,6 +60,7 @@
   (test-case "all-...-follow-wildcards"
              (check-true (ellipses-follow-wildcards-or-subpatterns? #'()))
              (check-true (ellipses-follow-wildcards-or-subpatterns? #'foo))
+             (check-true (ellipses-follow-wildcards-or-subpatterns? #'(foo . bar)))
              (check-true (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '(a b))))
              (check-true (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '(a b C ...))))
              (check-true (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '((a b) ...))))
