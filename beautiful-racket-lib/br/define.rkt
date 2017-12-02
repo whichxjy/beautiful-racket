@@ -128,19 +128,23 @@
     [(_ id:id stxed-thing:syntaxed-thing) 
      #'(define-macro id (λ (stx) stxed-thing))]
     [(_ (id:id . patargs:expr) . body:expr)
-     #'(define-macro-cases id [(id . patargs) (begin . body)])]
+     (with-syntax ([id (syntax-property #'id 'caller 'define-macro)])
+       #'(define-macro-cases id [(id . patargs) (begin . body)]))]
     [else (raise-syntax-error
            'define-macro
            "no matching case for calling pattern"
            (syntax->datum stx))]))
 
-(define-syntax (define-macro-cases stx)  
+(define-syntax (define-macro-cases stx)
+  (define (error-source stx) (or (syntax-property stx 'caller) 'define-macro-cases))
   (syntax-parse stx
     [(_ id:id)
-     (raise-syntax-error 'define-macro-cases "no cases given" (syntax->datum #'id))]
+     (raise-syntax-error (error-source #'id) "no cases given" (syntax->datum #'id))]
     [(_ id:id leading-pat:expr ... else-pat:else-clause trailing-pat0:expr trailing-pat:expr ...)
-     (raise-syntax-error 'define-macro-cases "`else` clause must be last" (syntax->datum #'id))]
+     (raise-syntax-error (error-source #'id) "`else` clause must be last" (syntax->datum #'id))]
     [(_ id:id (pat:expr . result-exprs:expr) ... else-clause:else-clause)
+     (unless (ellipses-follow-wildcards-or-subpatterns? #'(pat ...))
+       (raise-syntax-error (error-source #'id) "ellipsis in pattern can only appear after wildcard or subpattern" (syntax->datum stx)))
      (with-syntax ([(BOUND-LITS UNBOUND-LITS)
                     (generate-bound-and-unbound-literals #'(pat ...) #:treat-as-bound #'id)])
        #'(define-macro id
@@ -148,8 +152,8 @@
              (define result
                (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
                  (syntax-parse (syntax-case stx () [any #'any])
-                     #:literals BOUND-LITS
-                     #:datum-literals UNBOUND-LITS
+                   #:literals BOUND-LITS
+                   #:datum-literals UNBOUND-LITS
                    [pat . result-exprs] ...
                    else-clause)))
              (if (syntax? result)
@@ -163,7 +167,7 @@
                 "no matching case for calling pattern"
                 (syntax->datum caller-stx))])]
     [else (raise-syntax-error
-           'define-macro-cases
+           (error-source #'id)
            "no matching case for calling pattern"
            (syntax->datum stx))]))
 
