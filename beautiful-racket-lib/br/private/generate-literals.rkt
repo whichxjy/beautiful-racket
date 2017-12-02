@@ -1,5 +1,5 @@
 #lang racket/base
-(require "syntax-flatten.rkt" racket/list)
+(require "syntax-flatten.rkt" racket/list racket/match)
 (provide ellipses-follow-wildcards-or-subpatterns? generate-literals generate-bound-and-unbound-literals)
 
 (define (literal-identifier? pat-datum)
@@ -34,15 +34,15 @@
 
 (define (ellipses-follow-wildcards-or-subpatterns? pat)
   (let loop ([datum (syntax->datum pat)])
-    (cond
-      [(null? datum) #t]
-      [(equal? datum '(...)) #f]
-      [(list? datum) (and (andmap loop datum)
-                          (for/and ([datum-left (in-list datum)]
-                                    [datum-right (in-list (cdr datum))]
-                                    #:when (eq? datum-right '...))
-                                   (or (wildcard? datum-left) (pair? datum-left))))]
-      [(pair? datum) (loop (flatten datum))]
+    (match datum
+      [(? null?) #t]
+      [(cons '... _) #f]
+      [(cons _ '...) #f]
+      [(list head '... tail ...) (and (or (wildcard? head) (pair? head))
+                                      (loop head)
+                                      (loop tail))]
+      [(list head tail ...) (and (loop head) (loop tail))]
+      [(cons x y) (loop (list x y))]
       [else #t])))
 
 
@@ -76,4 +76,9 @@
              (check-false (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '(((a ...) ...) ...))))
              (check-false (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '(((B ...) a ...) ...))))
              (check-false (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '((...) B ...))))
-             (check-false (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '(((((...))))))))))
+             (check-false (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '(((((...))))))))
+             (check-false (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '(A . ...))))
+             (check-false (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '(... A))))
+             (check-false (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '(... . A))))
+             (check-false (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '(... . ...))))
+             (check-false (ellipses-follow-wildcards-or-subpatterns? (datum->syntax #f '((... . A) ...))))))
