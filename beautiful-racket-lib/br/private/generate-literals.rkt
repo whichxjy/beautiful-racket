@@ -19,11 +19,14 @@
   (for*/list ([pat-arg (in-list (syntax-flatten pats))]
               [pat-datum (in-value (syntax->datum pat-arg))]
               #:when (literal-identifier? pat-datum))
-             pat-arg))
+    pat-arg))
 
 
 (define (generate-bound-and-unbound-literals pats #:treat-as-bound [bound-id #f])
-  (define literals (generate-literals pats))
+  (define literals (for/list ([literal (in-list (generate-literals pats))]
+                              ; the bound-id should not appear in any literal list
+                              #:unless (bound-identifier=? literal bound-id))
+                     literal))
   (define-values (bound-literals unbound-literals)
     (partition (λ (i) (or (identifier-binding i)
                           (and bound-id (bound-identifier=? i bound-id)))) literals))
