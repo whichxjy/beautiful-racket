@@ -37,6 +37,17 @@
   (map (λ (ids) (remove-duplicates ids bound-identifier=?)) (list bound-literals unbound-literals)))
 
 
+(module+ test
+  (define b-id 42)
+  (match-let ([(list bs ubs) (generate-bound-and-unbound-literals #'(ub-id b-id FOO))])
+    (check-equal? (map syntax->datum bs) '(b-id))
+    (check-equal? (map syntax->datum ubs) '(ub-id)))
+  (match-let ([(list bs ubs) (generate-bound-and-unbound-literals #'(ub-id b-id FOO) #:treat-as-bound #'ub-id)])
+    (check-equal? (map syntax->datum bs) '(b-id))
+    (check-equal? (map syntax->datum ubs) '()))
+  (check-exn exn:fail:contract? (λ () (generate-bound-and-unbound-literals #'(ub-id b-id FOO) #:treat-as-bound 42)))) 
+
+
 (define (ellipses-follow-wildcards-or-subpatterns? pat)
   (let loop ([datum (syntax->datum pat)])
     (match datum
