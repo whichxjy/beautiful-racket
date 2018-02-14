@@ -23,9 +23,11 @@
 
 
 (define (generate-bound-and-unbound-literals pats #:treat-as-bound [bound-id #f])
+  (when (and bound-id (not (identifier? bound-id)))
+    (raise-argument-error 'generate-bound-and-unbound-literals "identifier" bound-id))
   (define literals (for/list ([literal (in-list (generate-literals pats))]
                               ; the bound-id should not appear in any literal list
-                              #:unless (bound-identifier=? literal bound-id))
+                              #:unless (and bound-id (bound-identifier=? literal bound-id)))
                      literal))
   (define-values (bound-literals unbound-literals)
     (partition (λ (i) (or (identifier-binding i)
