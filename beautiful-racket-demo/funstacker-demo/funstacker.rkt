@@ -1,10 +1,10 @@
 #lang br/quicklang
 
 (define (read-syntax path port)
-  (define args (port->lines port))
-  (define handle-datums (format-datums '~a args))
+  (define src-lines (port->lines port))
+  (define src-datums (format-datums '~a src-lines))
   (define module-datum `(module funstacker-mod "funstacker.rkt"
-                          (handle-args ,@handle-datums)))
+                          (handle-args ,@src-datums)))
   (datum->syntax #f module-datum))
 (provide read-syntax)
 
