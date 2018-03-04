@@ -1,6 +1,6 @@
 #lang br
-(require "sample-export.rkt")
-(provide (all-from-out "sample-export.rkt"))
+(require "sample-exporter.rkt")
+(provide (all-from-out "sample-exporter.rkt"))
 div
 x
 (div x 10)

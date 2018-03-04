@@ -8,4 +8,8 @@
 here
   )
 
-(parse-to-datum (apply-tokenizer-maker make-tokenizer str))
+(module+ test
+  (require rackunit)
+  (check-equal?
+   (parse-to-datum (apply-tokenizer-maker make-tokenizer str))
+   '(b-program (b-line 10 (b-rem "rem print")) (b-line 20 (b-end)))))
