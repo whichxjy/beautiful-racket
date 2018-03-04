@@ -1,10 +1,10 @@
 #lang br/quicklang
 
 (define (read-syntax path port)
-  (define args (port->lines port))
-  (define handle-datums (format-datums '(handle ~a) args))
+  (define src-lines (port->lines port))
+  (define src-datums (format-datums '(handle ~a) src-lines))
   (define module-datum `(module stacker-mod stacker-demo/stacker
-                          ,@handle-datums))
+                          ,@src-datums))
   (datum->syntax #f module-datum))
 (provide read-syntax)
 
