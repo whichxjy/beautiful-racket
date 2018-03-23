@@ -186,7 +186,7 @@
   (check-equal? fortytwo 42)
   (check-equal? (let ()
                   (define-macro (foo X)
-                    (with-syntax ([zam +])
+                    (with-syntax ([zam #'+])
                       #'(zam X X))) (foo 42)) 84) 
   (begin
     (define-macro (redefine ID) #'(define ID 42))
