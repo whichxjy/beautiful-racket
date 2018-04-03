@@ -135,6 +135,14 @@
            "no matching case for calling pattern"
            (syntax->datum stx))]))
 
+(define-for-syntax (literalize-pat pat)
+  (cond
+    [(syntax->list pat) => (λ (subpats) (datum->syntax pat (map literalize-pat subpats)))]
+    [else (syntax-case pat ()
+            [pat (and (identifier? #'pat) (literal-identifier-datum? (syntax->datum #'pat)))
+                 #'(~literal pat)]
+            [pat #'pat])]))
+
 (define-syntax (define-macro-cases stx)
   (define (error-source stx) (or (syntax-property stx 'caller) 'define-macro-cases))
   (syntax-parse stx
@@ -145,16 +153,13 @@
     [(_ id:id (pat:expr . result-exprs:expr) ... else-clause:else-clause)
      (unless (ellipses-follow-wildcards-or-subpatterns? #'(pat ...))
        (raise-syntax-error (error-source #'id) "ellipsis in pattern can only appear after wildcard or subpattern" (syntax->datum stx)))
-     (with-syntax ([(BOUND-LITS UNBOUND-LITS)
-                    (generate-bound-and-unbound-literals #'(pat ...) #:treat-as-bound #'id)])
+     (with-syntax ([(PAT ...) (map literalize-pat (syntax->list #'(pat ...)))])
        #'(define-macro id
            (λ (stx)
              (define result
                (syntax-parameterize ([caller-stx (make-rename-transformer #'stx)])
                  (syntax-parse (syntax-case stx () [any #'any])
-                   #:literals BOUND-LITS
-                   #:datum-literals UNBOUND-LITS
-                   [pat . result-exprs] ...
+                   [PAT . result-exprs] ...
                    else-clause)))
              (if (syntax? result)
                  result

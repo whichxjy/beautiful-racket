@@ -1,8 +1,8 @@
 #lang racket/base
 (require "syntax-flatten.rkt" racket/list racket/match)
-(provide ellipses-follow-wildcards-or-subpatterns? generate-literals generate-bound-and-unbound-literals)
+(provide ellipses-follow-wildcards-or-subpatterns? generate-literals generate-bound-and-unbound-literals literal-identifier-datum?)
 
-(define (literal-identifier? pat-datum)
+(define (literal-identifier-datum? pat-datum)
   (and (symbol? pat-datum)
        (not (memq pat-datum '(... _))) ; isn't a reserved identifier
        (let ([pat-str (symbol->string pat-datum)])
@@ -11,14 +11,14 @@
 
 (define (wildcard? pat-datum)
   (and (symbol? pat-datum)
-       (not (literal-identifier? pat-datum))
+       (not (literal-identifier-datum? pat-datum))
        (not (memq pat-datum '(... _)))))
 
 ;; generate literals for any symbols that are not ... or _ and not IN_CAPS
 (define (generate-literals pats)
   (for*/list ([pat-arg (in-list (syntax-flatten pats))]
               [pat-datum (in-value (syntax->datum pat-arg))]
-              #:when (literal-identifier? pat-datum))
+              #:when (literal-identifier-datum? pat-datum))
     pat-arg))
 
 
