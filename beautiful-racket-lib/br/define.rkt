@@ -135,13 +135,6 @@
            "no matching case for calling pattern"
            (syntax->datum stx))]))
 
-(define-for-syntax (literalize-pat pat)
-  (cond
-    [(syntax->list pat) => (λ (subpats) (datum->syntax pat (map literalize-pat subpats)))]
-    [else (syntax-case pat ()
-            [pat (and (identifier? #'pat) (literal-identifier-datum? (syntax->datum #'pat)))
-                 #'(~literal pat)]
-            [pat #'pat])]))
 
 (define-syntax (define-macro-cases stx)
   (define (error-source stx) (or (syntax-property stx 'caller) 'define-macro-cases))

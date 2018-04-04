@@ -1,6 +1,6 @@
 #lang racket/base
-(require "syntax-flatten.rkt" racket/list racket/match)
-(provide ellipses-follow-wildcards-or-subpatterns? generate-literals generate-bound-and-unbound-literals literal-identifier-datum?)
+(require "syntax-flatten.rkt" racket/list racket/match syntax/parse)
+(provide ellipses-follow-wildcards-or-subpatterns? generate-literals generate-bound-and-unbound-literals literalize-pat)
 
 (define (literal-identifier-datum? pat-datum)
   (and (symbol? pat-datum)
@@ -8,6 +8,23 @@
        (let ([pat-str (symbol->string pat-datum)])
          (or (not (regexp-match #rx"[A-Z]" pat-str)) ; either doesn't contain at least one uppercase letter ...
              (not (equal? (string-upcase pat-str) pat-str)))))) ;...  or doesn't contain all uppercase letters
+
+(define (literalize-pat pat)
+  (cond
+    [(syntax->list #'pat) => (λ (subpats) (datum->syntax pat (map literalize-pat subpats)))]
+    [else
+     (syntax-case pat ()
+       [(head . tail) (datum->syntax pat (cons (literalize-pat #'head) (literalize-pat #'tail)))]
+       [pat (and (identifier? #'pat) (literal-identifier-datum? (syntax->datum #'pat)))
+            #'(~literal pat)]
+       [pat #'pat])]))
+
+(module+ test
+  (check-equal? (syntax->datum (literalize-pat #'(hello WORLD))) '((~literal hello) WORLD))
+  (check-equal? (syntax->datum (literalize-pat #'(hello . WORLD))) '((~literal hello) . WORLD))
+  (check-equal? (syntax->datum (literalize-pat #'(hello WORLD (... ...)))) '((~literal hello) WORLD  ...))
+  (check-equal? (syntax->datum (literalize-pat #'(hello (cruel WORLD)))) '((~literal hello) ((~literal cruel) WORLD)))
+  (check-equal? (syntax->datum (literalize-pat #'(hello (cruel . WORLD)))) '((~literal hello) ((~literal cruel) . WORLD))))
 
 (define (wildcard? pat-datum)
   (and (symbol? pat-datum)
