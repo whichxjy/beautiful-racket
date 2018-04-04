@@ -146,7 +146,7 @@
     [(_ id:id (pat:expr . result-exprs:expr) ... else-clause:else-clause)
      (unless (ellipses-follow-wildcards-or-subpatterns? #'(pat ...))
        (raise-syntax-error (error-source #'id) "ellipsis in pattern can only appear after wildcard or subpattern" (syntax->datum stx)))
-     (with-syntax ([(PAT ...) (map literalize-pat (syntax->list #'(pat ...)))])
+     (with-syntax ([(PAT ...) (map (λ (x) (literalize-pat x #'~literal)) (syntax->list #'(pat ...)))])
        #'(define-macro id
            (λ (stx)
              (define result

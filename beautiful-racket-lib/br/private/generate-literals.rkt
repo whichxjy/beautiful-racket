@@ -1,23 +1,32 @@
 #lang racket/base
 (require "syntax-flatten.rkt" racket/list racket/match syntax/parse)
-(provide ellipses-follow-wildcards-or-subpatterns? generate-literals generate-bound-and-unbound-literals literalize-pat)
+(provide ellipses-follow-wildcards-or-subpatterns? literalize-pat)
 
-(define (literal-identifier-datum? pat-datum)
-  (and (symbol? pat-datum)
-       (not (memq pat-datum '(... _))) ; isn't a reserved identifier
-       (let ([pat-str (symbol->string pat-datum)])
-         (or (not (regexp-match #rx"[A-Z]" pat-str)) ; either doesn't contain at least one uppercase letter ...
-             (not (equal? (string-upcase pat-str) pat-str)))))) ;...  or doesn't contain all uppercase letters
+(define (literal-identifier? x)
+  (let ([x (if (syntax? x) (syntax-e x) x)])
+    (and (symbol? x)
+         (not (memq x '(... _))) ; isn't a reserved identifier
+         (let ([pat-str (symbol->string x)])
+           (or (not (regexp-match #rx"[A-Z]" pat-str)) ; either doesn't contain at least one uppercase letter ...
+               (not (equal? (string-upcase pat-str) pat-str))))))) ;...  or doesn't contain all uppercase letters
 
-(define (literalize-pat pat)
-  (cond
-    [(syntax->list #'pat) => (λ (subpats) (datum->syntax pat (map literalize-pat subpats)))]
-    [else
-     (syntax-case pat ()
-       [(head . tail) (datum->syntax pat (cons (literalize-pat #'head) (literalize-pat #'tail)))]
-       [pat (and (identifier? #'pat) (literal-identifier-datum? (syntax->datum #'pat)))
-            #'(~literal pat)]
-       [pat #'pat])]))
+
+(define (wildcard-datum? x) (and (symbol? x) (not (literal-identifier? x))))
+
+
+(define (literalize-pat pat [literalizer-id #'~literal])
+  ;; take `literalizer-id` as explicit input from the calling site
+  ;; because this is a macro helper
+  ;; so hygiene is not enforced
+  (let loop ([pat pat])
+    (syntax-case pat ()
+      [(HEAD . TAIL) (datum->syntax pat (cons (loop #'HEAD) (loop #'TAIL)))]
+      [MAYBE-LIT-ID (literal-identifier? #'MAYBE-LIT-ID)
+              (with-syntax ([literalizer-id literalizer-id]
+                            [lit-id #'MAYBE-LIT-ID])
+                #'(literalizer-id lit-id))]
+      [ANY #'ANY])))
+
 
 (module+ test
   (check-equal? (syntax->datum (literalize-pat #'(hello WORLD))) '((~literal hello) WORLD))
@@ -26,44 +35,6 @@
   (check-equal? (syntax->datum (literalize-pat #'(hello (cruel WORLD)))) '((~literal hello) ((~literal cruel) WORLD)))
   (check-equal? (syntax->datum (literalize-pat #'(hello (cruel . WORLD)))) '((~literal hello) ((~literal cruel) . WORLD))))
 
-(define (wildcard? pat-datum)
-  (and (symbol? pat-datum)
-       (not (literal-identifier-datum? pat-datum))
-       (not (memq pat-datum '(... _)))))
-
-;; generate literals for any symbols that are not ... or _ and not IN_CAPS
-(define (generate-literals pats)
-  (for*/list ([pat-arg (in-list (syntax-flatten pats))]
-              [pat-datum (in-value (syntax->datum pat-arg))]
-              #:when (literal-identifier-datum? pat-datum))
-    pat-arg))
-
-
-(define (generate-bound-and-unbound-literals pats #:treat-as-bound [bound-id #f])
-  (when (and bound-id (not (identifier? bound-id)))
-    (raise-argument-error 'generate-bound-and-unbound-literals "identifier" bound-id))
-  (define literals (for/list ([literal (in-list (generate-literals pats))]
-                              ; the bound-id should not appear in any literal list
-                              #:unless (and bound-id (bound-identifier=? literal bound-id)))
-                     literal))
-  (define-values (bound-literals unbound-literals)
-    (partition (λ (i) (or (identifier-binding i)
-                          (and bound-id (bound-identifier=? i bound-id)))) literals))
-  ;; return as list of two lists so it's easy to match them in syntax pattern
-  ;; `syntax-parse` crabs if there are any duplicate ids, so remove them
-  (map (λ (ids) (remove-duplicates ids bound-identifier=?)) (list bound-literals unbound-literals)))
-
-
-(module+ test
-  (define b-id 42)
-  (match-let ([(list bs ubs) (generate-bound-and-unbound-literals #'(ub-id b-id FOO))])
-    (check-equal? (map syntax->datum bs) '(b-id))
-    (check-equal? (map syntax->datum ubs) '(ub-id)))
-  (match-let ([(list bs ubs) (generate-bound-and-unbound-literals #'(ub-id b-id FOO) #:treat-as-bound #'ub-id)])
-    (check-equal? (map syntax->datum bs) '(b-id))
-    (check-equal? (map syntax->datum ubs) '()))
-  (check-exn exn:fail:contract? (λ () (generate-bound-and-unbound-literals #'(ub-id b-id FOO) #:treat-as-bound 42)))) 
-
 
 (define (ellipses-follow-wildcards-or-subpatterns? pat)
   (let loop ([datum (syntax->datum pat)])
@@ -71,7 +42,7 @@
       [(? null?) #t]
       [(cons '... _) #f]
       [(cons _ '...) #f]
-      [(list head '... tail ...) (and (or (wildcard? head) (pair? head))
+      [(list head '... tail ...) (and (or (wildcard-datum? head) (pair? head))
                                       (loop head)
                                       (loop tail))]
       [(list head tail ...) (and (loop head) (loop tail))]
@@ -81,14 +52,11 @@
 
 (module+ test
   (require rackunit)
-  (check-equal? (map syntax->datum (generate-literals #'(foo 42 BAR _ (... ...) bar <=> 3Bar 3bar))) '(foo bar <=> 3Bar 3bar))
-
   (test-case "wildcard-identifier?"
-             (check-true (wildcard? 'FOO))
-             (check-true (wildcard? 'TOPPING))
-
-             (check-false (wildcard? 'piZZa))
-             (check-false (wildcard? 'please)))
+             (check-true (wildcard-datum? 'FOO))
+             (check-true (wildcard-datum? 'TOPPING))
+             (check-false (wildcard-datum? 'piZZa))
+             (check-false (wildcard-datum? 'please)))
 
   (test-case "all-...-follow-wildcards"
              (check-true (ellipses-follow-wildcards-or-subpatterns? #'()))

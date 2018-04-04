@@ -22,8 +22,36 @@
                      [suffix-id suffix-ids]
                      [infix-id infix-ids]))
 
+(module+ test (require rackunit))
+
+
+(define-macro-cases syntax-parse/easy
+  [(_ STX [PAT . BODY] ... [else . ELSEBODY])
+   (with-syntax ([(PAT ...) (map (λ (stx) (literalize-pat stx #'~literal)) (syntax->list #'(PAT ...)))])
+     #'(syntax-parse (syntax-case STX () [any #'any])
+         [PAT . BODY] ... [else . ELSEBODY]))])
+
+
+(define-macro-cases pattern-case
+  [(_ EXPR ... [else . ELSEBODY]) #'(syntax-parse/easy EXPR ... 
+                                                       [else . ELSEBODY])]
+  [(_ STX-ARG PAT+BODY ...)
+   #'(pattern-case STX-ARG
+                   PAT+BODY ...
+                   [else (raise-syntax-error 'pattern-case
+                                             (format "unable to match pattern for ~v" (syntax->datum STX-ARG)))])])
+
 (module+ test
-  (require rackunit))
+  (define (pc stx)
+    (pattern-case stx
+                  [(a 2ND c) #'2ND]
+                  [(LEFT RIGHT) #'LEFT]
+                  [(g) #'hooray]))
+  (check-equal? (syntax->datum (pc #'(a b c))) 'b)
+  (check-equal? (syntax->datum (pc #'(x y))) 'x)
+  (check-equal? (syntax->datum (pc #'(g))) 'hooray)
+  (check-exn exn:fail:syntax? (λ () (pc #'(f)))))
+
 
 (define-macro (pattern-case-filter STX-ARG PAT+BODY ...)
   #'(let* ([arg STX-ARG]
@@ -34,35 +62,36 @@
       (for*/list ([stx (in-list stxs)]
                   [result (in-value (pattern-case stx PAT+BODY ... [else #f]))]
                   #:when result)
-                 result)))
+        result)))
 
 
-(define-macro (syntax-parse/easy STX LITS . EXPS)
-  (with-syntax ([(BOUND-LITS UNBOUND-LITS) (generate-bound-and-unbound-literals #'LITS)])
-    #'(syntax-parse (syntax-case STX () [any #'any])
-          #:literals BOUND-LITS
-          #:datum-literals UNBOUND-LITS
-          . EXPS)))
+(module+ test
+  (define (pcf x)
+    (pattern-case-filter x
+                         [(1ST 2ND 3RD) #'2ND]
+                         [(LEFT RIGHT) #'LEFT]))
+  (check-equal? (map syntax-e (pcf #'((a b c) (x y) (f)))) '(b x)))
 
-(define-macro-cases pattern-case
-  [(_ STX-ARG
-      [PAT . BODY] ...
-      [else . ELSEBODY]) #'(syntax-parse/easy STX-ARG (PAT ...)
-                                              [PAT . BODY] ...
-                                              [else . ELSEBODY])]
-  [(_ STX-ARG PAT+BODY ...)
-   #'(pattern-case STX-ARG
-                   PAT+BODY ...
-                   [else (raise-syntax-error 'pattern-case
-                                             (format "unable to match pattern for ~v" (syntax->datum STX-ARG)))])])
 
 (define-macro-cases with-pattern
   [(_ () . BODY) #'(begin . BODY)]
   [(_ ([PAT0 STX0] PAT+STX ...) . BODY)
-   #'(syntax-parse/easy STX0 PAT0
+   #'(syntax-parse/easy STX0 
                         [PAT0 (with-pattern (PAT+STX ...) (let () (void) . BODY))]
                         [else (raise-syntax-error 'with-pattern
                                                   (format "unable to match pattern ~a" 'PAT0) STX0)])])
+
+(module+ test
+  (check-equal? (syntax->datum (with-pattern ([foo 'foo])
+                                 #'zzz)) 'zzz)
+  (check-exn exn:fail:syntax? (λ () (with-pattern ([42 'foo])
+                                      #'zzz)))
+  (check-exn exn:fail:syntax? (λ () (with-pattern ([bar 'foo])
+                                      #'zzz)))
+  (check-equal? (syntax->datum (with-pattern ([(foo BAR) '(foo 42)])
+                                 #'BAR)) 42)
+  (check-exn exn:fail:syntax? (λ () (with-pattern ([(foo BAR) '(zam 42)])
+                                      #'BAR))))
 
 
 (define-macro (format-string FMT ID0 ID ...)
