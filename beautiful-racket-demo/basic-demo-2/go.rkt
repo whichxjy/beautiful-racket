@@ -15,7 +15,7 @@
     (b-goto num-expr)))
 
 (define (b-return)
-  (unless (not (empty? return-ccs))
+  (when (empty? return-ccs)
     (raise-line-error "return without gosub"))
   (define top-cc (pop! return-ccs))
   (top-cc (void)))
