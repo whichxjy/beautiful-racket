@@ -679,11 +679,11 @@ xs
 
 
 @defproc[
-(test-reader
+(apply-reader
 [read-syntax-proc procedure?]
 [source-str string?])
 datum?]{
-Applies @racket[read-syntax-proc] to @racket[source-str] as if it were being read in from a source file. 
+Applies @racket[read-syntax-proc] to @racket[source-str] as if it were being read in from a source file. Perhaps helpful for testing & debugging.
 }
 
 

@@ -2,8 +2,11 @@
 (require (for-syntax racket/base racket/syntax br/syntax) br/define syntax/strip-context)
 (provide (all-defined-out))
 
-(define (test-reader read-syntax-proc str)
+(define (apply-reader read-syntax-proc str)
   (syntax->datum (read-syntax-proc #f (open-input-string str))))
+
+;; bw compat
+(define test-reader apply-reader)
 
 ;; `define-read-functions` simplifies support for the standard reading API,
 ;; which asks for `read` and `read-syntax`.
