@@ -17,7 +17,19 @@
                                                       "until") 'define]
                                                     [else #f])))))
 
-(define (br-get-info key default default-filter)
+(define (br-get-info key default-value proc)
+  (define (fallback) (if proc (proc key default-value) default-value))
+  (define (try-dynamic-require lib export)
+    (with-handlers ([exn:missing-module?
+                     (λ (x) (case key
+                              [(drracket:indentation) indenter]
+                              [else (fallback)]))])
+      (dynamic-require lib export)))
   (case key
-    [(drracket:indentation) indenter]
-    [else (default-filter key default)]))
+    [(color-lexer)
+     (try-dynamic-require 'syntax-color/scribble-lexer 'scribble-lexer)]
+    [(drracket:indentation)
+     (try-dynamic-require 'scribble/private/indentation 'determine-spaces)]
+    [(drracket:keystrokes)
+     (try-dynamic-require 'scribble/private/indentation 'keystrokes)]
+    [else (fallback)]))

@@ -22,4 +22,6 @@
 (module reader syntax/module-reader
   #:language 'br
   #:info br-get-info
-  (require br/get-info))
+  #:read at:read
+  #:read-syntax at:read-syntax
+  (require br/get-info (prefix-in at: scribble/reader)))
