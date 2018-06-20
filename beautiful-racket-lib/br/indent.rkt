@@ -17,14 +17,15 @@
 
 (define/contract (char text pos)
   ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . (or/c char? #f))
-  (and pos (send text get-character pos)))
+  (and pos (let ([c (send text get-character pos)])
+             (if (char=? #\nul c) #f c))))
 
 (module+ test
   (check-equal? (char t 0) #\f)
   (check-equal? (char t 2) #\o)
   (check-equal? (char t 3) #\newline)
   (check-equal? (char t 10) #\m)
-  (check-equal? (char t 11) #\nul))
+  (check-equal? (char t 11) #f))
 
 (define/contract (line text pos)
   ((is-a?/c text%) (or/c exact-nonnegative-integer? #f) . -> . exact-nonnegative-integer?)
@@ -41,13 +42,15 @@
   ((is-a?/c text%) exact-nonnegative-integer? . -> . (or/c (listof char?) #f))
   (and
    (valid-line? text line)
-   (for/list ([pos (in-range (line-start text line) (add1 (line-end text line)))])
-             (char text pos))))
+   (for*/list ([pos (in-range (line-start text line) (add1 (line-end text line)))]
+               [c (in-value (char text pos))]
+               #:when c)
+              c)))
 
 (module+ test
   (check-equal? (line-chars t 0) '(#\f #\o #\o #\newline))
   (check-equal? (line-chars t 1) '(#\space #\a #\r #\newline))
-  (check-equal? (line-chars t 2) '(#\space #\space #\m #\nul))
+  (check-equal? (line-chars t 2) '(#\space #\space #\m))
   (check-equal? (line-chars t 3) #f))
 
 
@@ -155,9 +158,10 @@
   (check-equal? (line-indent t 3) #f))
 
 (define (count-char text c [start 0] [end (send text last-position)])
-  (for/sum ([pos (in-range start (add1 end))]
-            #:when ((char text pos) . char=? . c))
-           1))
+  (for*/sum ([pos (in-range start (add1 end))]
+             [d (in-value (char text pos))]
+             #:when (and d (d . char=? . c)))
+            1))
 
 (module+ test
   (check-equal? (count-char t #\f) 1)
@@ -172,6 +176,7 @@
   t)
 
 (define (space-char? x) (char=? x #\space))
+
 
 (define/contract (apply-indenter indenter t-or-str)
   (procedure? (or/c (is-a?/c text%) string?) . -> . string?)
