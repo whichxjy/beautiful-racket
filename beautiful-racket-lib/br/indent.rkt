@@ -149,10 +149,11 @@
   (and (valid-line? text line)
        (let ([lsv (line-start-visible text line)])
          (and lsv ; could be #f
-              (- (line-start-visible text line) (line-start text line))))))
+              (let ([li (- (line-start-visible text line) (line-start text line))])
+                (and (positive? li) li))))))
 
 (module+ test
-  (check-equal? (line-indent t 0) 0)
+  (check-equal? (line-indent t 0) #f)
   (check-equal? (line-indent t 1) 1)
   (check-equal? (line-indent t 2) 2)
   (check-equal? (line-indent t 3) #f))
