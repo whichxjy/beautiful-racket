@@ -13,7 +13,6 @@
   (define (next-token)
     (define bf-lexer
       (lexer
-       [(eof) eof]
        [(char-set "><-.,+[]") lexeme]
        [any-char (next-token)]))
     (bf-lexer port))  

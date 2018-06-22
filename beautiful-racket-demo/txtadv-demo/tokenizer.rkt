@@ -7,7 +7,6 @@
   (define (next-token)
     (define get-token
       (lexer
-       [(eof) eof]
        [(union
          (:seq "/*" (complement (:seq any-string "*/" any-string)) "*/")
          (:seq "//" (repetition 1 +inf.0 (char-complement #\newline)) #\newline))

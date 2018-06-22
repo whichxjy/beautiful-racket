@@ -10,7 +10,6 @@
 
 (define basic-lexer
   (lexer-src-pos
-   [(eof) eof]
    [whitespace (token 'WHITE lexeme #:skip? #t
                       #:position (pos lexeme-start)
                       #:line (line lexeme-start)

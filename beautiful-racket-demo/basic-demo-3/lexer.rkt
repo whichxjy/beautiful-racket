@@ -10,7 +10,6 @@
 
 (define basic-lexer
   (lexer-srcloc
-   [(eof) (return-without-srcloc eof)]
    ["\n" (token 'NEWLINE lexeme)]
    [whitespace (token lexeme #:skip? #t)]
    [(from/stop-before "rem" "\n") (token 'REM lexeme)]

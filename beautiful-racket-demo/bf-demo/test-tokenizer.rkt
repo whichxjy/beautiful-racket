@@ -10,8 +10,7 @@
      #;[(:: "#" (:* (complement "\n")) "\n") (token 'comment #:skip? #t)]
      [whitespace (token 'white #:skip? #t)]
      ;; treat other characters as comments
-     [(char-range #\nul #\~) (token 'ascii #:skip? #t)]
-     [(eof) eof]))
+     [(char-range #\nul #\~) (token 'ascii #:skip? #t)]))
   
   (define (next-token) (get-token ip))
   

@@ -18,7 +18,6 @@
   (define (next-token)
     (define jsonic-lexer
       (lexer
-       [(eof) eof]
        [(from/to "//" "\n") (next-token)]
        [(from/to "@$" "$@")
         (token 'SEXP-TOK (trim-ends "@$" lexeme "$@")

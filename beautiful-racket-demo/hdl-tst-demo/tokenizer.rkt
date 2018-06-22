@@ -4,7 +4,6 @@
 
 (define hdl-test-lexer
   (lexer-srcloc
-   [(eof) eof]
    [(:or (from/to "/*" "*/")
          (from/to "//" #\newline)) (token 'COMMENT lexeme #:skip? #t)]
    [whitespace (token lexeme #:skip? #t)]
