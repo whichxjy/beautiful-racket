@@ -27,7 +27,7 @@
   #'(begin
       (define (ID) BODY)
       (module+ main
-        (displayln (format "~a: ~a" 'ID (ID))))))
+        (displayln (format "~a: ~a" 'ID (val ID))))))
 
 (define val
   (let ([val-cache (make-hash)])
