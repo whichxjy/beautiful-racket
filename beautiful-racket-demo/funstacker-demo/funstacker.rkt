@@ -15,7 +15,8 @@
 
 (define (handle-args . args)
   (for/fold ([stack-acc empty])
-            ([arg (filter-not void? args)])
+            ([arg (in-list args)]
+             #:unless (void? arg))
     (cond
       [(number? arg) (cons arg stack-acc)]
       [(or (equal? * arg) (equal? + arg))
