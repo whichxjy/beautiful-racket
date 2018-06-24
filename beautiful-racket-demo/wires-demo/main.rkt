@@ -14,12 +14,12 @@
 (provide #%module-begin)
 
 (define-macro-cases wire
-  [(wire ARG -> WIRE) #'(define/display (WIRE)
-                          (val ARG))]
-  [(wire OP ARG -> WIRE) #'(define/display (WIRE)
-                             (OP (val ARG)))]
-  [(wire ARG1 OP ARG2 -> WIRE) #'(define/display (WIRE)
-                                   (OP (val ARG1) (val ARG2)))]
+  [(wire ARG -> ID)
+   #'(define/display (ID) (val ARG))]
+  [(wire OP ARG -> ID)
+   #'(wire (OP (val ARG)) -> ID)]
+  [(wire ARG1 OP ARG2 -> ID)
+   #'(wire (OP (val ARG1) (val ARG2)) -> ID)]
   [else #'(void)])
 (provide wire)
 
@@ -27,7 +27,7 @@
   #'(begin
       (define (ID) BODY)
       (module+ main
-        (displayln (format "~a: ~a" 'ID (val ID))))))
+        (displayln (format "~a: ~a" 'ID (ID))))))
 
 (define val
   (let ([val-cache (make-hash)])
