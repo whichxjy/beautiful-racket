@@ -14,6 +14,7 @@
 (provide (all-defined-out)
          syntax-flatten
          stx-map
+         strip-context ;; under both names
          (rename-out [strip-context strip-bindings]
                      [replace-context replace-bindings]
                      [stx-map syntax-map]
