@@ -19,7 +19,7 @@ Installation
 Update
 -
 
-`raco pkg update beautiful-racket`
+`raco pkg update  --update-deps beautiful-racket`
 
 Documentation
 -
