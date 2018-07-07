@@ -1,4 +1,4 @@
-#lang s-exp scriptlike/expander
+#lang s-exp javascriptlike-demo/expander
 
 (assignment x 42)
 (assignment s "string")

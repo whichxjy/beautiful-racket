@@ -1,4 +1,4 @@
-#lang s-exp scriptlike
+#lang s-exp javascriptlike-demo
 ;;
 ;;var x = 42;
 ;(define x 42)
