@@ -14,6 +14,6 @@
       (repl-parse
        (make-tokenizer (open-input-string one-line)))))
 
-(define (do-setup! [where #f])
+(define (do-setup!)
   (basic-output-port (current-output-port))
   (current-read-interaction read-one-line))
