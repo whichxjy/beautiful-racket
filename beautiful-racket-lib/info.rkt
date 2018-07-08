@@ -1,7 +1,7 @@
 #lang info
 (define collection 'multi)
 
-(define version "1.3")
+(define version "1.4")
 (define deps '("at-exp-lib"
                "base"
                "sugar"
