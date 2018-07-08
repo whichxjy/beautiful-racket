@@ -7,16 +7,17 @@
   (for/list ([tok (in-port read ip)])
             tok))
 
-(define (parse tok)
-  (integer->char
-   (for/sum ([val (in-list tok)]
-             [power (in-naturals)]
-             #:when (eq? val 'taco))
-            (expt 2 power))))
+(define (parse toks)
+  (for/list ([tok (in-list toks)])
+            (integer->char
+             (for/sum ([val (in-list tok)]
+                       [power (in-naturals)]
+                       #:when (eq? val 'taco))
+                      (expt 2 power)))))
 
 (define (read-syntax src ip)
   (define toks (tokenize ip))
-  (define parse-tree (map parse toks))
+  (define parse-tree (parse toks))
   (define src-string (list->string parse-tree))
   (define racket-toks
     (for/list ([tok (in-port read (open-input-string src-string))])

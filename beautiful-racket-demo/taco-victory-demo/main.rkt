@@ -5,27 +5,30 @@
 (module+ reader
   (provide read-syntax))
 
-(define lex
-  (lexer
-   ["#$" lexeme]
-   ["%" lexeme]
-   [any-char (lex input-port)]))
+(define (tokenize ip)
+  (define lex
+    (lexer
+     ["#$" lexeme]
+     ["%" lexeme]
+     [any-char (lex input-port)]))
+  (lex ip))
 
 (define (taco-program . pieces) pieces)
 
 (define (taco-leaf . pieces)
   (integer->char
-   (for/sum ([bit (in-list pieces)]
+   (for/sum ([taco-or-not (in-list pieces)]
              [pow (in-naturals)])
-            (* bit (expt 2 pow)))))
+            (* taco-or-not (expt 2 pow)))))
 
 (define (taco) 1)
 
 (define (not-a-taco) 0)
 
 (define (read-syntax src ip)
-  (define parse-tree (parse (λ () (lex ip))))
+  (define token-thunk (λ () (tokenize ip)))
+  (define parse-tree (parse token-thunk))
   (strip-context
    (with-syntax ([PT parse-tree])
-     #'(module vic taco-victory-demo
+     #'(module winner taco-victory-demo
          (display (apply string PT))))))

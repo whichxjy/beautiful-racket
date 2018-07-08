@@ -8,17 +8,20 @@
   (for/list ([tok (in-port read-char ip)])
             tok))
 
-(define (leaf->char taco-leaf)
-  (integer->char
-   (for/sum ([val (in-list (cdr taco-leaf))]
-             [power (in-naturals)]
-             #:when (equal? val '(taco)))
-            (expt 2 power))))
+(define (parse toks)
+  (define parse-tree-datum (parse-to-datum toks))
+  (for/list ([leaf (in-list (cdr parse-tree-datum))])
+            (integer->char
+             (for/sum ([val (in-list (cdr leaf))]
+                       [power (in-naturals)]
+                       #:when (equal? val '(taco)))
+                      (expt 2 power)))))
+
 
 (define (read-syntax src ip)
-  (define parse-tree (parse-to-datum (tokenize ip)))
-  (define taco-branches (cdr parse-tree))
+  (define toks (tokenize ip))
+  (define parse-tree (parse toks))
   (strip-context
-   (with-syntax ([CHARS (map leaf->char taco-branches)])
+   (with-syntax ([PT parse-tree])
      #'(module untaco racket
-         (display (list->string 'CHARS))))))
+         (display (list->string 'PT))))))
