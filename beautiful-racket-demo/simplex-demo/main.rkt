@@ -28,8 +28,9 @@
   #'(ID ARG ...))
 
 (define (read-syntax src ip)
-  (define pt (parse (λ () (lex ip))))
+  (define token-thunk (λ () (lex ip)))
+  (define parse-tree (parse token-thunk))
   (strip-context
-   (with-syntax ([PT pt])
+   (with-syntax ([PT parse-tree])
      #'(module mod-name simplex-demo
          PT))))
