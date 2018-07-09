@@ -1,8 +1,9 @@
 #lang brag
 
-top : func-def{2} func-app
-func-def : /"fun" ID /"(" argids /")" /"=" expr
-/argids : ID [/"," ID]
-expr : ID "+" ID | func-app
-func-app : ID /"(" arg [/"," arg] /")"
-@arg : ID | INT
+top : (func-def | func-app)*
+func-def : /"fun" var /"(" boundvars /")" /"=" expr
+/boundvars : var [/"," var]
+expr : var "+" var | func-app
+func-app : var /"(" arg [/"," arg] /")"
+@var : ID
+@arg : var | INT
