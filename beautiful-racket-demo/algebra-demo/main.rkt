@@ -18,7 +18,7 @@
 (define-macro top #'begin)
 
 (define-macro (func-def VAR VARS EXPR)
-  #'(define VAR (λ VARS EXPR)))
+  #'(define (VAR . VARS) EXPR))
 
 (define-macro-cases expr
   [(_ LEFT "+" RIGHT) #'(+ LEFT RIGHT)]

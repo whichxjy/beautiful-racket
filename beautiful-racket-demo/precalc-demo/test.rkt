@@ -9,8 +9,7 @@ h() // also 300
 
 fun k(x) = x / 10 / 10 / (x / x)
 k(h()) // 3
-
-36/6/2 // 3
+k(10 * (15 + 3 * 5)) // 3
 
 /*
 multiline comment

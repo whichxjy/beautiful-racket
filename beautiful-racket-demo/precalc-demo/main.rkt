@@ -18,8 +18,8 @@
 
 (define-macro top #'begin)
 
-(define-macro (func-def ID ARGIDS EXPR)
-  #'(define ID (λ ARGIDS EXPR)))
+(define-macro (func-def VAR VARS EXPR)
+  #'(define (VAR . VARS) EXPR))
 
 (define-macro-cases sum
   [(_ LEFT "+" RIGHT) #'(+ LEFT RIGHT)]

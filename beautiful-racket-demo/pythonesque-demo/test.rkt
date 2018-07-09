@@ -1,51 +1,27 @@
 #lang pythonesque-demo
 
-a = 3
-b = 4
+"escaped quote: middle \" and end \""
+"escaped backslash: middle \\ and end \\"
 
-"middle \" escaped quote"
-"ending escaped quote\""
-"middle \\ escaped backslash"
-"ending escaped backslash\\"
+def nothing():
+  42
 
-def ft():
+def fortytwo():
   return 42
 
-def gt(x, y):
-  return x > y
+def eightyfour():
+  return 84
   def noop():
-    return "double dedent here"
+    return "double dedent next"
 
+nothing() # no output
 
-def squaresum(x, y):
-  def add(c, d):
-    return c + d
-  return add(x, y) * add(x, y)
-
-gt(a, b) # #f
-squaresum(b, a) # 49
-
-println(a)
-
-expt(2, 4)
-
-range(1, 5)
-
-# keep indented example next to eof
-for x in range(1, 5):
-  println(x * x)
-
-def foo(x):
-  x
-
-foo(42) # no return value
-
-if a < b:
-  print "a is less than b"
+if fortytwo() < eightyfour():
+  "left is less than right"
 else:
-  print "a is not less than b"
+  "left is not less than right"
 
-def bar(x, y):
-  return x > y
+def last():
+  return 42
   def noop():
-    return "double dedent here"
+    return "double dedent next"
