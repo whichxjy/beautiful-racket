@@ -6,10 +6,11 @@
   (provide read-syntax))
 
 (define-lex-abbrev reserved-toks
-  (:or "fun" "(" ")" "=" "+" ","))
+  (:or "fun" "(" ")" "=" "+" "*" "/" "-" ","))
 
 (define lex
   (lexer
+   [(:or (from/to "//" "\n") (from/to "/*" "*/")) (token 'COMMENT #:skip? #t)]
    [whitespace (lex input-port)]
    [reserved-toks lexeme]
    [alphabetic (token 'ID (string->symbol lexeme))]
@@ -17,11 +18,18 @@
 
 (define-macro top #'begin)
 
-(define-macro (func-def VAR VARS EXPR)
-  #'(define VAR (λ VARS EXPR)))
+(define-macro (func-def ID ARGIDS EXPR)
+  #'(define ID (λ ARGIDS EXPR)))
 
-(define-macro-cases expr
+(define-macro-cases sum
   [(_ LEFT "+" RIGHT) #'(+ LEFT RIGHT)]
+  [(_ LEFT "-" RIGHT) #'(- LEFT RIGHT)]
+  [(_ OTHER) #'OTHER])
+
+(define-macro-cases product
+  [(_ LEFT OP-STR RIGHT)
+   (with-syntax ([OP (string->symbol (syntax->datum #'OP-STR))])
+     #'(OP LEFT RIGHT))]
   [(_ OTHER) #'OTHER])
 
 (define-macro func-app #'#%app)
@@ -31,5 +39,5 @@
   (define parse-tree (parse token-thunk))
   (strip-context
    (with-syntax ([PT parse-tree])
-     #'(module mod-name algebra-demo
+     #'(module mod-name precalc-demo
          PT))))
