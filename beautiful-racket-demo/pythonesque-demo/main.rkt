@@ -67,13 +67,12 @@
 (define-macro block #'begin)
 
 (provide (rename-out [my-if if]))
-(define-macro-cases my-if
-  [(_ COND TBLOCK) #'(when COND TRUE-BLOCK)]
-  [(_ COND TBLOCK FBLOCK) #'(if COND (let () TBLOCK) (let () FBLOCK))])
+(define-macro (my-if COND TBLOCK FBLOCK)
+  #'(if COND (let () TBLOCK) (let () FBLOCK)))
 
 (define (read-syntax src ip)
   (define parse-tree (parse (λ () (lex ip))))
   (strip-context
    (with-syntax ([PT parse-tree])
-     #'(module _ pythonesque-demo
+     #'(module pyname pythonesque-demo
          PT))))
