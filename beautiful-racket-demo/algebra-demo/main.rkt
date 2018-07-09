@@ -32,5 +32,5 @@
   (define parse-tree (parse token-thunk))
   (strip-context
    (with-syntax ([PT parse-tree])
-     #'(module mod-name simplex-demo
+     #'(module mod-name algebra-demo
          PT))))
