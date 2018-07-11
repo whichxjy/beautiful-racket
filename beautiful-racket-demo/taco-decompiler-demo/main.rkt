@@ -5,15 +5,15 @@
 
 (define (tokenize ip)
   (for/list ([tok (in-port read ip)])
-            tok))
+    tok))
 
 (define (parse toks)
   (for/list ([tok (in-list toks)])
-            (integer->char
-             (for/sum ([val (in-list tok)]
-                       [power (in-naturals)]
-                       #:when (eq? val 'taco))
-                      (expt 2 power)))))
+    (integer->char
+     (for/sum ([val (in-list tok)]
+               [power (in-naturals)]
+               #:when (eq? val 'taco))
+       (expt 2 power)))))
 
 (define (read-syntax src ip)
   (define toks (tokenize ip))

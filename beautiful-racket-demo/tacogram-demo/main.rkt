@@ -6,16 +6,16 @@
 
 (define (tokenize ip)
   (for/list ([tok (in-port read-char ip)])
-            tok))
+    tok))
 
 (define (parse toks)
   (define parse-tree-datum (parse-to-datum toks))
   (for/list ([leaf (in-list (cdr parse-tree-datum))])
-            (integer->char
-             (for/sum ([val (in-list (cdr leaf))]
-                       [power (in-naturals)]
-                       #:when (equal? val '(taco)))
-                      (expt 2 power)))))
+    (integer->char
+     (for/sum ([val (in-list (cdr leaf))]
+               [power (in-naturals)]
+               #:when (equal? val '(taco)))
+       (expt 2 power)))))
 
 
 (define (read-syntax src ip)

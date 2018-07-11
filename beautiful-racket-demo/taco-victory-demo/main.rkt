@@ -19,7 +19,7 @@
   (integer->char
    (for/sum ([taco-or-not (in-list pieces)]
              [pow (in-naturals)])
-            (* taco-or-not (expt 2 pow)))))
+     (* taco-or-not (expt 2 pow)))))
 
 (define (taco) 1)
 

@@ -13,17 +13,17 @@
 (define (tokenize ip)
   (define toklets
     (for/list ([toklet (in-port lex ip)])
-              toklet))
+      toklet))
   (for/list ([tok (in-slice 7 toklets)])
-            tok))
+    tok))
 
 (define (parse toks)
   (for/list ([tok (in-list toks)])
-            (integer->char
-             (for/sum ([val (in-list tok)]
-                       [power (in-naturals)]
-                       #:when (eq? val 'taco))
-                      (expt 2 power)))))
+    (integer->char
+     (for/sum ([val (in-list tok)]
+               [power (in-naturals)]
+               #:when (eq? val 'taco))
+       (expt 2 power)))))
 
 (define (read-syntax src ip)
   (define toks (tokenize ip))
