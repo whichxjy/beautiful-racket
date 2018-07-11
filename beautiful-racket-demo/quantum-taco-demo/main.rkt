@@ -5,7 +5,7 @@
 
 (define (tokenize ip)
   (for/list ([tok (in-port read ip)])
-            tok))
+    tok))
 
 (define (parse tok)
   (if (list? tok)
