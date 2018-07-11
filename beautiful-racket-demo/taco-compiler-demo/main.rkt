@@ -5,15 +5,15 @@
 
 (define (tokenize ip)
   (for/list ([tok (in-port read-char ip)])
-            tok))
+    tok))
 
 (define (parse toks)
   (for/list ([tok (in-list toks)])
-            (define int (modulo (char->integer tok) 128))
-            (for/list ([bit (in-range 7)])
-                      (if (bitwise-bit-set? int bit)
-                          'taco
-                          null))))
+    (define int (modulo (char->integer tok) 128))
+    (for/list ([bit (in-range 7)])
+      (if (bitwise-bit-set? int bit)
+          'taco
+          null))))
 
 (define (read-syntax src ip)
   (define toks (tokenize ip))
