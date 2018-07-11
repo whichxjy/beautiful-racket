@@ -9,7 +9,7 @@
 
 (define (parse toks)
   (for/list ([tok (in-list toks)])
-    (define int (modulo (char->integer tok) 128))
+    (define int (char->integer tok))
     (for/list ([bit (in-range 7)])
       (if (bitwise-bit-set? int bit)
           'taco
