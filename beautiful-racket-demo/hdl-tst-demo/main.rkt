@@ -8,5 +8,7 @@
     (define port+newline (input-port-append #f port (open-input-string "\n")))
     (port-count-lines! port+newline)
     (set-port-next-location! port+newline line col pos)
-    #`(module hdl-mod hdl-tst-demo/expander
-        #,(parse source-path (make-tokenizer port+newline)))))
+    (strip-context
+     (with-syntax ([PT (parse source-path (make-tokenizer port+newline))])
+       #'(module hdl-mod hdl-tst-demo/expander
+           PT)))))
