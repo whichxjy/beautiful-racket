@@ -1,14 +1,16 @@
 #lang racket
-(provide #%datum #%top-interaction #%module-begin
-         (rename-out [#%my-app #%app]))
+(provide #%top-interaction #%module-begin
+         (rename-out [my-datum #%datum]
+                     [my-datum #%top]
+                     [my-app #%app]))
 
-(define-syntax (#%datum stx)
+(define-syntax (my-datum stx)
   (syntax-case stx ()
     [(_ . THING) #''taco]))
 
-(define-syntax (#%my-app stx)
+(define-syntax (my-app stx)
   (syntax-case stx ()
-    [(_ FUNC . ARGS) #'(list (#%datum) . ARGS)]))
+    [(_ FUNC . ARGS) #'(list (my-datum) . ARGS)]))
 
 (module reader syntax/module-reader
   atomic-taco-demo)
