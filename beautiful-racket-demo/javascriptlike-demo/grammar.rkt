@@ -6,7 +6,8 @@ assignment : /"var" id /"=" expr
 @expr : comparison
 comparison : [comparison ("!=" | "==")] sumlike
 sumlike : [@sumlike /"+"] value 
-@value : id | INTEGER  | STRING | object | func-def | func-app | increment
+@value : id | INTEGER  | STRING | object
+       | func-def | func-app | increment
 increment : id /"++"
 object : /"{" @kvs /"}"
 kvs : [kv (/"," kv)*]

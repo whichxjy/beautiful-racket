@@ -9,7 +9,7 @@
        ":" "," "(" ")" "//" "/*" "*/"
        "if" "while" "==" "!=" "function" "return" "++"))
 
-(define lex
+(define tokenize
   (lexer
    [(:or (from/stop-before "//" "\n")
          (from/to "/*" "*/")) (token 'COMMENT #:skip? #t)]
@@ -26,8 +26,8 @@
    [any-char lexeme]))
 
 (define (read-syntax src ip)
-  (define parse-tree (parse (λ () (lex ip))))
+  (define parse-tree (parse (λ () (tokenize ip))))
   (strip-context
    (with-syntax ([PT parse-tree])
-     #'(module _ javascriptlike-demo/expander
+     #'(module you-win javascriptlike-demo/expander
          PT))))

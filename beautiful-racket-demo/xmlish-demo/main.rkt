@@ -8,7 +8,7 @@
 (define-lex-abbrev xml-reserved
   (:or "<" "/>" "</" ">" "<!--" "-->" "=" "\""))
 
-(define lex
+(define tokenize
   (lexer
    [(:+ whitespace) (token 'SP " ")]
    ["&amp;" (token 'AMP "&")]
@@ -36,7 +36,7 @@
   (string->symbol (apply string strs)))
 
 (define (read-syntax src ip)
-  (define parse-tree (parse (λ () (lex ip))))
+  (define parse-tree (parse (λ () (tokenize ip))))
   (strip-context
    (with-syntax ([PT parse-tree])
      #'(module mel xmlish-demo

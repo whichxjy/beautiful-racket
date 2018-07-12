@@ -8,9 +8,9 @@
 (define-lex-abbrev reserved-toks
   (:or "fun" "(" ")" "=" "+" ","))
 
-(define lex
+(define tokenize
   (lexer
-   [whitespace (lex input-port)]
+   [whitespace (tokenize input-port)]
    [reserved-toks lexeme]
    [alphabetic (token 'ID (string->symbol lexeme))]
    [(:+ (char-set "0123456789")) (token 'INT (string->number lexeme))]))
@@ -27,8 +27,7 @@
 (define-macro func-app #'#%app)
 
 (define (read-syntax src ip)
-  (define token-thunk (λ () (lex ip)))
-  (define parse-tree (parse token-thunk))
+  (define parse-tree (parse (λ () (tokenize ip))))
   (strip-context
    (with-syntax ([PT parse-tree])
      #'(module mod-name algebra-demo
