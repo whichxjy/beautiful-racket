@@ -7,7 +7,7 @@
 
 (define-lex-abbrev regex-chars (char-set "()*+?.^$|<!=[]"))
   
-(define lex
+(define tokenize
   (lexer
    [(:+ "\n") (token 'NEWLINE lexeme)]
    [(from/stop-before ";" "\n") (token 'COMMENT #:skip? #t)]
@@ -16,7 +16,7 @@
    [alphabetic (token 'LITERAL lexeme)]))
 
 (define (read-syntax src ip)
-  (define parse-tree (parse (λ () (lex ip))))
+  (define parse-tree (parse (λ () (tokenize ip))))
   (strip-context
    (with-syntax ([PT parse-tree])
      #'(module regexcellent-mod regexcellent-demo
