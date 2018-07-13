@@ -1,7 +1,6 @@
 #lang br/quicklang
 (require (for-syntax racket/string) rackunit racket/file)
-(provide #%module-begin
-         (matching-identifiers-out #rx"^tst-" (all-defined-out)))
+(provide #%module-begin (all-defined-out))
 
 (define (print-cell val fmt)
   (match-define (list _ radix-letter number-strings) (regexp-match #px"^%(.)(.*)$" fmt)) ; like %B1.16.1
@@ -34,20 +33,20 @@
 (define-for-syntax chip-prefix #f)
 
 
-(define-macro (tst-program EXPR ...)
+(define-macro (program EXPR ...)
   (with-shared-id (compare-files)
     #'(begin
         EXPR ...
         (compare-files))))
 
 
-(define-macro (tst-load-expr CHIPFILE-STRING)
+(define-macro (load-expr CHIPFILE-STRING)
   (set! chip-prefix (string-replace (syntax->datum #'CHIPFILE-STRING) ".hdl" ""))
   (with-pattern ([CHIPFILE.RKT (format-string "~a.rkt" #'CHIPFILE-STRING)])
     #'(require CHIPFILE.RKT)))
 
 
-(define-macro (tst-output-file-expr OUTPUT-FILE-STRING)
+(define-macro (output-file-expr OUTPUT-FILE-STRING)
   (with-shared-id (output-file output-filename)
     #'(begin
         (define output-filename OUTPUT-FILE-STRING)
@@ -55,13 +54,13 @@
           #:mode 'text #:exists 'replace))))
 
 
-(define-macro (tst-compare-to-expr COMPARE-FILE-STRING)
+(define-macro (compare-to-expr COMPARE-FILE-STRING)
   (with-shared-id (compare-files output-filename)
     #'(define (compare-files)
         (check-equal? (file->lines output-filename) (file->lines COMPARE-FILE-STRING)))))
 
 
-(define-macro (tst-output-list-expr (COL-NAME FORMAT-SPEC) ...)
+(define-macro (output-list-expr (COL-NAME FORMAT-SPEC) ...)
   (with-shared-id (eval-result eval-chip output output-filename)
     (with-pattern ([(COL-ID ...) (suffix-ids #'(COL-NAME ...) "")]
                    [(CHIP-COL-ID ...) (prefix-ids chip-prefix "-" #'(COL-NAME ...))])
@@ -73,17 +72,17 @@
           (output COL-NAME ...)))))
 
 
-(define-macro (tst-set-expr IN-BUS IN-VAL)
+(define-macro (set-expr IN-BUS IN-VAL)
   (with-pattern
       ([CHIP-IN-BUS-ID-WRITE (prefix-id chip-prefix "-" (suffix-id #'IN-BUS "-write"))])
     #'(CHIP-IN-BUS-ID-WRITE IN-VAL)))
 
 
-(define-macro (tst-eval-expr)
+(define-macro (eval-expr)
   (with-shared-id (eval-result eval-chip)
     #'(set! eval-result (eval-chip))))
 
 
-(define-macro (tst-output-expr)
+(define-macro (output-expr)
   (with-shared-id (output eval-result)
     #'(apply output eval-result)))

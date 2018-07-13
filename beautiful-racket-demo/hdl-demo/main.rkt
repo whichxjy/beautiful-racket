@@ -22,6 +22,7 @@
   (provide read-syntax))
 
 (define (read-syntax src ip)
+  (port-count-lines! ip)
   (strip-context
    (with-syntax ([PT (parse src (λ () (tokenize ip)))])
      #'(module hdl-mod hdl-demo/expander

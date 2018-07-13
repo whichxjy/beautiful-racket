@@ -1,14 +1,22 @@
 #lang br
+(require "grammar.rkt" brag/support)
 
-(module reader br
-  (require "parser.rkt" "tokenizer.rkt")
-  (provide read-syntax)
-  (define (read-syntax source-path port)
-    (define-values (line col pos) (port-next-location port))
-    (define port+newline (input-port-append #f port (open-input-string "\n")))
-    (port-count-lines! port+newline)
-    (set-port-next-location! port+newline line col pos)
-    (strip-context
-     (with-syntax ([PT (parse source-path (make-tokenizer port+newline))])
-       #'(module hdl-mod hdl-tst-demo/expander
-           PT)))))
+(module+ reader
+  (provide read-syntax))
+
+(define tokenize
+  (lexer-srcloc
+   [(:or (from/to "/*" "*/")
+         (from/to "//" #\newline)) (token 'COMMENT lexeme #:skip? #t)]
+   [whitespace (token lexeme #:skip? #t)]
+   [(:or "load" "output-list" "output-file" "compare-to" "set" "eval" "output" "," ";") lexeme]
+   [(:seq "%" (:+ alphabetic numeric ".")) (token 'FORMAT-STRING lexeme)]
+   [(:+ numeric) (token 'VAL (string->number lexeme))]
+   [(:+ alphabetic numeric "-" ".") (token 'ID lexeme)]))
+
+(define (read-syntax src ip)
+  (port-count-lines! ip)
+  (strip-context
+   (with-syntax ([PT (parse src (λ () (tokenize ip)))])
+     #'(module hdl-mod hdl-tst-demo/expander
+         PT))))
