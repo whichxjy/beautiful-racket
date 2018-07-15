@@ -7,10 +7,10 @@ lookbehind : /"(" /"?" /"<" /"=" pat /")"
 lookahead : /"(" /"?" /"=" pat /")"
 choice : pat (/"|" pat)+
 repeat : repeatable [("*" | "+") ["?"] | "?"]
-@repeatable : group | any | start | end | literals | chars
+@repeatable : group | any | start | end | literal | chars
 group : /"(" pat /")"
 any : /"."
 start : /"^"
 end : /"$"
-literals : LITERAL+
-chars : /"[" LITERAL* /"]"
+literal : LITERAL
+chars : /"[" literal* /"]"
