@@ -1,12 +1,12 @@
 #lang br/quicklang
 (require json)
 
-(define-macro (js-module-begin PARSE-TREE)
+(define-macro (jsonic-mb PARSE-TREE)
   #'(#%module-begin
      (define result-string PARSE-TREE)
      (define validated-jsexpr (string->jsexpr result-string))
      (display result-string)))
-(provide (rename-out [js-module-begin #%module-begin]))
+(provide (rename-out [jsonic-mb #%module-begin]))
 
 (define-macro (jsonic-char CHAR-TOK-VALUE)
   #'CHAR-TOK-VALUE)
