@@ -24,7 +24,7 @@
          ['REM '(comment #f)]
          ['ERROR '(error #f)]
          [else (match val
-                 [(? number?)'(constant #f)]
+                 [(? number?) '(constant #f)]
                  [(? symbol?) '(symbol #f)]
                  ["(" '(parenthesis |(|)]
                  [")" '(parenthesis |)|)]
