@@ -149,11 +149,10 @@
   (and (valid-line? text line)
        (let ([lsv (line-start-visible text line)])
          (and lsv ; could be #f
-              (let ([li (- (line-start-visible text line) (line-start text line))])
-                (and (positive? li) li))))))
+              (- (line-start-visible text line) (line-start text line))))))
 
 (module+ test
-  (check-equal? (line-indent t 0) #f)
+  (check-equal? (line-indent t 0) 0)
   (check-equal? (line-indent t 1) 1)
   (check-equal? (line-indent t 2) 2)
   (check-equal? (line-indent t 3) #f))
@@ -198,10 +197,9 @@
   (send indented-t get-text))
 
 (define/contract (string-indents str)
-  (string? . -> . (listof (or/c exact-positive-integer? #f)))
+  (string? . -> . (listof exact-nonnegative-integer?))
   (for/list ([line (in-list (string-split str "\n"))])
-            (define len (length (takef (string->list line) space-char?)))
-            (and (exact-positive-integer? len) len)))
+            (length (takef (string->list line) space-char?))))
 
 (module+ test
-  (check-equal? (string-indents t-str) '(#f 1 2)))
+  (check-equal? (string-indents t-str) '(0 1 2)))

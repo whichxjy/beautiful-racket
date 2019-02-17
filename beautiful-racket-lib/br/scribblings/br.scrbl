@@ -620,7 +620,7 @@ Convenient notation for @racket[(char textbox (line-end-visible textbox line-idx
 [textbox (is-a?/c text%)]
 [line-idx (or/c exact-nonnegative-integer? #f)])
 (or/c exact-nonnegative-integer? #f)]{
-Get the length of the indent of line @racket[line-idx] in @racket[textbox] (or @racket[#f] the line has no indent).
+Get the length of the indent of line @racket[line-idx] in @racket[textbox].
 }
 
 
@@ -634,7 +634,7 @@ Apply @racket[indenter-proc] to the text in @racket[textbox-or-str] and return a
 
 @defproc[(string-indents
 [str string?])
-(listof (or/c exact-positive-integer? #f))]{
+(listof exact-nonnegative-integer?)]{
 Lists the indents at the beginning of each line in @racket[str]. Useful for unit testing.
 }
 
