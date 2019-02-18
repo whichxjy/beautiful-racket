@@ -8,15 +8,18 @@
 (define (indent-jsonic tbox [posn 0])
   (define prev-line (previous-line tbox posn))
   (define current-line (line tbox posn))
-  (define prev-indent (line-indent tbox prev-line))
   (cond
-    [(left-bracket?
-      (line-first-visible-char tbox prev-line))
-     (+ prev-indent indent-width)]
-    [(right-bracket?
-      (line-first-visible-char tbox current-line))
-     (- prev-indent indent-width)]
-    [else prev-indent]))
+    [(not prev-line) 0]
+    [else
+     (define prev-indent (line-indent tbox prev-line))
+     (cond
+       [(left-bracket?
+         (line-first-visible-char tbox prev-line))
+        (+ prev-indent indent-width)]
+       [(right-bracket?
+         (line-first-visible-char tbox current-line))
+        (- prev-indent indent-width)]
+       [else prev-indent])]))
 (provide
  (contract-out
   [indent-jsonic (((is-a?/c text%)) 
@@ -28,7 +31,7 @@
   (define test-str #<<HERE
 #lang jsonic
 {
-"value",
+"value": 42,
 "string":
 [
 {
