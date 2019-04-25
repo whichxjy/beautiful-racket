@@ -10,7 +10,7 @@
    #`(module basic-mod basic-demo-2/expander
        #,parse-tree)))
 
-(define (get-info port mod line col pos)
+(define (get-info port src-mod src-line src-col src-pos)
     (define (handle-query key default)
       (case key
         [(color-lexer)
