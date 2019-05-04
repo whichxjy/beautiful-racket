@@ -3,12 +3,16 @@
 
 (define version "1.4")
 
-(define deps '("beautiful-racket-lib"
+(define deps '(["base" #:version "6.3"]
+               "beautiful-racket-lib"
                "beautiful-racket-demo"))
 
-(define build-deps '("at-exp-lib"
+(define build-deps '("gui-doc"
+                     "gui-lib"
+                     "at-exp-lib"
                      "br-parser-tools-doc"
                      "racket-doc"
                      "scribble-lib"))
 
-(define implies deps)
+(define implies '("beautiful-racket-lib"
+                  "beautiful-racket-demo"))
