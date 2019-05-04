@@ -3,7 +3,7 @@
 
 (define version "1.4")
 
-(define deps '"beautiful-racket-lib"
+(define deps '("beautiful-racket-lib"
                "beautiful-racket-demo"))
 
 (define build-deps '("at-exp-lib"
