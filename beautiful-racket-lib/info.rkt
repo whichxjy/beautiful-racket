@@ -1,10 +1,13 @@
 #lang info
+
 (define collection 'multi)
 
 (define version "1.4")
-(define deps '("at-exp-lib"
-               "base"
+
+(define deps '(["base" #:version "6.3"]
+               "at-exp-lib"
                "sugar"
+               "rackunit-lib"
                "gui-lib"
                "draw-lib"))
-(define build-deps '("racket-doc" "gui-doc" "rackunit-lib" "scribble-lib"))
+

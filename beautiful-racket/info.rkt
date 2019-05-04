@@ -2,6 +2,13 @@
 (define collection 'multi)
 
 (define version "1.4")
-(define deps '("base" "sugar" "beautiful-racket-lib" "beautiful-racket-demo" "rackunit-lib" "brag" "br-parser-tools-lib"))
-(define build-deps '("racket-doc"))
-(define update-implies '("brag" "br-parser-tools-lib"))
+
+(define deps '"beautiful-racket-lib"
+               "beautiful-racket-demo"))
+
+(define build-deps '("at-exp-lib"
+                     "br-parser-tools-doc"
+                     "racket-doc"
+                     "scribble-lib"))
+
+(define implies deps)
