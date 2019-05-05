@@ -7,6 +7,7 @@
 (define deps '(["base" #:version "6.3"]
                "at-exp-lib"
                "sugar"
+               "debug"
                "rackunit-lib"
                "gui-lib"
                "draw-lib"))
