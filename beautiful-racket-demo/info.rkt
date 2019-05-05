@@ -7,7 +7,7 @@
 
 (define version "1.5")
 
-(define deps '(["base" #:version "6.7"]
+(define deps '(["base" #:version "6.6.0.900"]
                "sugar"
                "beautiful-racket-lib"
                "rackunit-lib"

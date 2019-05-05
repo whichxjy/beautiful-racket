@@ -4,7 +4,7 @@
 
 (define version "1.5")
 
-(define deps '(["base" #:version "6.7"]
+(define deps '(["base" #:version "6.6.0.900"]
                "at-exp-lib"
                "sugar"
                "debug"
