@@ -5,9 +5,9 @@
 
 (define collection 'multi)
 
-(define version "1.4")
+(define version "1.5")
 
-(define deps '(["base" #:version "6.3"]
+(define deps '(["base" #:version "6.7"]
                "sugar"
                "beautiful-racket-lib"
                "rackunit-lib"
