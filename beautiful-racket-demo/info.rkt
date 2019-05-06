@@ -19,3 +19,5 @@
                "syntax-color-lib"
                "gui-lib"
                "math-lib"))
+
+(define build-deps '("at-exp-lib"))
