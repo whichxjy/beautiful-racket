@@ -555,14 +555,14 @@ Get the line index in @racket[textbox] that contains @racket[position].
 @defproc[(previous-line 
 [textbox (is-a?/c text%)]
 [position (or/c exact-nonnegative-integer? #f)])
-exact-nonnegative-integer?]{
+(or/c exact-nonnegative-integer? #f)]{
 Get the line index in @racket[textbox] of the line before the one that contains @racket[position].
 }
 
 @defproc[(next-line 
 [textbox (is-a?/c text%)]
 [position (or/c exact-nonnegative-integer? #f)])
-exact-nonnegative-integer?]{
+(or/c exact-nonnegative-integer? #f)]{
 Get the line index in @racket[textbox] of the line after the one that contains @racket[position].
 }
 
